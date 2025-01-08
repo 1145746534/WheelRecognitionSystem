@@ -1,0 +1,169 @@
+﻿<UserControl x:Class="WheelRecognitionSystem.Views.Pages.TemplateManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Pages"
+             xmlns:p="http://prismlibrary.com/"
+             xmlns:h="clr-namespace:HalconDotNet;assembly=halcondotnet"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             mc:Ignorable="d" 
+             d:DesignHeight="640" d:DesignWidth="1280">
+    <Border CornerRadius="5">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#88B0BAE6" Offset="0"/>
+                <GradientStop Color="Transparent" Offset="1.5"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="480"/>
+            </Grid.ColumnDefinitions>
+            <h:HSmartWindowControlWPF HKeepAspectRatio="True" HLineWidth="{Binding LineWidth}">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplateImage}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplate}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayWheelContour}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplateContour}" HColor="medium slate blue"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayInGateContour}" HColor="{Binding GateContourColor}"/>
+                <!--<h:HSmartWindowControlWPF.InputBindings>
+                    <MouseBinding Command="{Binding HWindowMouseMoveCommand}" MouseAction="LeftClick"/>
+                </h:HSmartWindowControlWPF.InputBindings>-->
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="HMouseMove">
+                        <p:InvokeCommandAction Command="{Binding HWindowMouseMoveCommand}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </h:HSmartWindowControlWPF>
+            <TextBox Text="{Binding ImageGrayval}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
+                     HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
+            <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Visibility="{Binding RecognitionResultDisplay}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="1.4*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="轮   型:" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding RecognitionWheelType}" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                    <TextBlock Text="相似度:" Grid.Row="1" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding RecognitionSimilarity}" Grid.Row="1" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                    <TextBlock Text="耗   时:" Grid.Row="2" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding RecognitionConsumptionTime}" Grid.Row="2" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+            <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,80,0,0" Visibility="{Binding GateDetectionVisibility}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="0.9*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="浇口结果:" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding GateDetectionResult}" Grid.Row="0" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                    <TextBlock Text="浇口面积:" Grid.Row="1" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding GateArea}" Grid.Row="1"  Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                    <TextBlock Text="浇口半径:" Grid.Row="2" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding GateRadiu}" Grid.Row="2" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+
+                </Grid>
+            </Border>
+            <GridSplitter HorizontalAlignment="Right" Width="2" Background="Transparent" Cursor="SizeWE"/>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="220"/>
+                </Grid.RowDefinitions>
+                <GroupBox  Header="模板数据" Margin="2" Style="{StaticResource NewGroupBoxStyle}">
+                    <DataGrid x:Name="TemplateDataGrid"  Margin="2,25,2,0" ItemsSource="{Binding TemplateDatas}" Background="Transparent" BorderThickness="0"  
+                                IsReadOnly="True" FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False"
+                              SelectedItem="{Binding DataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding DataGridSelectedIndex, Mode=TwoWay}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="未用天数" Binding="{Binding UnusedDays}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂高度"  Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridCheckBoxColumn Header="强制分选" Binding="{Binding SortingEnable}" Width="0.4*">
+                                <!--<DataGridCheckBoxColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <CheckBox Style="{StaticResource CheckBoxStyle}"/>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#FFDDE3FB"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#FFB7F9BE"/>
+                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridCheckBoxColumn.CellStyle>-->
+                            </DataGridCheckBoxColumn>
+                            <DataGridTextColumn Header="创建时间" Binding="{Binding CreationTime}"  Width="0.7*" FontSize="12" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                        </DataGrid.Columns>
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseLeftButtonDown">
+                                <p:InvokeCommandAction Command="{Binding MouseLeftButtonDownCommand}"
+                                                       CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </DataGrid>
+                </GroupBox>
+                <GroupBox Grid.Row="1" Style="{StaticResource NewGroupBoxStyle}" Header="模板制作" Margin="2">
+                    <Grid Margin="5,28,5,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Button Grid.Row="0" Grid.Column="0" Content="添加模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="添加模板"/>
+                        <Button Grid.Row="0" Grid.Column="1" Content="读取图片" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="读取图片"/>
+                        <Button Grid.Row="0" Grid.Column="2" Content="显示模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="显示模板"/>
+                        <Button Grid.Row="1" Grid.Column="0" Content="采集图像" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="采集图像"/>
+                        <Button Grid.Row="1" Grid.Column="1" Content="定位轮毂" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="定位轮毂"/>
+                        <Button Grid.Row="1" Grid.Column="2" Content="删除模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="删除模板"/>
+                        <Button Grid.Row="2" Grid.Column="0" Content="参数设置" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="参数设置"/>
+                        <Button Grid.Row="2" Grid.Column="1" Content="预览模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="预览模板"/>
+                        <Button Grid.Row="2" Grid.Column="2" Content="匹配结果" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="匹配结果"/>
+                        <Button Grid.Row="3" Grid.Column="0" Content="识别测试" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="识别测试"/>
+                        <Button Grid.Row="3" Grid.Column="1" Content="保存模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="保存模板"/>
+                        <Button Grid.Row="3" Grid.Column="2" Content="模板检查" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                                Command="{Binding TemplateBtnCommand}" CommandParameter="模板检查"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

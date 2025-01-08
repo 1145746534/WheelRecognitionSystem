@@ -1,0 +1,369 @@
+﻿<UserControl x:Class="WheelRecognitionSystem.Views.Pages.DisplayInterfaceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:h="clr-namespace:HalconDotNet;assembly=halcondotnet"
+             xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Pages"
+             xmlns:c="clr-namespace:WheelRecognitionSystem.Public.Converter"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Loaded="UserControl_Loaded" >
+    <UserControl.Resources>
+        <c:BackgroundConverter x:Key="BackgroundConverter"/>
+        <c:BtuBackgroundConverter x:Key="BtuBackgroundConverter"/>
+        <BooleanToVisibilityConverter x:Key="btv"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="9*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FFBFBCBC" CornerRadius="5" Margin="0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <Border Margin="2,0,2,0" Background="{Binding CameraStatus1, Converter={StaticResource BackgroundConverter}}" Width="30" Height="10" CornerRadius="2" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName1}" FontSize="14" Foreground="#FF424141"  VerticalAlignment="Center"/>
+                    <Button Margin="2,4,0,4" ToolTip="实时取像" Style="{StaticResource NormalButtonStyle}"
+                             Click="Button_Click">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bb;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="单帧拍照" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTakePhotoCommand}" CommandParameter="{Binding DisplayName1}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe675;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="相机连接" Style="{StaticResource NormalButtonStyle}" 
+                            Command="{Binding BtnSettingCommand}" CommandParameter="{Binding DisplayName1}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe677;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="保存原图" Style="{StaticResource NormalButtonStyle}"
+                         Command="{Binding BtnSaveCommand}" CommandParameter="{Binding DisplayName1}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6d3;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="6,4,0,4" ToolTip="" Style="{StaticResource NormalButtonStyle}" Background="#FFBFBCBC" >
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="轮毂到位" Background="{Binding Inplace1, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <h:HSmartWindowControlWPF Grid.Row="1"  HKeepAspectRatio="True" HLineWidth="2">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage1}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour1}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour1}" HColor="medium slate blue"/>
+            </h:HSmartWindowControlWPF>
+        </Grid>
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="9*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FFBFBCBC" CornerRadius="5" Margin="0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <Border Margin="2,0,2,0" Background="{Binding CameraStatus2, Converter={StaticResource BackgroundConverter}}" Width="30" Height="10" CornerRadius="2" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName2}" FontSize="14" Foreground="#FF424141"  VerticalAlignment="Center"/>
+                    <Button Margin="2,4,0,4" ToolTip="实时取像" Style="{StaticResource NormalButtonStyle}" Click="Button_Click">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bb;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="单帧拍照" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTakePhotoCommand}" CommandParameter="{Binding DisplayName2}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe675;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="相机连接" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSettingCommand}" CommandParameter="{Binding DisplayName2}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe677;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="保存原图" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSaveCommand}" CommandParameter="{Binding DisplayName2}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6d3;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="6,4,0,4" ToolTip="" Style="{StaticResource NormalButtonStyle}" Background="#FFBFBCBC" >
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="轮毂到位" Background="{Binding Inplace2, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage2}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour2}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour2}" HColor="medium slate blue"/>
+            </h:HSmartWindowControlWPF>
+        </Grid>
+        <Grid Grid.Row="0" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="9*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FFBFBCBC" CornerRadius="5" Margin="0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <Border Margin="2,0,2,0" Background="{Binding CameraStatus3, Converter={StaticResource BackgroundConverter}}" Width="30" Height="10" CornerRadius="2" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName3}" FontSize="14" Foreground="#FF424141"  VerticalAlignment="Center"/>
+                    <Button Margin="2,4,0,4" ToolTip="实时取像" Style="{StaticResource NormalButtonStyle}" Click="Button_Click">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bb;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="单帧拍照" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTakePhotoCommand}" CommandParameter="{Binding DisplayName3}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe675;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="相机连接" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSettingCommand}" CommandParameter="{Binding DisplayName3}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe677;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="保存原图" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSaveCommand}" CommandParameter="{Binding DisplayName3}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6d3;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="6,4,0,4" ToolTip="" Style="{StaticResource NormalButtonStyle}" Background="#FFBFBCBC" >
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="轮毂到位" Background="{Binding Inplace3, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage3}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour3}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour3}" HColor="medium slate blue"/>
+            </h:HSmartWindowControlWPF>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="9*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FFBFBCBC" CornerRadius="5" Margin="0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <Border Margin="2,0,2,0" Background="{Binding CameraStatus4, Converter={StaticResource BackgroundConverter}}" Width="30" Height="10" CornerRadius="2" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName4}" FontSize="14" Foreground="#FF424141"  VerticalAlignment="Center"/>
+                    <Button Margin="2,4,0,4" ToolTip="实时取像" Style="{StaticResource NormalButtonStyle}" Click="Button_Click">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bb;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="单帧拍照" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTakePhotoCommand}" CommandParameter="{Binding DisplayName4}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe675;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="相机连接" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSettingCommand}" CommandParameter="{Binding DisplayName4}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe677;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="保存原图" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSaveCommand}" CommandParameter="{Binding DisplayName4}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6d3;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="6,4,0,4" ToolTip="" Style="{StaticResource NormalButtonStyle}" Background="#FFBFBCBC" >
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="轮毂到位" Background="{Binding Inplace4, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage4}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour4}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour4}" HColor="medium slate blue"/>
+            </h:HSmartWindowControlWPF>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="9*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FFBFBCBC" CornerRadius="5" Margin="0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <Border Margin="2,0,2,0" Background="{Binding CameraStatus5, Converter={StaticResource BackgroundConverter}}" Width="30" Height="10" CornerRadius="2" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName5}" FontSize="14" Foreground="#FF424141"  VerticalAlignment="Center"/>
+                    <Button Margin="2,4,0,4" ToolTip="实时取像" Style="{StaticResource NormalButtonStyle}" Click="Button_Click">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bb;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="单帧拍照" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTakePhotoCommand}" CommandParameter="{Binding DisplayName5}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe675;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="相机连接" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSettingCommand}" CommandParameter="{Binding DisplayName5}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe677;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="保存原图" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnSaveCommand}" CommandParameter="{Binding DisplayName5}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xe6d3;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                    <Button Margin="6,4,0,4" ToolTip="" Style="{StaticResource NormalButtonStyle}" Background="#FFBFBCBC" >
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="轮毂到位" Background="{Binding Inplace5, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage5}"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour5}" HColor="magenta"/>
+                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour5}" HColor="medium slate blue"/>
+            </h:HSmartWindowControlWPF>
+        </Grid>
+
+    </Grid>
+</UserControl>
