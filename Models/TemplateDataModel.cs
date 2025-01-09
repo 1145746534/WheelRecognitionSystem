@@ -27,6 +27,14 @@ namespace WheelRecognitionSystem.Models
         /// 未用天数
         /// </summary>
         public int UnusedDays { get; set; }
+        /// <summary>
+        /// 轮毂高度
+        /// </summary>
+        public float WheelHeight { get; set; }
+        /// <summary>
+        /// 轮毂样式
+        /// </summary>
+        public string WheelStyle { get; set; }
 
         private bool _sortingEnable;
         /// <summary>

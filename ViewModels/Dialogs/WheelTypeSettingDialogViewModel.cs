@@ -1,6 +1,7 @@
 ﻿using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +45,26 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             get { return _wheelType; }
             set { SetProperty(ref _wheelType, value); }
+        }
+
+        private string _wheelHeight;
+        /// <summary>
+        /// 轮毂高度
+        /// </summary>
+        public string WheelHeight
+        {
+            get { return _wheelHeight; }
+            set { SetProperty(ref _wheelHeight, value); }
+        }
+
+        private string _wheelStyle;
+        /// <summary>
+        /// 轮毂样式
+        /// </summary>
+        public string WheelStyle
+        {
+            get { return _wheelStyle; }
+            set { SetProperty(ref _wheelStyle, value); }
         }
 
         /// <summary>
@@ -90,9 +111,26 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 EventMessage.SystemMessageDisplay("轮型输入错误，请重新输入！", MessageType.Error);
                 return;
             }
-            var sDB = new SqlAccess().SystemDataAccess;
-            var datas = sDB.Queryable<TemplateDataModel>().ToList();
-            var result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' '));
+            if (WheelHeight == null)
+            {
+                EventMessage.SystemMessageDisplay("轮型高度未输入，请重新输入！", MessageType.Error);
+                return;
+            }
+            if (!float.TryParse(WheelHeight,out float height))
+            {
+                EventMessage.SystemMessageDisplay("轮型高度错误，请重新输入！", MessageType.Error);
+                return;
+            }
+            if (WheelType == null)
+            {
+                EventMessage.SystemMessageDisplay("轮型样式选择，请重新选择！", MessageType.Error);
+                return;
+            }
+            
+            SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
+            List<TemplateDataModel> datas = sDB.Queryable<TemplateDataModel>().ToList();
+            int result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' ') 
+            && x.WheelHeight.ToString() ==WheelHeight && x.WheelStyle == WheelStyle);
             if (result >= 0)
             {
                 EventMessage.SystemMessageDisplay("轮型重复，请重新输入！", MessageType.Error);
@@ -103,6 +141,8 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 Index = int.Parse(Id),
                 WheelType = WheelType,
                 UnusedDays = 0,
+                WheelHeight = float.Parse(WheelHeight),
+                WheelStyle = WheelStyle,
                 SortingEnable = false,
                 CreationTime = DateTime.Now.ToString("yy-MM-dd")
             };
