@@ -1,10 +1,12 @@
 ﻿using HalconDotNet;
+using MySqlX.XDevAPI.Common;
 using NPOI.OpenXmlFormats.Vml;
 using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.SS.Formula.Functions;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
+using Sharp7;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -18,7 +20,12 @@ using System.Windows.Threading;
 using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
+using WheelRecognitionSystem.Views.Dialogs;
 using WheelRecognitionSystem.Views.Pages;
+using static WheelRecognitionSystem.Public.SystemDatas;
+using static WheelRecognitionSystem.Public.ConfigEdit;
+using static WheelRecognitionSystem.Public.ExternalConnections;
+using static WheelRecognitionSystem.Public.ImageProcessingHelper;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -333,9 +340,137 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             _task = Task.Run(() => MyMethod(cts.Token), cts.Token);
 
             EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Subscribe(ResultDisplay);
+            EventMessage.MessageHelper.GetEvent<InteractS7PLCEvent>().Subscribe(ReceiveS7PLC);
 
         }
 
+        /// <summary>
+        /// 接收PLC数据
+        /// </summary>
+        /// <param name="interact"></param>
+        private void ReceiveS7PLC(InteractS7PLC interact)
+        {
+            if (interact != null && interact.ArrivalSignal)
+            {
+                switch (interact.Index)
+                {
+                    case 1:
+                        Inplace1 = "1";
+                        break;
+                    case 2:
+                        Inplace2 = "1";
+                        break;
+                    case 3:
+                        Inplace3 = "1";
+                        break;
+                    case 4:
+                        Inplace4 = "1";
+                        break;
+                    case 5:
+                        Inplace5 = "1";
+                        break;
+                }
+                Thread.Sleep(interact.ArrivalDelay);
+                PhotoAndTackle(interact);
+            }
+            else if (interact != null && !interact.ArrivalSignal)
+            {
+                switch (interact.Index)
+                {
+                    case 1:
+                        Inplace1 = "0";
+                        break;
+                    case 2:
+                        Inplace2 = "0";
+                        break;
+                    case 3:
+                        Inplace3 = "0";
+                        break;
+                    case 4:
+                        Inplace4 = "0";
+                        break;
+                    case 5:
+                        Inplace5 = "0";
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 相机拍照&处理
+        /// </summary>
+        /// <param name="index"></param>
+        public void PhotoAndTackle(InteractS7PLC interact)
+        {
+            int index = interact.Index - 1;
+            HObject image = null;
+            if (cameras[index] != null && cameras[index].IsConnected)
+            {
+                try
+                {
+                    image = CameraHelper.Grabimage(cameras[index].acqHandle);
+                    //ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = index + 1 });
+                }
+                catch (Exception ex)
+                {
+                    cameras[index].IsConnected = false;
+                }
+            }
+
+        }
+
+        public void Tackle(InteractS7PLC interact, HObject CurrentImage)
+        {
+            
+            DateTime startTime = DateTime.Now;
+            //定位轮毂
+            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);           
+            //存储识别结果
+            RecognitionResultModel recognitionResult = new RecognitionResultModel();
+            //如果定位到轮毂
+            if (pResult.WheelImage != null)
+            {                
+                //轮毂识别
+                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            }
+            else//没有定位到轮毂
+            {
+                recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            }        
+            #region======结果显示与识别暂停判断======
+            HObject templateContour = new HObject();
+            if (recognitionResult.RecognitionWheelType != "NG")
+            {
+                templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+                //根据高度确定为哪个轮型
+
+            }
+            if (recognitionResult.RecognitionWheelType == "NG" && RecognitionPauseSetting != 0)
+            {
+                //NG的轮型需要保存图片-后续人工补录
+            }
+
+            AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
+            autoRecognitionResult = new AutoRecognitionResultDisplayModel
+            {
+                WheelType = recognitionResult.RecognitionWheelType,
+                CurrentImage = CurrentImage,
+                WheelContour = pResult.WheelContour,
+                TemplateContour = templateContour,
+               
+               
+            };
+            //图像结果显示
+            EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
+           // RecognitionWheelType = recognitionResult.RecognitionWheelType;
+            //Similarity = recognitionResult.Similarity.ToString();
+
+            
+            DateTime endTime = DateTime.Now;
+            TimeSpan consumeTime = endTime.Subtract(startTime);
+            //TimeConsumed = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
+            #endregion
+        }
 
         /// <summary>
         /// 相机连接
@@ -345,9 +480,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             while (!token.IsCancellationRequested)
             {
-                try
+
+                foreach (Camera camera in cameras)
                 {
-                    foreach (Camera camera in cameras)
+                    try
                     {
                         if (camera?.IsConnected == false)
                         {
@@ -355,18 +491,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             LoadCameraConnStatus();
                         }
                     }
-                    Thread.Sleep(5000);
-                }
-                catch (Exception ex)
-                {
+                    catch (Exception ex)
+                    {
 
+                    }
                 }
+                Thread.Sleep(2000);
+
             }
         }
-
-
-
-
 
         /// <summary>
         /// 实时取像
@@ -380,7 +513,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             camera._dispatcherTimer = new DispatcherTimer();
             camera._dispatcherTimer.Tag = obj;
             camera._dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            camera._dispatcherTimer.Interval = new TimeSpan(0,0, 0, 0,50);//设置时间间隔为1秒
+            camera._dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 50);//设置时间间隔为1秒
             camera._dispatcherTimer.Start();//启动定时器
 
         }
@@ -479,8 +612,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         //数据库更新
                     }
                 }
-               
-                
+
+
             }
         }
 
@@ -488,17 +621,30 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 单帧拍照
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">相机名</param>
         private void BtnTakePhoto(string obj)
         {
             Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj));
+            HObject image = null;
             if (camera != null && camera.IsConnected)
             {
-                HObject image = CameraHelper.Grabimage(camera.acqHandle);
-                ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 });
+                try
+                {
+                    image = CameraHelper.Grabimage(camera.acqHandle);
+                    ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 });
+                }
+                catch (Exception ex)
+                {
+                    camera.IsConnected = false;
+                }
             }
         }
+
+
+
+
+
         /// <summary>
         /// 加载相机信息
         /// </summary>

@@ -959,8 +959,10 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                         else
                         {
-                            if (PlcDataInteractionControl) PlcDataInteractionControl = false;
-                            if (HeartbeatThreadControl) HeartbeatThreadControl = false;
+                            if (PlcDataInteractionControl) 
+                                PlcDataInteractionControl = false;
+                            if (HeartbeatThreadControl) 
+                                HeartbeatThreadControl = false;
                             PlcCilent.Disconnect();
                             if (PlcStatus != "0") PlcStatus = "0";
                         }

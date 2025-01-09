@@ -89,6 +89,10 @@ namespace WheelRecognitionSystem.Public
     /// </summary>
     public class AutoRecognitionResultDisplayEvent : PubSubEvent<AutoRecognitionResultDisplayModel> { }
     /// <summary>
+    /// 信号交互事件
+    /// </summary>
+    public class InteractS7PLCEvent : PubSubEvent<InteractS7PLC> { }
+    /// <summary>
     /// 分选数据显示事件
     /// </summary>
     public class ScreenedDataDisplayEvent : PubSubEvent<List<ScreenedDataModel>> { }

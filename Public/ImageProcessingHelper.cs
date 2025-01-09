@@ -48,7 +48,6 @@ namespace WheelRecognitionSystem.Public
             PositioningWheelResultModel resultModel = new PositioningWheelResultModel();
             if (SystemDatas.CroppingOrNot)
             {
-
                 HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
                 minThreshold = (int)Mean1.D;
             }
