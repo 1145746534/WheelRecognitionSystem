@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="pack://application:,,,/Assets/Styles/LabelStyle.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/Assets/Styles/DataGridStyle.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/Assets/Styles/CheckBoxStyle.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/Assets/Styles/ComboBoxStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BitmapImage x:Key="icon" UriSource="pack://application:,,,/Assets/Images/wheels.png"/>
             <FontFamily x:Key="Iconfont">../Assets/Fonts/#iconfont</FontFamily>

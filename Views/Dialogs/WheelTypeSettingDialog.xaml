@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Dialogs"
              mc:Ignorable="d" FontFamily="Microsoft YaHei" FontSize="16"
-             Height="310" Width="500">
+             Height="450" Width="500">
     <Border>
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -15,12 +15,14 @@
         </Border.Background>
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="250"/>
                 <RowDefinition Height="100"/>
-                <RowDefinition Height="120"/>
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid Margin="5" Grid.Row="0">
                 <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
@@ -41,6 +43,24 @@
                     <Label Grid.Column="0" Content="轮毂型号：" FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     <TextBox Grid.Column="1" Text="{Binding WheelType}" Style="{StaticResource NewTextBoxStyle}" FontSize="20" Height="35" Width="200" Name="tbw"
                     HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+                </Grid>
+                <Grid Grid.Row="2" Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.64*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="轮毂高度：" FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding WheelType}" Style="{StaticResource NewTextBoxStyle}" FontSize="20" Height="35" Width="200" 
+                        HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+                </Grid>
+                <Grid Grid.Row="3" Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.64*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="轮毂类型：" FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    <ComboBox Grid.Column="1" Name="cmb" Style="{StaticResource ValueValidationComboBoxStyle}" FontSize="18" Height="35" Width="200" 
+                               HorizontalContentAlignment="Center" HorizontalAlignment="Left"></ComboBox>
                 </Grid>
             </Grid>
             <GroupBox Grid.Row="1" Style="{StaticResource NewGroupBoxStyle}" Header="特别注意" FontSize="18" Background="Transparent" Width="440">

@@ -30,6 +30,7 @@ namespace WheelRecognitionSystem.Views.Dialogs
         {
             this.tbw.Focus();
             this.tbw.SelectAll();
+            cmb.ItemsSource =  new List<string>() { "精车", "涂装" };
         }
 
         private void WindowClose_Click(object sender, RoutedEventArgs e)

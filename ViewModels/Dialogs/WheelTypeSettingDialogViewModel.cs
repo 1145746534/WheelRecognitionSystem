@@ -59,6 +59,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             OkCommand = new DelegateCommand(Ok);
             CancelCommand = new DelegateCommand(Cancel);
+
         }
         /// <summary>
         /// 取消按钮
