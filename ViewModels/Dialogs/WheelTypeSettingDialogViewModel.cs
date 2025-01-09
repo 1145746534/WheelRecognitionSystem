@@ -149,7 +149,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
 
             datas.Add(data);
             //数据根据轮型排序
-            var newDatas = datas.OrderBy(x => x.WheelType).ToList();
+            var newDatas = datas.OrderBy(x => x.WheelType ).ToList();
             //整理Index
             for (int i = 0; i < newDatas.Count; i++)
             {
