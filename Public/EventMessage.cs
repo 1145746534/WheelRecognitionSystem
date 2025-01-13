@@ -91,7 +91,7 @@ namespace WheelRecognitionSystem.Public
     /// <summary>
     /// 信号交互事件
     /// </summary>
-    public class InteractS7PLCEvent : PubSubEvent<InteractS7PLC> { }
+    public class InteractS7PLCEvent : PubSubEvent<InteractS7PLCModel> { }
     /// <summary>
     /// 分选数据显示事件
     /// </summary>
@@ -104,6 +104,16 @@ namespace WheelRecognitionSystem.Public
     /// 模板参数设置数据改变事件
     /// </summary>
     public class ParameterSettingChangedEvent : PubSubEvent<string> { }
+    /// <summary>
+    /// 设置跳转页面事件
+    /// </summary>
+    public class ServletInfoEvent : PubSubEvent<ServletInfoModel> { }
+
+    /// <summary>
+    /// 模板图片更新事件
+    /// </summary>
+    public class TemplatePicUpdateEvent: PubSubEvent<ServletInfoModel> { }
+
     /// <summary>
     /// 模板表格数据更新事件，用于执行模板动态调整时的数据更新
     /// </summary>

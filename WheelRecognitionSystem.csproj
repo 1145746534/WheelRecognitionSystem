@@ -225,7 +225,7 @@
     <Compile Include="Models\GateDetectionResultModel.cs" />
     <Compile Include="Models\GetDateTimeModel.cs" />
     <Compile Include="Models\IdentityDataModel.cs" />
-    <Compile Include="Models\InteractS7PLC.cs" />
+    <Compile Include="Models\InteractS7PLCModel.cs" />
     <Compile Include="Models\MatchResultModel.cs" />
     <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Models\MessageType.cs" />
@@ -233,6 +233,7 @@
     <Compile Include="Models\ProductionDataModel.cs" />
     <Compile Include="Models\RecognitionResultModel.cs" />
     <Compile Include="Models\ScreenedDataModel.cs" />
+    <Compile Include="Models\ServletInfoModel.cs" />
     <Compile Include="Models\StatisticsDataModel.cs" />
     <Compile Include="Models\SystemSettingsDataModel.cs" />
     <Compile Include="Models\TemplateDataModel.cs" />

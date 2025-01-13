@@ -68,7 +68,8 @@
                             <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTemplateCommand}" CommandParameter="{Binding DisplayName1}">
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -136,7 +137,8 @@
                             <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTemplateCommand}" CommandParameter="{Binding DisplayName2}">
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -204,7 +206,8 @@
                             <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTemplateCommand}" CommandParameter="{Binding DisplayName3}">
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -272,7 +275,8 @@
                             <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTemplateCommand}" CommandParameter="{Binding DisplayName4}">
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -340,7 +344,8 @@
                             <TextBlock Text="&#xe6bc;" FontFamily="{StaticResource Iconfont1}" Margin="0,0,0,0" FontSize="20" Foreground="#FF090909" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}">
+                    <Button Margin="2,4,0,4" ToolTip="模板设置" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding BtnTemplateCommand}" CommandParameter="{Binding DisplayName5}">
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>

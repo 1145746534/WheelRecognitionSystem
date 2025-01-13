@@ -26,6 +26,7 @@ using static WheelRecognitionSystem.Public.SystemDatas;
 using static WheelRecognitionSystem.Public.ConfigEdit;
 using static WheelRecognitionSystem.Public.ExternalConnections;
 using static WheelRecognitionSystem.Public.ImageProcessingHelper;
+using Prism.Regions;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -316,6 +317,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 保存图片按钮命令
         /// </summary>
         public DelegateCommand<string> BtnSaveCommand { get; set; }
+
+        /// <summary>
+        /// 模板管理按钮命令
+        /// </summary>
+        public DelegateCommand<string> BtnTemplateCommand { get; set; }
+
         #endregion
 
         private CancellationTokenSource cts = new CancellationTokenSource();
@@ -335,6 +342,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
             BtnTakePhotoCommand = new DelegateCommand<string>(BtnTakePhoto);
             BtnSaveCommand = new DelegateCommand<string>(BtnSave);
+            BtnTemplateCommand = new DelegateCommand<string>(BtnTemplate);
 
             LoadCameraInfo();
             _task = Task.Run(() => MyMethod(cts.Token), cts.Token);
@@ -344,11 +352,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
+
+
         /// <summary>
         /// 接收PLC数据
         /// </summary>
         /// <param name="interact"></param>
-        private void ReceiveS7PLC(InteractS7PLC interact)
+        private void ReceiveS7PLC(InteractS7PLCModel interact)
         {
             if (interact != null && interact.ArrivalSignal)
             {
@@ -400,7 +410,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 相机拍照&处理
         /// </summary>
         /// <param name="index"></param>
-        public void PhotoAndTackle(InteractS7PLC interact)
+        public void PhotoAndTackle(InteractS7PLCModel interact)
         {
             int index = interact.Index - 1;
             HObject image = null;
@@ -419,24 +429,24 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
-        public void Tackle(InteractS7PLC interact, HObject CurrentImage)
+        public void Tackle(InteractS7PLCModel interact, HObject CurrentImage)
         {
-            
+
             DateTime startTime = DateTime.Now;
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);           
+            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             //如果定位到轮毂
             if (pResult.WheelImage != null)
-            {                
+            {
                 //轮毂识别
                 recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             }
             else//没有定位到轮毂
             {
                 recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-            }        
+            }
             #region======结果显示与识别暂停判断======
             HObject templateContour = new HObject();
             if (recognitionResult.RecognitionWheelType != "NG")
@@ -457,15 +467,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 CurrentImage = CurrentImage,
                 WheelContour = pResult.WheelContour,
                 TemplateContour = templateContour,
-               
-               
+
+
             };
             //图像结果显示
             EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
-           // RecognitionWheelType = recognitionResult.RecognitionWheelType;
+            // RecognitionWheelType = recognitionResult.RecognitionWheelType;
             //Similarity = recognitionResult.Similarity.ToString();
 
-            
+
             DateTime endTime = DateTime.Now;
             TimeSpan consumeTime = endTime.Subtract(startTime);
             //TimeConsumed = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
@@ -538,6 +548,40 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
 
+        }
+        /// <summary>
+        /// 模板设置
+        /// </summary>
+        /// <param name="obj"></param>
+        private void BtnTemplate(string obj)
+        {
+            ServletInfoModel model = new ServletInfoModel();
+            model.Path = "TemplateManagementView";
+            int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
+            switch (index)
+            {
+                case 0:
+                    model.DisplayName = DisplayName1;
+                    model.image = CurrentImage1;
+                    break;
+                case 1:
+                    model.DisplayName = DisplayName2;
+                    model.image = CurrentImage2;
+                    break;
+                case 2:
+                    model.DisplayName = DisplayName3;
+                    model.image = CurrentImage3;
+                    break;
+                case 3:
+                    model.DisplayName = DisplayName4;
+                    model.image = CurrentImage4;
+                    break;
+                case 4:
+                    model.DisplayName = DisplayName5;
+                    model.image = CurrentImage5;
+                    break;
+            }
+            EventMessage.MessageHelper.GetEvent<ServletInfoEvent>().Publish(model);
         }
         /// <summary>
         /// 设置相机参数

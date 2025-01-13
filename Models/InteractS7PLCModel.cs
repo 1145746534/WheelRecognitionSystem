@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace WheelRecognitionSystem.Models
 {
     /// <summary>
-    /// 信号交互类
+    /// 信号交互类-PLC发送的信号
     /// </summary>
-    public class InteractS7PLC
+    public class InteractS7PLCModel
     {
         /// <summary>
         /// 到位轮毂位置

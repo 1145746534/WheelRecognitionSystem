@@ -19,7 +19,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
-                <ColumnDefinition Width="480"/>
+                <ColumnDefinition Width="500"/>
             </Grid.ColumnDefinitions>
             <h:HSmartWindowControlWPF HKeepAspectRatio="True" HLineWidth="{Binding LineWidth}">
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplateImage}"/>
@@ -91,7 +91,8 @@
                             <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="未用天数" Binding="{Binding UnusedDays}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="轮毂高度"  Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂高度" Binding="{Binding WheelHeight}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelStyle}" Width="0.5*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridCheckBoxColumn Header="强制分选" Binding="{Binding SortingEnable}" Width="0.4*">
                                 <!--<DataGridCheckBoxColumn.CellStyle>
                                     <Style TargetType="DataGridCell">

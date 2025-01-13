@@ -21,6 +21,9 @@ using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Media;
 using SqlSugar;
+using Prism.Ioc;
+using WheelRecognitionSystem.Views.Pages;
+using System.Windows.Shapes;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -423,6 +426,8 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private bool TemplatesLoading { get; set; } = true;
 
+        private IRegionManager _regionManager;
+
         #endregion
         public MainViewModel(IRegionManager regionManager)
         {
@@ -447,15 +452,29 @@ namespace WheelRecognitionSystem.ViewModels
             regionManager.RegisterViewWithRegion("ViewRegion", "TemplateManagementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "ReportManagementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "SystemSettingsView");
+            _regionManager = regionManager;
 
             SystemModeSwitchCommand = new DelegateCommand(SystemModeSwitch);
             ManualRecognitionCommand = new DelegateCommand(ManualRecognition);
             //订阅消息
             EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
             EventMessage.MessageHelper.GetEvent<RecognitionPauseSettingEvent>().Subscribe(RecognitionPauseSet);
+            EventMessage.MessageHelper.GetEvent<ServletInfoEvent>().Subscribe(ServletDisplay);
 
             RecognitionStatus = "";
             IsIdentifying = false;
+        }
+
+        /// <summary>
+        /// 页面跳转显示
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void ServletDisplay(ServletInfoModel model)
+        {
+            string path = model.Path;
+            _regionManager.RequestNavigate("ViewRegion", "TemplateManagementView");
+            EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Publish(model);
         }
 
         private void RecognitionPauseSet(string obj)
@@ -467,6 +486,8 @@ namespace WheelRecognitionSystem.ViewModels
                 SqlAccess.SystemDatasWrite("CurrentNgNumber", CurrentNgNumber.ToString());
             }
         }
+
+
 
         /// <summary>
         /// 系统信息显示

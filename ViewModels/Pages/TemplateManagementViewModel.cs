@@ -284,12 +284,30 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             LoadedTemplateDatas();
             RecognitionResultDisplay = Visibility.Collapsed;
             GateDetectionVisibility = Visibility.Collapsed;
+            //订阅事件
             EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Subscribe(TemplateDataUpdata);
+            EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Subscribe(PicUpdate);
+
         }
+
+       
 
         private void TemplateDataUpdata(string obj)
         {
             LoadedTemplateDatas();
+        }
+        /// <summary>
+        /// 设置转过来图片更新
+        /// </summary>
+        /// <param name="model"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void PicUpdate(ServletInfoModel model)
+        {
+            if (model.image !=null)
+            {
+                TemplateWindowDisplay(model.image, null, null, null, null);
+                
+            }
         }
 
         /// <summary>
@@ -920,8 +938,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DisplayWheelContour.Dispose();
             DisplayTemplateContour.Dispose();
             DisplayInGateContour.Dispose();
-            if (sourceImage != null) DisplayTemplateImage = sourceImage.Clone();
-            if (templateImage != null) DisplayTemplate = templateImage.Clone();
+            if (sourceImage != null) 
+                DisplayTemplateImage = sourceImage.Clone();
+            if (templateImage != null) 
+                DisplayTemplate = templateImage.Clone();
             if (wheelContour != null)
             {
                 LineWidth = 4.0;

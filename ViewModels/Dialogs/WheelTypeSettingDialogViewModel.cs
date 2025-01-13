@@ -24,7 +24,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
 
         /// <summary>
         /// 关闭弹窗
-        /// </summary>
+        /// </summary> 
         public event Action<IDialogResult> RequestClose;
 
         private string _id;
@@ -148,8 +148,8 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             };
 
             datas.Add(data);
-            //数据根据轮型排序
-            var newDatas = datas.OrderBy(x => x.WheelType ).ToList();
+            //数据根据轮型还有轮毂样式排序
+            var newDatas = datas.OrderBy(x => x.WheelType ).ThenBy(x=>x.WheelStyle).ToList();
             //整理Index
             for (int i = 0; i < newDatas.Count; i++)
             {
@@ -159,7 +159,8 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             sDB.DbMaintenance.TruncateTable<TemplateDataModel>();
             sDB.Insertable(newDatas).ExecuteCommand();
             //获取排序后的新增数据
-            TemplateDataModel d = newDatas.Find(x => x.WheelType == WheelType);
+            TemplateDataModel d = newDatas.Find(x => x.WheelType == WheelType
+             && x.WheelHeight.ToString() == WheelHeight && x.WheelStyle == WheelStyle);
             //定义弹窗结果
             IDialogResult dialogResult = new DialogResult();
             //将新增数据添加到弹窗结果的Parameters
