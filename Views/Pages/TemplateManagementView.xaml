@@ -38,6 +38,8 @@
             </h:HSmartWindowControlWPF>
             <TextBox Text="{Binding ImageGrayval}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
                      HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
+            <TextBox Text="{Binding ImageDisName}" Visibility="{Binding ImageDisVisibility}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
+                        HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
             <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Visibility="{Binding RecognitionResultDisplay}">
                 <Grid>
                     <Grid.RowDefinitions>

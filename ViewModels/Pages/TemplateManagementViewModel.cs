@@ -170,6 +170,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             set { SetProperty(ref _recognitionResultDisplay, value); }
         }
 
+        private Visibility _imageDisVisibility;
+        /// <summary>
+        /// 图片的来源显示
+        /// </summary>
+        public Visibility ImageDisVisibility
+        {
+            get { return _imageDisVisibility; }
+            set { SetProperty(ref _imageDisVisibility, value); }
+        }
+
         private string _gateDetectionResult;
         /// <summary>
         /// 浇口检测结果
@@ -218,6 +228,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             get { return _imageGrayval; }
             set { SetProperty(ref _imageGrayval, value); }
+        }
+
+        private string _imageDisName;
+        /// <summary>
+        /// 图像来源窗口名称
+        /// </summary>
+        public string ImageDisName
+        {
+            get { return _imageDisName; }
+            set { SetProperty(ref _imageDisName, value); }
         }
 
         private string _gateContourColor;
@@ -284,6 +304,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             LoadedTemplateDatas();
             RecognitionResultDisplay = Visibility.Collapsed;
             GateDetectionVisibility = Visibility.Collapsed;
+            ImageDisVisibility = Visibility.Collapsed;
             //订阅事件
             EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Subscribe(TemplateDataUpdata);
             EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Subscribe(PicUpdate);
@@ -306,7 +327,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (model.image !=null)
             {
                 TemplateWindowDisplay(model.image, null, null, null, null);
-                
+                ImageDisVisibility = Visibility.Visible;
+                ImageDisName = model.DisplayName;
             }
         }
 
