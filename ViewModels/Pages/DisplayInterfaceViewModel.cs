@@ -348,7 +348,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             _task = Task.Run(() => MyMethod(cts.Token), cts.Token);
 
             EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Subscribe(ResultDisplay);
-            EventMessage.MessageHelper.GetEvent<InteractS7PLCEvent>().Subscribe(ReceiveS7PLC);
+            EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Subscribe(ReceiveS7PLC);
 
         }
 
@@ -418,6 +418,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 try
                 {
+                    interact.starTime = DateTime.Now;
                     image = CameraHelper.Grabimage(cameras[index].acqHandle);
                     //ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = index + 1 });
                 }
@@ -429,6 +430,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
+        /// <summary>
+        /// 处理识别结果
+        /// </summary>
+        /// <param name="interact"></param>
+        /// <param name="CurrentImage"></param>
         public void Tackle(InteractS7PLCModel interact, HObject CurrentImage)
         {
 
@@ -475,9 +481,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             // RecognitionWheelType = recognitionResult.RecognitionWheelType;
             //Similarity = recognitionResult.Similarity.ToString();
 
-
-            DateTime endTime = DateTime.Now;
-            TimeSpan consumeTime = endTime.Subtract(startTime);
             //TimeConsumed = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
             #endregion
         }

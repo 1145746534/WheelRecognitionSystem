@@ -24,22 +24,249 @@ using SqlSugar;
 using Prism.Ioc;
 using WheelRecognitionSystem.Views.Pages;
 using System.Windows.Shapes;
+using NPOI.SS.Formula.Functions;
+using System.Threading;
+using System.Reflection;
 
 namespace WheelRecognitionSystem.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        #region======通知属性定义======
-        private string _recognitionStatus;
+
+        #region 识别相关属性定义
+        private string _recognitionStatus1;
         /// <summary>
-        /// 自动模式下识别状态
+        /// 自动模式下识别状态1
         /// </summary>
-        public string RecognitionStatus
+        public string RecognitionStatus1
         {
-            get { return _recognitionStatus; }
-            set { SetProperty(ref _recognitionStatus, value); }
+            get { return _recognitionStatus1; }
+            set { SetProperty(ref _recognitionStatus1, value); }
+        }
+        private string _recognitionWheelType1 = "";
+        /// <summary>
+        /// 识别轮型1
+        /// </summary>
+        public string RecognitionWheelType1
+        {
+            get { return _recognitionWheelType1; }
+            set { SetProperty(ref _recognitionWheelType1, value); }
+        }
+        private string _similarity1 = "";
+        /// <summary>
+        /// 相似度1
+        /// </summary>
+        public string Similarity1
+        {
+            get { return _similarity1; }
+            set { SetProperty(ref _similarity1, value); }
+        }
+        private string _timeConsumed1 = "";
+        /// <summary>
+        /// 用时1
+        /// </summary>
+        public string TimeConsumed1
+        {
+            get { return _timeConsumed1; }
+            set { SetProperty(ref _timeConsumed1, value); }
+        }
+        private string _colour1 = "";
+        /// <summary>
+        /// 颜色1
+        /// </summary>
+        public string Colour1
+        {
+            get { return _colour1; }
+            set { SetProperty(ref _colour1, value); }
         }
 
+        private string _recognitionStatus2;
+        /// <summary>
+        /// 自动模式下识别状态2
+        /// </summary>
+        public string RecognitionStatus2
+        {
+            get { return _recognitionStatus2; }
+            set { SetProperty(ref _recognitionStatus2, value); }
+        }
+        private string _recognitionWheelType2 = "";
+        /// <summary>
+        /// 识别轮型2
+        /// </summary>
+        public string RecognitionWheelType2
+        {
+            get { return _recognitionWheelType2; }
+            set { SetProperty(ref _recognitionWheelType2, value); }
+        }
+        private string _similarity2 = "";
+        /// <summary>
+        /// 相似度2
+        /// </summary>
+        public string Similarity2
+        {
+            get { return _similarity2; }
+            set { SetProperty(ref _similarity2, value); }
+        }
+        private string _timeConsumed2 = "";
+        /// <summary>
+        /// 用时2
+        /// </summary>
+        public string TimeConsumed2
+        {
+            get { return _timeConsumed2; }
+            set { SetProperty(ref _timeConsumed2, value); }
+        }
+        private string _colour2 = "";
+        /// <summary>
+        /// 颜色2
+        /// </summary>
+        public string Colour2
+        {
+            get { return _colour2; }
+            set { SetProperty(ref _colour2, value); }
+        }
+
+        private string _recognitionStatus3;
+        /// <summary>
+        /// 自动模式下识别状态3
+        /// </summary>
+        public string RecognitionStatus3
+        {
+            get { return _recognitionStatus3; }
+            set { SetProperty(ref _recognitionStatus3, value); }
+        }
+        private string _recognitionWheelType3 = "";
+        /// <summary>
+        /// 识别轮型3
+        /// </summary>
+        public string RecognitionWheelType3
+        {
+            get { return _recognitionWheelType3; }
+            set { SetProperty(ref _recognitionWheelType3, value); }
+        }
+        private string _similarity3 = "";
+        /// <summary>
+        /// 相似度3
+        /// </summary>
+        public string Similarity3
+        {
+            get { return _similarity3; }
+            set { SetProperty(ref _similarity3, value); }
+        }
+        private string _timeConsumed3 = "";
+        /// <summary>
+        /// 用时3
+        /// </summary>
+        public string TimeConsumed3
+        {
+            get { return _timeConsumed3; }
+            set { SetProperty(ref _timeConsumed3, value); }
+        }
+        private string _colour3 = "";
+        /// <summary>
+        /// 颜色3
+        /// </summary>
+        public string Colour3
+        {
+            get { return _colour3; }
+            set { SetProperty(ref _colour3, value); }
+        }
+
+        private string _recognitionStatus4;
+        /// <summary>
+        /// 自动模式下识别状态4
+        /// </summary>
+        public string RecognitionStatus4
+        {
+            get { return _recognitionStatus4; }
+            set { SetProperty(ref _recognitionStatus4, value); }
+        }
+        private string _recognitionWheelType4 = "";
+        /// <summary>
+        /// 识别轮型4
+        /// </summary>
+        public string RecognitionWheelType4
+        {
+            get { return _recognitionWheelType4; }
+            set { SetProperty(ref _recognitionWheelType4, value); }
+        }
+        private string _similarity4 = "";
+        /// <summary>
+        /// 相似度4
+        /// </summary>
+        public string Similarity4
+        {
+            get { return _similarity4; }
+            set { SetProperty(ref _similarity4, value); }
+        }
+        private string _timeConsumed4 = "";
+        /// <summary>
+        /// 用时4
+        /// </summary>
+        public string TimeConsumed4
+        {
+            get { return _timeConsumed4; }
+            set { SetProperty(ref _timeConsumed4, value); }
+        }
+        private string _colour4 = "";
+        /// <summary>
+        /// 颜色4
+        /// </summary>
+        public string Colour4
+        {
+            get { return _colour4; }
+            set { SetProperty(ref _colour4, value); }
+        }
+
+        private string _recognitionStatus5;
+        /// <summary>
+        /// 自动模式下识别状态5
+        /// </summary>
+        public string RecognitionStatus5
+        {
+            get { return _recognitionStatus5; }
+            set { SetProperty(ref _recognitionStatus5, value); }
+        }
+        private string _recognitionWheelType5 = "";
+        /// <summary>
+        /// 识别轮型5
+        /// </summary>
+        public string RecognitionWheelType5
+        {
+            get { return _recognitionWheelType5; }
+            set { SetProperty(ref _recognitionWheelType5, value); }
+        }
+        private string _similarity5 = "";
+        /// <summary>
+        /// 相似度5
+        /// </summary>
+        public string Similarity5
+        {
+            get { return _similarity5; }
+            set { SetProperty(ref _similarity5, value); }
+        }
+        private string _timeConsumed5 = "";
+        /// <summary>
+        /// 用时5
+        /// </summary>
+        public string TimeConsumed5
+        {
+            get { return _timeConsumed5; }
+            set { SetProperty(ref _timeConsumed5, value); }
+        }
+        private string _colour5 = "";
+        /// <summary>
+        /// 颜色5
+        /// </summary>
+        public string Colour5
+        {
+            get { return _colour5; }
+            set { SetProperty(ref _colour5, value); }
+        }
+
+        #endregion
+
+        #region======通知属性定义======
         private string _plcStatus = "2";
         /// <summary>
         /// PLC连接状态 0:失败 1：成功 2：未知
@@ -97,15 +324,7 @@ namespace WheelRecognitionSystem.ViewModels
             set { SetProperty(ref _signalInPlace, value); }
         }
 
-        private string _recognitionWheelType = "";
-        /// <summary>
-        /// 识别轮型
-        /// </summary>
-        public string RecognitionWheelType
-        {
-            get { return _recognitionWheelType; }
-            set { SetProperty(ref _recognitionWheelType, value); }
-        }
+
 
         private string _screenedResultDisplay;
         /// <summary>
@@ -142,15 +361,7 @@ namespace WheelRecognitionSystem.ViewModels
             set { SetProperty(ref _systemModeButtonForeground, value); }
         }
 
-        private string _similarity = "";
-        /// <summary>
-        /// 相似度
-        /// </summary>
-        public string Similarity
-        {
-            get { return _similarity; }
-            set { SetProperty(ref _similarity, value); }
-        }
+
 
         private string _gateResult;
         /// <summary>
@@ -162,15 +373,7 @@ namespace WheelRecognitionSystem.ViewModels
             set { SetProperty(ref _gateResult, value); }
         }
 
-        private string _timeConsumed = "";
-        /// <summary>
-        /// 用时
-        /// </summary>
-        public string TimeConsumed
-        {
-            get { return _timeConsumed; }
-            set { SetProperty(ref _timeConsumed, value); }
-        }
+
 
         private int _currentNgNumber;
         /// <summary>
@@ -278,7 +481,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// PLC连接
         /// </summary>
         private S7Client PlcCilent;
-        
+
         /// <summary>
         /// PLC IP地址
         /// </summary>
@@ -366,6 +569,11 @@ namespace WheelRecognitionSystem.ViewModels
         private bool ArrivalSignal;
 
         /// <summary>
+        /// 轮毂到位信号数组
+        /// </summary>
+        private bool[] ArrivalSignals = new bool[5];
+
+        /// <summary>
         /// 信息显示定时器
         /// </summary>
         private DispatcherTimer MessageShowTimer;
@@ -429,6 +637,9 @@ namespace WheelRecognitionSystem.ViewModels
         private IRegionManager _regionManager;
 
         #endregion
+
+        private CancellationTokenSource cts = new CancellationTokenSource();
+
         public MainViewModel(IRegionManager regionManager)
         {
             Task.Run(() =>
@@ -439,13 +650,14 @@ namespace WheelRecognitionSystem.ViewModels
             LoadSystemDatas();
             ExternalConnectionThread();
             MainThread();
-            
+            MainThread5();
+
             //初始化数据库
             SqlAccess sqlAccess = new SqlAccess();
             sqlAccess.InitializeTable();
             //PLC连接
             PlcCilent = new S7Client();
-         
+
             //加载功能页面
             regionManager.RegisterViewWithRegion("ViewRegion", "DisplayInterfaceView");
             regionManager.RegisterViewWithRegion("ViewRegion", "MonitoringView");
@@ -460,9 +672,355 @@ namespace WheelRecognitionSystem.ViewModels
             EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
             EventMessage.MessageHelper.GetEvent<RecognitionPauseSettingEvent>().Subscribe(RecognitionPauseSet);
             EventMessage.MessageHelper.GetEvent<ServletInfoEvent>().Subscribe(ServletDisplay);
+            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow);
 
-            RecognitionStatus = "";
+            RecognitionStatus1 = "";
             IsIdentifying = false;
+        }
+
+        /// <summary>
+        /// 主线程
+        /// </summary>
+        private void MainThread()
+        {
+            Task.Run(async () =>
+            {
+                MainThreadControl = true;
+                int grabAbnormal = 0;
+                while (MainThreadControl)
+                {
+                    // 轮毂到位          自动模式      没有在识别中     没有在模板数据更新中            PLC已连接              相机已连接              再次识别使能信号已复位                   
+                    if (ArrivalSignal && SystemModel && !IsIdentifying && !TemplateDataUpdataControl && PlcCilent.Connected && CameraStatus == "1" && !S7.GetBitAt(ReadBuffer, 0, 3)
+                    && !S7.GetBitAt(WriteBuffer, 12, 4) && !DataBeingUpdated && !MotorFailureSignal && !AutoTemplateDataLoadControl || ManualIdentify)
+                    //没有在识别暂停中                没有在每天数据更新中    识别工位电机正常        没有在加模板表格数据
+                    {
+                        //再次识别使能复位信号复位
+                        S7.SetBitAt(ref WriteBuffer, 12, 5, false);
+                        IsIdentifying = true;
+                        RecognitionStatus1 = "识别中...";
+                        #region======清除显示======
+                        RecognitionWheelType1 = "";
+                        ScreenedResultDisplay = "";
+                        Similarity1 = "";
+                        GateResult = "";
+                        TimeConsumed1 = "";
+                        #endregion
+                        //轮毂到位延时
+                        await Task.Delay(ArrivalDelay);
+                        #region======采集图像======
+                        try
+                        {
+                            HOperatorSet.GrabImage(out HObject image, CameraHandle);
+                            HOperatorSet.Rgb1ToGray(image, out HObject grayImage);
+                            CurrentImage.Dispose();
+                            if (CroppingOrNot)
+                            {
+                                Cropping(grayImage, out HObject SourceImage);
+                                HOperatorSet.ZoomImageFactor(SourceImage, out CurrentImage, ScalingCoefficient, ScalingCoefficient, "constant");
+                            }
+                            else
+                            {
+                                HOperatorSet.ZoomImageFactor(grayImage, out CurrentImage, ScalingCoefficient, ScalingCoefficient, "constant");
+                            }
+                            grabAbnormal = 0;
+                        }
+                        catch (Exception ex)
+                        {
+                            grabAbnormal++;
+                            if (grabAbnormal == 3)
+                            {
+                                EventMessage.MessageDisplay($"图像采集异常,相机重新连接!", true, true);
+                                CameraStatus = "0";
+                                CameraHandle = null;
+                                if (!ExternalConnectionThreadControl) ExternalConnectionThreadControl = true;
+                                ExternalConnectionThread();
+                                CurrentImage.Dispose();
+                                grabAbnormal = 0;
+                                IsIdentifying = false;
+                                ManualIdentify = false;
+                            }
+                            else
+                            {
+                                await Task.Delay(1000);
+                                CurrentImage.Dispose();
+                                RecognitionStatus1 = "采集异常";
+                                EventMessage.MessageDisplay($"第{grabAbnormal}次图像采集异常:" + ex.Message, false, true);
+                                IsIdentifying = false;
+                            }
+                        }
+                        #endregion
+                        if (CurrentImage.IsInitialized())
+                        {
+                            #region======浇口检测与轮毂识别======
+                            DateTime startTime = DateTime.Now;
+                            //定位轮毂
+                            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);
+                            //存储浇口检测结果
+                            GateDetectionResultModel gateResult = new GateDetectionResultModel();
+                            //存储识别结果
+                            RecognitionResultModel recognitionResult = new RecognitionResultModel();
+                            //如果定位到轮毂
+                            if (pResult.WheelImage != null)
+                            {
+                                if (GateDetectionSwitch)
+                                {
+                                    //浇口检测
+                                    gateResult = GateDetection(pResult.WheelImage, pResult.CenterRow, pResult.CenterColumn,
+                                        PositioningGateRadius, GateOutMinThreshold, GateMinArea, GateMinRadius);
+                                    if (gateResult.DetectionResult) GateResult = "OK";
+                                    else GateResult = "NG";
+                                }
+                                //轮毂识别
+                                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+                            }
+                            else//没有定位到轮毂
+                            {
+                                GateResult = "_";
+                                recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+                            }
+                            #endregion
+                            #region======结果显示与识别暂停判断======
+                            HObject templateContour = new HObject();
+                            if (recognitionResult.RecognitionWheelType != "NG")
+                            {
+                                templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+                            }
+                            AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
+                            autoRecognitionResult = new AutoRecognitionResultDisplayModel
+                            {
+                                WheelType = recognitionResult.RecognitionWheelType,
+                                CurrentImage = CurrentImage,
+                                WheelContour = pResult.WheelContour,
+                                TemplateContour = templateContour,
+                                GateContour = gateResult.GateContour,
+                                IsGate = gateResult.DetectionResult
+                            };
+                            //图像结果显示
+                            EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
+                            RecognitionWheelType1 = recognitionResult.RecognitionWheelType;
+                            Similarity1 = recognitionResult.Similarity.ToString();
+
+                            if (recognitionResult.RecognitionWheelType == "NG" && RecognitionPauseSetting != 0)
+                            {
+                                //在此处判断识别是否暂停
+                                CurrentNgNumber++;
+                                SqlAccess.SystemDatasWrite("CurrentNgNumber", CurrentNgNumber.ToString());
+                                //如果当前NG次数大于等于设置的识别暂停次数
+                                if (CurrentNgNumber >= RecognitionPauseSetting)
+                                {
+                                    //将识别暂停状态发送给PLC
+                                    S7.SetBitAt(ref WriteBuffer, 12, 4, true);
+                                    Application.Current.Dispatcher.Invoke(new Action(() =>
+                                    {
+                                        WMessageBox.Show("视觉识别NG次数已达到设定次数，视觉识别暂停，请检查是否需要录入新模板！", MessageType.Warning);
+                                    }));
+                                }
+                            }
+                            DateTime endTime = DateTime.Now;
+                            TimeSpan consumeTime = endTime.Subtract(startTime);
+                            TimeConsumed1 = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
+                            #endregion
+                            #region======发送轮型给PLC======
+                            byte[] wheelTypeBuffer = new byte[12];
+                            string wheelType;
+                            //如果浇口检测开关打开，并且浇口检测结果为False，给PLC发送轮型为NG
+                            if (GateDetectionSwitch && !gateResult.DetectionResult)
+                            {
+                                wheelType = "NG";
+                                S7.SetBitAt(ref WriteBuffer2, 0, 0, true); //浇口NG
+                            }
+                            else
+                            {
+                                wheelType = RecognitionWheelType1.Trim('_');
+                                S7.SetBitAt(ref WriteBuffer2, 0, 0, false); //浇口OK
+                            }
+
+
+                            //将轮型字符串转换成字节数组
+                            var wheelTypeBytes = Encoding.Default.GetBytes(wheelType);
+                            //将轮型字符串的长度转换为字节数组byte[]
+                            byte[] wheelTypeLength = BitConverter.GetBytes(wheelType.Length);
+                            WriteBuffer[0] = 10;
+                            WriteBuffer[1] = wheelTypeLength[0];
+                            for (int i = 2; i < wheelTypeBytes.Length + 2; i++)
+                            {
+                                WriteBuffer[i] = wheelTypeBytes[i - 2];
+                            }
+                            #endregion
+                            #region======轮毂分选判断======
+                            if (IsScreenedResult)
+                            {
+                                TemplateDataModel templateDate = null;
+                                bool screenedResult = false;
+                                if (recognitionResult.RecognitionWheelType != "NG")
+                                {
+                                    //从在线数据中判断是否分选
+                                    screenedResult = ScreenedResult(recognitionResult.RecognitionWheelType.Trim('_'), ScreenedDatas);
+                                    //根据识别轮型获取模板表格数据
+                                    templateDate = TemplateDataList.First(x => x.WheelType == recognitionResult.RecognitionWheelType);
+                                }
+                                //如果没有检测到浇口 或  当前轮型强制分选打开 或 从在线数据中判断需要分选 或 识别为NG
+                                if (!gateResult.DetectionResult || templateDate != null && templateDate.SortingEnable || screenedResult || RecognitionWheelType1 == "NG")
+                                {
+                                    WriteBuffer[13] = 1;
+                                    ScreenedResultDisplay = "分选";
+                                }
+                                else
+                                {
+                                    WriteBuffer[13] = 0;
+                                    ScreenedResultDisplay = "下转";
+                                }
+                            }
+                            #endregion
+                            #region======如果在不活跃模板中匹配成功,实时调整模板======
+                            if (recognitionResult.RecognitionWheelType != null && recognitionResult.IsInNotTemplate)
+                            {
+                                string activePath = ActiveTemplatesPath + @"\" + recognitionResult.RecognitionWheelType + ".ncm";
+                                string notActivePath = NotActiveTemplatesPath + @"\" + recognitionResult.RecognitionWheelType + ".ncm";
+                                if (File.Exists(notActivePath))
+                                {
+                                    try
+                                    {
+                                        File.Move(notActivePath, activePath);
+                                        int index = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == recognitionResult.RecognitionWheelType);
+                                        if (index >= 0)
+                                        {
+                                            TemplateDataCollection.ActiveTemplateNames.Add(TemplateDataCollection.NotActiveTemplateNames[index]);
+                                            TemplateDataCollection.ActiveTemplates.Add(TemplateDataCollection.NotActiveTemplates[index]);
+                                            TemplateDataCollection.NotActiveTemplateNames.RemoveAt(index);
+                                            TemplateDataCollection.NotActiveTemplates.RemoveAt(index);
+                                        }
+                                        EventMessage.MessageDisplay("实时调整模板，型号是：" + recognitionResult.RecognitionWheelType, true, true);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        EventMessage.MessageDisplay("实时调整模板失败：" + ex.Message, false, true);
+                                    }
+                                }
+                            }
+                            #endregion
+                            #region======保存当天识别轮型======
+                            //如果当天活跃轮型列表中没有当前识别的轮型
+                            if (recognitionResult.RecognitionWheelType != "NG" && !TodayWheels.Contains(recognitionResult.RecognitionWheelType))
+                            {
+                                //将当前轮型添加到列表中
+                                TodayWheels.Add(recognitionResult.RecognitionWheelType);
+                                //添加到数据库，防止停电或系统崩溃
+                                var sDB = new SqlAccess().SystemDataAccess;
+                                var d = sDB.Queryable<ActiveWheelTypeDataModel>().First(x => x.WheelType == recognitionResult.RecognitionWheelType);
+                                if (d == null)
+                                {
+                                    var id = sDB.Queryable<ActiveWheelTypeDataModel>().Max(x => x.ID);
+                                    ActiveWheelTypeDataModel activeWheelTypeDataModel = new ActiveWheelTypeDataModel()
+                                    {
+                                        ID = id + 1,
+                                        WheelType = recognitionResult.RecognitionWheelType,
+                                    };
+                                    sDB.Insertable(activeWheelTypeDataModel).ExecuteCommand();
+                                }
+                            }
+                            #endregion
+                            #region======构建数据并保存======
+                            try
+                            {
+                                var pDB = new SqlAccess().ProductionDataAccess;
+                                int maxIndex = pDB.Queryable<ProductionDataModel>().Max(i => i.Index);
+                                ProductionDataModel productionDataModel = new ProductionDataModel
+                                {
+                                    Index = maxIndex + 1,
+                                    WheelType = RecognitionWheelType1,
+                                    TimeConsumed = TimeConsumed1,
+                                    Similarity = Similarity1,
+                                    RecognitionTime = DateTime.Parse(endTime.ToString("yyyy/MM/dd HH:mm:ss"))
+                                };
+                                pDB.Insertable(productionDataModel).ExecuteCommand();
+                                if (SaveImageDays != 0) SaveImageDatas(CurrentImage, productionDataModel, endTime, GateResult);
+                            }
+                            catch (Exception ex)
+                            {
+                                EventMessage.MessageDisplay(ex.Message, false, true);
+                            }
+                            #endregion
+                            //发送识别完成信号
+                            S7.SetBitAt(ref WriteBuffer, 12, 2, true);
+                            RecognitionStatus1 = "识别完成";
+                        }
+                    }
+                    //手动识别复位
+                    if (ManualIdentify && IsIdentifying)
+                    {
+                        ManualIdentify = false;
+                    }
+                    //更新匹配用模板数据
+                    if (TemplateDataUpdataControl && !IsIdentifying && !DataBeingUpdated)
+                    {
+                        try
+                        {
+                            UpdateTemplateDatas();
+                        }
+                        catch (Exception ex)
+                        {
+                            EventMessage.MessageDisplay(ex.Message, false, true);
+                        }
+                        finally
+                        {
+                            TemplateDataUpdataControl = false;
+                        }
+                    }
+                    if (AutoTemplateDataLoadControl && !IsIdentifying)
+                    {
+                        try
+                        {
+                            List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
+                            TemplateDataList.Clear();
+                            TemplateDataList = datas;
+                        }
+                        catch (Exception ex)
+                        {
+                            EventMessage.MessageDisplay(ex.Message, false, true);
+                        }
+                        finally
+                        {
+                            AutoTemplateDataLoadControl = false;
+                        }
+                    }
+                    //定时执行数据更新
+                    if (DateTime.Now.Day != UpdatedDay && DateTime.Now.Hour >= UpdateTime && !IsIdentifying && !DataBeingUpdated && !TemplatesLoading)
+                    {
+                        DataBeingUpdated = true;
+                        PerformDataUpdates();
+                    }
+                    await Task.Delay(20);
+                }
+            });
+        }
+        private void MainThread5()
+        {
+           
+            for (int i = 0; i < ArrivalSignals.Count(); i++)
+            {
+                Thread.Sleep(100);
+                int localI = i; // 创建一个局部变量来保存当前的i值
+                Task.Run(async () => await DoJob(cts.Token, localI), cts.Token);
+            }
+
+           
+        }
+
+        private async Task DoJob(CancellationToken token, int index)
+        {
+            while(!token.IsCancellationRequested)
+            {
+                // 模拟一些工作
+                await Task.Delay(1000);
+                Console.WriteLine($"任务 {index} 完成");
+                //  轮毂到位                 自动模式        PLC已连接   
+                if (ArrivalSignals[index] && SystemModel && PlcCilent.Connected)
+                {
+
+                }
+            }
+            
         }
 
         /// <summary>
@@ -475,6 +1033,47 @@ namespace WheelRecognitionSystem.ViewModels
             string path = model.Path;
             _regionManager.RequestNavigate("ViewRegion", "TemplateManagementView");
             EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Publish(model);
+        }
+        /// <summary>
+        /// 处理回复显示
+        /// </summary>
+        /// <param name="model"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void CallShow(InteractS7PLCModel model)
+        {
+            switch (model.Index)
+            {
+                case 1:
+                    RecognitionWheelType1 = model.wheelType;
+                    Similarity1 = model.similarity.ToString();
+                    TimeConsumed1 = model.Interval.TotalMilliseconds.ToString();
+                    Colour1 = model.colour;
+                    break;
+                case 2:
+                    RecognitionWheelType2 = model.wheelType;
+                    Similarity2 = model.similarity.ToString();
+                    TimeConsumed2 = model.Interval.TotalMilliseconds.ToString();
+                    Colour2 = model.colour;
+                    break;
+                case 3:
+                    RecognitionWheelType3 = model.wheelType;
+                    Similarity3 = model.similarity.ToString();
+                    TimeConsumed3 = model.Interval.TotalMilliseconds.ToString();
+                    Colour3 = model.colour;
+                    break;
+                case 4:
+                    RecognitionWheelType4 = model.wheelType;
+                    Similarity4 = model.similarity.ToString();
+                    TimeConsumed4 = model.Interval.TotalMilliseconds.ToString();
+                    Colour4 = model.colour;
+                    break;
+                case 5:
+                    RecognitionWheelType5 = model.wheelType;
+                    Similarity5 = model.similarity.ToString();
+                    TimeConsumed5 = model.Interval.TotalMilliseconds.ToString();
+                    Colour5 = model.colour;
+                    break;
+            }
         }
 
         private void RecognitionPauseSet(string obj)
@@ -652,7 +1251,7 @@ namespace WheelRecognitionSystem.ViewModels
             catch (Exception ex)
             {
                 EventMessage.MessageDisplay("系统数据加载错误：" + ex.Message, true, true);
-            } 
+            }
         }
         /// <summary>
         /// 加载模板
@@ -820,9 +1419,11 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                     });
                     //切换到自动模式时如果识别完成信号为Treu, 则复位识别完成信号
-                    if (S7.GetBitAt(WriteBuffer, 12, 2)) S7.SetBitAt(ref WriteBuffer, 12, 2, false);
+                    if (S7.GetBitAt(WriteBuffer, 12, 2))
+                        S7.SetBitAt(ref WriteBuffer, 12, 2, false);
                     //切换到自动模式时如果识别中标志为True, 则复位识别中标志
-                    if (IsIdentifying) IsIdentifying = false;
+                    if (IsIdentifying) 
+                        IsIdentifying = false;
                     SystemModelContent = "自动模式";
                     EventMessage.MessageDisplay("系统切换到自动模式！", true, true);
                     ManualRecognitionEnabled = false;
@@ -836,7 +1437,7 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     SystemModel = false;
                     SystemModelContent = "手动模式";
-                    RecognitionStatus = "";
+                    RecognitionStatus1 = "";
 
                     EventMessage.MessageDisplay("系统切换到手动模式！", true, true);
                     ManualRecognitionEnabled = true;
@@ -859,7 +1460,8 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void ManualRecognition()
         {
-            if (ManualIdentify) return;
+            if (ManualIdentify)
+                return;
             if (!PlcCilent.Connected || CameraStatus != "1")
             {
                 EventMessage.SystemMessageDisplay("操作失败，请确认PLC、相机连接状态！", MessageType.Warning);
@@ -980,16 +1582,16 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                         else
                         {
-                            if (PlcDataInteractionControl) 
+                            if (PlcDataInteractionControl)
                                 PlcDataInteractionControl = false;
-                            if (HeartbeatThreadControl) 
+                            if (HeartbeatThreadControl)
                                 HeartbeatThreadControl = false;
                             PlcCilent.Disconnect();
                             if (PlcStatus != "0") PlcStatus = "0";
                         }
                     }
 
-                    
+
                     //多相机连接
                     if (ExternalConnections.DatasCamera != null && ExternalConnections.DatasCamera.Count > 0)
                     {
@@ -1051,7 +1653,7 @@ namespace WheelRecognitionSystem.ViewModels
                         {
                             //复位识别中信号
                             IsIdentifying = false;
-                            RecognitionStatus = "等待识别";
+                            RecognitionStatus1 = "等待识别";
                             //复位再次识别使能信号
                             S7.SetBitAt(ref WriteBuffer, 12, 5, true);
                         }
@@ -1125,322 +1727,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-        /// <summary>
-        /// 主线程
-        /// </summary>
-        private void MainThread()
-        {
-            Task.Run(async () =>
-            {
-                MainThreadControl = true;
-                int grabAbnormal = 0;
-                while (MainThreadControl)
-                {
-                    // 轮毂到位          自动模式      没有在识别中     没有在模板数据更新中            PLC已连接              相机已连接              再次识别使能信号已复位                   
-                    if (ArrivalSignal && SystemModel && !IsIdentifying && !TemplateDataUpdataControl && PlcCilent.Connected && CameraStatus == "1" && !S7.GetBitAt(ReadBuffer, 0, 3)
-                    && !S7.GetBitAt(WriteBuffer, 12, 4) && !DataBeingUpdated && !MotorFailureSignal && !AutoTemplateDataLoadControl || ManualIdentify)
-                    //没有在识别暂停中                没有在每天数据更新中    识别工位电机正常        没有在加模板表格数据
-                    {
-                        //再次识别使能复位信号复位
-                        S7.SetBitAt(ref WriteBuffer, 12, 5, false);
-                        IsIdentifying = true;
-                        RecognitionStatus = "识别中...";
-                        #region======清除显示======
-                        RecognitionWheelType = "";
-                        ScreenedResultDisplay = "";
-                        Similarity = "";
-                        GateResult = "";
-                        TimeConsumed = "";
-                        #endregion
-                        //轮毂到位延时
-                        await Task.Delay(ArrivalDelay);
-                        #region======采集图像======
-                        try
-                        {
-                            HOperatorSet.GrabImage(out HObject image, CameraHandle);
-                            HOperatorSet.Rgb1ToGray(image, out HObject grayImage);
-                            CurrentImage.Dispose();
-                            if (CroppingOrNot)
-                            {
-                                Cropping(grayImage, out HObject SourceImage);
-                                HOperatorSet.ZoomImageFactor(SourceImage, out CurrentImage, ScalingCoefficient, ScalingCoefficient, "constant");
-                            }
-                            else
-                            {
-                                HOperatorSet.ZoomImageFactor(grayImage, out CurrentImage, ScalingCoefficient, ScalingCoefficient, "constant");
-                            }
-                            grabAbnormal = 0;
-                        }
-                        catch (Exception ex)
-                        {
-                            grabAbnormal++;
-                            if (grabAbnormal == 3)
-                            {
-                                EventMessage.MessageDisplay($"图像采集异常,相机重新连接!", true, true);
-                                CameraStatus = "0";
-                                CameraHandle = null;
-                                if (!ExternalConnectionThreadControl) ExternalConnectionThreadControl = true;
-                                ExternalConnectionThread();
-                                CurrentImage.Dispose();
-                                grabAbnormal = 0;
-                                IsIdentifying = false;
-                                ManualIdentify = false;
-                            }
-                            else
-                            {
-                                await Task.Delay(1000);
-                                CurrentImage.Dispose();
-                                RecognitionStatus = "采集异常";
-                                EventMessage.MessageDisplay($"第{grabAbnormal}次图像采集异常:" + ex.Message, false, true);
-                                IsIdentifying = false;
-                            }
-                        }
-                        #endregion
-                        if (CurrentImage.IsInitialized())
-                        {
-                            #region======浇口检测与轮毂识别======
-                            DateTime startTime = DateTime.Now;
-                            //定位轮毂
-                            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);
-                            //存储浇口检测结果
-                            GateDetectionResultModel gateResult = new GateDetectionResultModel();
-                            //存储识别结果
-                            RecognitionResultModel recognitionResult = new RecognitionResultModel();
-                            //如果定位到轮毂
-                            if (pResult.WheelImage != null)
-                            {
-                                if (GateDetectionSwitch)
-                                {
-                                    //浇口检测
-                                    gateResult = GateDetection(pResult.WheelImage, pResult.CenterRow, pResult.CenterColumn,
-                                        PositioningGateRadius, GateOutMinThreshold, GateMinArea, GateMinRadius);
-                                    if (gateResult.DetectionResult) GateResult = "OK";
-                                    else GateResult = "NG";
-                                }
-                                //轮毂识别
-                                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-                            }
-                            else//没有定位到轮毂
-                            {
-                                GateResult = "_";
-                                recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-                            }
-                            #endregion
-                            #region======结果显示与识别暂停判断======
-                            HObject templateContour = new HObject();
-                            if (recognitionResult.RecognitionWheelType != "NG")
-                            {
-                                templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
-                            }
-                            AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
-                            autoRecognitionResult = new AutoRecognitionResultDisplayModel
-                            {
-                                WheelType = recognitionResult.RecognitionWheelType,
-                                CurrentImage = CurrentImage,
-                                WheelContour = pResult.WheelContour,
-                                TemplateContour = templateContour,
-                                GateContour = gateResult.GateContour,
-                                IsGate = gateResult.DetectionResult
-                            };
-                            //图像结果显示
-                            EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
-                            RecognitionWheelType = recognitionResult.RecognitionWheelType;
-                            Similarity = recognitionResult.Similarity.ToString();
-
-                            if (recognitionResult.RecognitionWheelType == "NG" && RecognitionPauseSetting != 0)
-                            {
-                                //在此处判断识别是否暂停
-                                CurrentNgNumber++;
-                                SqlAccess.SystemDatasWrite("CurrentNgNumber", CurrentNgNumber.ToString());
-                                //如果当前NG次数大于等于设置的识别暂停次数
-                                if (CurrentNgNumber >= RecognitionPauseSetting)
-                                {
-                                    //将识别暂停状态发送给PLC
-                                    S7.SetBitAt(ref WriteBuffer, 12, 4, true);
-                                    Application.Current.Dispatcher.Invoke(new Action(() =>
-                                    {
-                                        WMessageBox.Show("视觉识别NG次数已达到设定次数，视觉识别暂停，请检查是否需要录入新模板！", MessageType.Warning);
-                                    }));
-                                }
-                            }
-                            DateTime endTime = DateTime.Now;
-                            TimeSpan consumeTime = endTime.Subtract(startTime);
-                            TimeConsumed = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
-                            #endregion
-                            #region======发送轮型给PLC======
-                            byte[] wheelTypeBuffer = new byte[12];
-                            string wheelType;
-                            //如果浇口检测开关打开，并且浇口检测结果为False，给PLC发送轮型为NG
-                            if (GateDetectionSwitch && !gateResult.DetectionResult)
-                            {
-                                wheelType = "NG";
-                                S7.SetBitAt(ref WriteBuffer2, 0, 0, true); //浇口NG
-                            }
-                            else
-                            {
-                                wheelType = RecognitionWheelType.Trim('_');
-                                S7.SetBitAt(ref WriteBuffer2, 0, 0, false); //浇口OK
-                            }
-                            
-
-                            //将轮型字符串转换成字节数组
-                            var wheelTypeBytes = Encoding.Default.GetBytes(wheelType);
-                            //将轮型字符串的长度转换为字节数组byte[]
-                            byte[] wheelTypeLength = BitConverter.GetBytes(wheelType.Length);
-                            WriteBuffer[0] = 10;
-                            WriteBuffer[1] = wheelTypeLength[0];
-                            for (int i = 2; i < wheelTypeBytes.Length + 2; i++)
-                            {
-                                WriteBuffer[i] = wheelTypeBytes[i - 2];
-                            }
-                            #endregion
-                            #region======轮毂分选判断======
-                            if (IsScreenedResult)
-                            {
-                                TemplateDataModel templateDate = null;
-                                bool screenedResult = false;
-                                if (recognitionResult.RecognitionWheelType != "NG")
-                                {
-                                    //从在线数据中判断是否分选
-                                    screenedResult = ScreenedResult(recognitionResult.RecognitionWheelType.Trim('_'), ScreenedDatas);
-                                    //根据识别轮型获取模板表格数据
-                                    templateDate = TemplateDataList.First(x => x.WheelType == recognitionResult.RecognitionWheelType);
-                                }
-                                //如果没有检测到浇口 或  当前轮型强制分选打开 或 从在线数据中判断需要分选 或 识别为NG
-                                if (!gateResult.DetectionResult || templateDate != null && templateDate.SortingEnable || screenedResult || RecognitionWheelType == "NG")
-                                {
-                                    WriteBuffer[13] = 1;
-                                    ScreenedResultDisplay = "分选";
-                                }
-                                else
-                                {
-                                    WriteBuffer[13] = 0;
-                                    ScreenedResultDisplay = "下转";
-                                }
-                            }
-                            #endregion
-                            #region======如果在不活跃模板中匹配成功,实时调整模板======
-                            if (recognitionResult.RecognitionWheelType != null && recognitionResult.IsInNotTemplate)
-                            {
-                                string activePath = ActiveTemplatesPath + @"\" + recognitionResult.RecognitionWheelType + ".ncm";
-                                string notActivePath = NotActiveTemplatesPath + @"\" + recognitionResult.RecognitionWheelType + ".ncm";
-                                if (File.Exists(notActivePath))
-                                {
-                                    try
-                                    {
-                                        File.Move(notActivePath, activePath);
-                                        int index = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == recognitionResult.RecognitionWheelType);
-                                        if (index >= 0)
-                                        {
-                                            TemplateDataCollection.ActiveTemplateNames.Add(TemplateDataCollection.NotActiveTemplateNames[index]);
-                                            TemplateDataCollection.ActiveTemplates.Add(TemplateDataCollection.NotActiveTemplates[index]);
-                                            TemplateDataCollection.NotActiveTemplateNames.RemoveAt(index);
-                                            TemplateDataCollection.NotActiveTemplates.RemoveAt(index);
-                                        }
-                                        EventMessage.MessageDisplay("实时调整模板，型号是：" + recognitionResult.RecognitionWheelType, true, true);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        EventMessage.MessageDisplay("实时调整模板失败：" + ex.Message, false, true);
-                                    }
-                                }
-                            }
-                            #endregion
-                            #region======保存当天识别轮型======
-                            //如果当天活跃轮型列表中没有当前识别的轮型
-                            if (recognitionResult.RecognitionWheelType != "NG" && !TodayWheels.Contains(recognitionResult.RecognitionWheelType))
-                            {
-                                //将当前轮型添加到列表中
-                                TodayWheels.Add(recognitionResult.RecognitionWheelType);
-                                //添加到数据库，防止停电或系统崩溃
-                                var sDB = new SqlAccess().SystemDataAccess;
-                                var d = sDB.Queryable<ActiveWheelTypeDataModel>().First(x => x.WheelType == recognitionResult.RecognitionWheelType);
-                                if (d == null)
-                                {
-                                    var id = sDB.Queryable<ActiveWheelTypeDataModel>().Max(x => x.ID);
-                                    ActiveWheelTypeDataModel activeWheelTypeDataModel = new ActiveWheelTypeDataModel()
-                                    {
-                                        ID = id + 1,
-                                        WheelType = recognitionResult.RecognitionWheelType,
-                                    };
-                                    sDB.Insertable(activeWheelTypeDataModel).ExecuteCommand();
-                                }
-                            }
-                            #endregion
-                            #region======构建数据并保存======
-                            try
-                            {
-                                var pDB = new SqlAccess().ProductionDataAccess;
-                                int maxIndex = pDB.Queryable<ProductionDataModel>().Max(i => i.Index);
-                                ProductionDataModel productionDataModel = new ProductionDataModel
-                                {
-                                    Index = maxIndex + 1,
-                                    WheelType = RecognitionWheelType,
-                                    TimeConsumed = TimeConsumed,
-                                    Similarity = Similarity,
-                                    RecognitionTime = DateTime.Parse(endTime.ToString("yyyy/MM/dd HH:mm:ss"))
-                                };
-                                pDB.Insertable(productionDataModel).ExecuteCommand();
-                                if (SaveImageDays != 0) SaveImageDatas(CurrentImage, productionDataModel, endTime, GateResult);
-                            }
-                            catch (Exception ex)
-                            {
-                                EventMessage.MessageDisplay(ex.Message, false, true);
-                            }
-                            #endregion
-                            //发送识别完成信号
-                            S7.SetBitAt(ref WriteBuffer, 12, 2, true);
-                            RecognitionStatus = "识别完成";
-                        }
-                    }
-                    //手动识别复位
-                    if (ManualIdentify && IsIdentifying)
-                    {
-                        ManualIdentify = false;
-                    }
-                    //更新匹配用模板数据
-                    if (TemplateDataUpdataControl && !IsIdentifying && !DataBeingUpdated)
-                    {
-                        try
-                        {
-                            UpdateTemplateDatas();
-                        }
-                        catch (Exception ex)
-                        {
-                            EventMessage.MessageDisplay(ex.Message, false, true);
-                        }
-                        finally
-                        {
-                            TemplateDataUpdataControl = false;
-                        }
-                    }
-                    if (AutoTemplateDataLoadControl && !IsIdentifying)
-                    {
-                        try
-                        {
-                            List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
-                            TemplateDataList.Clear();
-                            TemplateDataList = datas;
-                        }
-                        catch (Exception ex)
-                        {
-                            EventMessage.MessageDisplay(ex.Message, false, true);
-                        }
-                        finally
-                        {
-                            AutoTemplateDataLoadControl = false;
-                        }
-                    }
-                    //定时执行数据更新
-                    if (DateTime.Now.Day != UpdatedDay && DateTime.Now.Hour >= UpdateTime && !IsIdentifying && !DataBeingUpdated && !TemplatesLoading)
-                    {
-                        DataBeingUpdated = true;
-                        PerformDataUpdates();
-                    }
-                    await Task.Delay(20);
-                }
-            });
-        }
+        
 
         /// <summary>
         /// 执行数据更新
