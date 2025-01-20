@@ -562,7 +562,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 轮毂到位延时
         /// </summary>
-        private int ArrivalDelay;
+        private int _ArrivalDelay;
         /// <summary>
         /// 轮毂到位信号
         /// </summary>
@@ -660,8 +660,9 @@ namespace WheelRecognitionSystem.ViewModels
 
             //加载功能页面
             regionManager.RegisterViewWithRegion("ViewRegion", "DisplayInterfaceView");
-            regionManager.RegisterViewWithRegion("ViewRegion", "MonitoringView");
+            //regionManager.RegisterViewWithRegion("ViewRegion", "MonitoringView");
             regionManager.RegisterViewWithRegion("ViewRegion", "TemplateManagementView");
+            regionManager.RegisterViewWithRegion("ViewRegion", "DateSupplementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "ReportManagementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "SystemSettingsView");
             _regionManager = regionManager;
@@ -706,7 +707,7 @@ namespace WheelRecognitionSystem.ViewModels
                         TimeConsumed1 = "";
                         #endregion
                         //轮毂到位延时
-                        await Task.Delay(ArrivalDelay);
+                        await Task.Delay(_ArrivalDelay);
                         #region======采集图像======
                         try
                         {
@@ -994,33 +995,45 @@ namespace WheelRecognitionSystem.ViewModels
                 }
             });
         }
+
+        /// <summary>
+        /// 开启5个线程
+        /// </summary>
         private void MainThread5()
         {
-           
             for (int i = 0; i < ArrivalSignals.Count(); i++)
             {
                 Thread.Sleep(100);
                 int localI = i; // 创建一个局部变量来保存当前的i值
                 Task.Run(async () => await DoJob(cts.Token, localI), cts.Token);
             }
-
-           
         }
 
         private async Task DoJob(CancellationToken token, int index)
         {
-            while(!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
                 // 模拟一些工作
                 await Task.Delay(1000);
                 Console.WriteLine($"任务 {index} 完成");
-                //  轮毂到位                 自动模式        PLC已连接   
-                if (ArrivalSignals[index] && SystemModel && PlcCilent.Connected)
-                {
 
+                //  轮毂到位                 自动模式        PLC已连接              电机非故障
+                if (ArrivalSignals[index] && SystemModel && PlcCilent.Connected && !MotorFailureSignal)
+                {
+                    int n = index + 1;
+                    ClearDisplay(n);
+                    SetStatus(n, "识别中...");
+                    EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
+                    {
+                        Index = n,
+                        ArrivalDelay = _ArrivalDelay,
+                        //ArrivalSignal = ArrivalSignals[index],
+                        ArrivalSignal = true,
+                        ArrivalHeight = 0
+                    });
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -1041,39 +1054,48 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
+            //发送PLC数据
+
+
+            //显示状态信息
+            SetStatus(model.Index, model.status);
+            string similarity = model.similarity == 0 ? "" : model.similarity.ToString();
+            string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
             switch (model.Index)
             {
+
                 case 1:
                     RecognitionWheelType1 = model.wheelType;
-                    Similarity1 = model.similarity.ToString();
-                    TimeConsumed1 = model.Interval.TotalMilliseconds.ToString();
+                    Similarity1 = similarity;
+                    TimeConsumed1 = timeConsumed;
                     Colour1 = model.colour;
                     break;
                 case 2:
                     RecognitionWheelType2 = model.wheelType;
-                    Similarity2 = model.similarity.ToString();
-                    TimeConsumed2 = model.Interval.TotalMilliseconds.ToString();
+                    Similarity2 = similarity;
+                    TimeConsumed2 = timeConsumed;
                     Colour2 = model.colour;
                     break;
                 case 3:
                     RecognitionWheelType3 = model.wheelType;
-                    Similarity3 = model.similarity.ToString();
-                    TimeConsumed3 = model.Interval.TotalMilliseconds.ToString();
+                    Similarity3 = similarity;
+                    TimeConsumed3 = timeConsumed;
                     Colour3 = model.colour;
                     break;
                 case 4:
                     RecognitionWheelType4 = model.wheelType;
-                    Similarity4 = model.similarity.ToString();
-                    TimeConsumed4 = model.Interval.TotalMilliseconds.ToString();
+                    Similarity4 = similarity;
+                    TimeConsumed4 = timeConsumed;
                     Colour4 = model.colour;
                     break;
                 case 5:
                     RecognitionWheelType5 = model.wheelType;
-                    Similarity5 = model.similarity.ToString();
-                    TimeConsumed5 = model.Interval.TotalMilliseconds.ToString();
+                    Similarity5 = similarity;
+                    TimeConsumed5 = timeConsumed;
                     Colour5 = model.colour;
                     break;
             }
+
         }
 
         private void RecognitionPauseSet(string obj)
@@ -1085,7 +1107,6 @@ namespace WheelRecognitionSystem.ViewModels
                 SqlAccess.SystemDatasWrite("CurrentNgNumber", CurrentNgNumber.ToString());
             }
         }
-
 
 
         /// <summary>
@@ -1201,7 +1222,7 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadAppSettings("BigScreenDataLength", out string bigScreenDataLength);
                 BigScreenDataLength = int.Parse(bigScreenDataLength);
                 ReadAppSettings("ArrivalDelay", out string arrivalDelay);
-                ArrivalDelay = int.Parse(arrivalDelay);
+                _ArrivalDelay = int.Parse(arrivalDelay);
 
                 ReadAppSettings("IsScreenedResult", out string isScreenedResult);
                 bool r = bool.TryParse(isScreenedResult, out bool result);
@@ -1422,7 +1443,7 @@ namespace WheelRecognitionSystem.ViewModels
                     if (S7.GetBitAt(WriteBuffer, 12, 2))
                         S7.SetBitAt(ref WriteBuffer, 12, 2, false);
                     //切换到自动模式时如果识别中标志为True, 则复位识别中标志
-                    if (IsIdentifying) 
+                    if (IsIdentifying)
                         IsIdentifying = false;
                     SystemModelContent = "自动模式";
                     EventMessage.MessageDisplay("系统切换到自动模式！", true, true);
@@ -1591,33 +1612,27 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                     }
 
+                    //if (CameraHandle == null || CameraHandle.Length == 0)
+                    //{
+                    //    try
+                    //    {
+                    //        //连接相机
+                    //        HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive", -1, "default", -1, "false", "default", CameraIdentifier, 0, -1, out CameraHandle);
+                    //        HOperatorSet.GrabImageStart(CameraHandle, -1);
+                    //        HOperatorSet.SetFramegrabberParam(CameraHandle, "TriggerMode", "Off");
+                    //        if (CameraStatus != "1") CameraStatus = "1";
+                    //    }
+                    //    catch
+                    //    {
+                    //        if (CameraStatus != "0")
+                    //        {
+                    //            CameraStatus = "0";
+                    //        }
+                    //    }
+                    //}
 
-                    //多相机连接
-                    if (ExternalConnections.DatasCamera != null && ExternalConnections.DatasCamera.Count > 0)
-                    {
-
-                    }
-
-                    if (CameraHandle == null || CameraHandle.Length == 0)
-                    {
-                        try
-                        {
-                            //连接相机
-                            HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive", -1, "default", -1, "false", "default", CameraIdentifier, 0, -1, out CameraHandle);
-                            HOperatorSet.GrabImageStart(CameraHandle, -1);
-                            HOperatorSet.SetFramegrabberParam(CameraHandle, "TriggerMode", "Off");
-                            if (CameraStatus != "1") CameraStatus = "1";
-                        }
-                        catch
-                        {
-                            if (CameraStatus != "0")
-                            {
-                                CameraStatus = "0";
-                            }
-                        }
-                    }
-
-                    if (PlcStatus == "1" && CameraStatus == "1") ExternalConnectionThreadControl = false;
+                    if (PlcStatus == "1" && CameraStatus == "1")
+                        ExternalConnectionThreadControl = false;
                 }
             });
         }
@@ -1727,7 +1742,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-        
+
 
         /// <summary>
         /// 执行数据更新
@@ -1949,5 +1964,77 @@ namespace WheelRecognitionSystem.ViewModels
             }
             return freeSpace;
         }
+
+        #region 清除显示
+
+        /// <summary>
+        /// 清除显示
+        /// </summary>
+        /// <param name="index"></param>
+        private void ClearDisplay(int index)
+        {
+            switch (index)
+            {
+                case 1:
+                    RecognitionStatus1 = "";
+                    RecognitionWheelType1 = "";
+                    Similarity1 = "";
+                    TimeConsumed1 = "";
+                    Colour1 = "";
+                    break;
+                case 2:
+                    RecognitionStatus2 = "";
+                    RecognitionWheelType2 = "";
+                    Similarity2 = "";
+                    TimeConsumed2 = "";
+                    Colour2 = "";
+                    break;
+                case 3:
+                    RecognitionStatus3 = "";
+                    RecognitionWheelType3 = "";
+                    Similarity3 = "";
+                    TimeConsumed3 = "";
+                    Colour3 = "";
+                    break;
+                case 4:
+                    RecognitionStatus4 = "";
+                    RecognitionWheelType4 = "";
+                    Similarity4 = "";
+                    TimeConsumed4 = "";
+                    Colour4 = "";
+                    break;
+                case 5:
+                    RecognitionStatus5 = "";
+                    RecognitionWheelType5 = "";
+                    Similarity5 = "";
+                    TimeConsumed5 = "";
+                    Colour5 = "";
+                    break;
+            }
+
+        }
+
+        private void SetStatus(int index, string status)
+        {
+            switch (index)
+            {
+                case 1:
+                    RecognitionStatus1 = status;
+                    break;
+                case 2:
+                    RecognitionStatus2 = status;
+                    break;
+                case 3:
+                    RecognitionStatus3 = status;
+                    break;
+                case 4:
+                    RecognitionStatus4 = status;
+                    break;
+                case 5:
+                    RecognitionStatus5 = status;
+                    break;
+            }
+        }
+        #endregion
     }
 }

@@ -29,6 +29,11 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public float ArrivalHeight;
 
+
+        /// <summary>
+        /// 识别状态
+        /// </summary>
+        public string status;
         /// <summary>
         /// 识别轮型类型
         /// </summary>

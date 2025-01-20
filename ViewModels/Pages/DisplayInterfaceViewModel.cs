@@ -355,7 +355,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
 
         /// <summary>
-        /// 接收PLC数据
+        /// 接收主界面传过来的PLC数据
         /// </summary>
         /// <param name="interact"></param>
         private void ReceiveS7PLC(InteractS7PLCModel interact)
@@ -420,14 +420,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     interact.starTime = DateTime.Now;
                     image = CameraHelper.Grabimage(cameras[index].acqHandle);
+                    Tackle(interact, image);
                     //ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = index + 1 });
                 }
                 catch (Exception ex)
                 {
                     cameras[index].IsConnected = false;
+                    interact.status = "取图失败";
                 }
             }
-
+            else
+            {
+                interact.status = "相机未连接";
+            }
+            //回复消息
+            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
         }
 
         /// <summary>
@@ -464,7 +471,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (recognitionResult.RecognitionWheelType == "NG" && RecognitionPauseSetting != 0)
             {
                 //NG的轮型需要保存图片-后续人工补录
+
             }
+
 
             AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
             autoRecognitionResult = new AutoRecognitionResultDisplayModel
@@ -478,10 +487,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             };
             //图像结果显示
             EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
-            // RecognitionWheelType = recognitionResult.RecognitionWheelType;
-            //Similarity = recognitionResult.Similarity.ToString();
-
-            //TimeConsumed = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms";
+            
             #endregion
         }
 
@@ -546,6 +552,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
+        /// <summary>
+        /// 保存图片
+        /// </summary>
+        /// <param name="obj"></param>
         private void BtnSave(string obj)
         {
             Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
@@ -784,7 +794,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         //计时器时间(从相机中采图并显示)
         private void dispatcherTimer_Tick(object sender, EventArgs e)//计时执行的程序
         {
-            Console.WriteLine("----------");
+            //Console.WriteLine("----------");
             DispatcherTimer dispatcher = sender as DispatcherTimer;
             string name = dispatcher.Tag.ToString();
             BtnTakePhoto(name);

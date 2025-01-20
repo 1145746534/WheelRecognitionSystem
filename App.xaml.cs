@@ -70,6 +70,7 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterForNavigation<DisplayInterfaceView>();
             containerRegistry.RegisterForNavigation<MonitoringView>();
             containerRegistry.RegisterForNavigation<ReportManagementView>();
+            containerRegistry.RegisterForNavigation<DateSupplementView>();
             containerRegistry.RegisterForNavigation<SystemSettingsView>();
             containerRegistry.RegisterForNavigation<TemplateManagementView>();
             //注册轮型设置弹窗内容

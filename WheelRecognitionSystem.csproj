@@ -256,6 +256,7 @@
     <Compile Include="ViewModels\Dialogs\ParameterSettingDialogViewModel.cs" />
     <Compile Include="ViewModels\Dialogs\WheelTypeSettingDialogViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\Pages\DateSupplementViewModel.cs" />
     <Compile Include="ViewModels\Pages\DisplayInterfaceViewModel.cs" />
     <Compile Include="ViewModels\Pages\MonitoringViewModel.cs" />
     <Compile Include="ViewModels\Pages\ReportManagementViewModel.cs" />
@@ -281,6 +282,9 @@
     </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\DateSupplementView.xaml.cs">
+      <DependentUpon>DateSupplementView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Pages\DisplayInterfaceView.xaml.cs">
       <DependentUpon>DisplayInterfaceView.xaml</DependentUpon>
@@ -388,6 +392,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MainView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Pages\DateSupplementView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

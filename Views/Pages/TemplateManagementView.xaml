@@ -146,8 +146,6 @@
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="读取图片"/>
                         <Button Grid.Row="0" Grid.Column="2" Content="显示模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="显示模板"/>
-                        <Button Grid.Row="1" Grid.Column="0" Content="采集图像" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
-                                Command="{Binding TemplateBtnCommand}" CommandParameter="采集图像"/>
                         <Button Grid.Row="1" Grid.Column="1" Content="定位轮毂" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="定位轮毂"/>
                         <Button Grid.Row="1" Grid.Column="2" Content="删除模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
