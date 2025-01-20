@@ -70,11 +70,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         #endregion
 
         #region  模板数据属性
-        private ObservableCollection<ProductionDataModel> _templateDatas;
+        private ObservableCollection<TemplateDataModel> _templateDatas;
         /// <summary>
         /// 未识别数据
         /// </summary>
-        public ObservableCollection<ProductionDataModel> TemplateDatas
+        public ObservableCollection<TemplateDataModel> TemplateDatas
         {
             get { return _templateDatas; }
             set { SetProperty(ref _templateDatas, value); }
@@ -110,7 +110,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         #region  待补录数据属性
 
         private string _unrIndex;
-        
+
         public string UnrIndex
         {
             get { return _unrIndex; }
@@ -150,8 +150,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public DateSupplementViewModel(IRegionManager regionManager)
         {
             UnrMouseLeftButtonDownCommand = new DelegateCommand<object>(UnrMouseLeftButtonDown);
+            TemMouseLeftButtonDownCommand = new DelegateCommand<object>(TemMouseLeftButtonDown);
             _regionManager = regionManager;
             UnrecognizedDatas = new ObservableCollection<ProductionDataModel>();
+            TemplateDatas = new ObservableCollection<TemplateDataModel>();
+
             _dispatcherTimer = new DispatcherTimer();
             _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
             _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5000);//设置时间间隔为5000ms
@@ -159,6 +162,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //DataInquire();
 
         }
+
+
 
         private void UnrMouseLeftButtonDown(object obj)
         {
@@ -178,6 +183,23 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
+        private void TemMouseLeftButtonDown(object obj)
+        {
+            DataGrid dataGrid = (DataGrid)obj;
+            if (dataGrid != null && dataGrid.Items.Count > 0 && dataGrid.CurrentItem != null)
+            {
+                //获取选中的行索引
+                int rowIndex = dataGrid.Items.IndexOf(dataGrid.CurrentItem);
+                //获取选中的列索引
+                int columnIndex = dataGrid.CurrentCell.Column.DisplayIndex;
+
+                TemDataGridSelectedItem = TemplateDatas[TemDataGridSelectedIndex];
+                RecWheelType = TemDataGridSelectedItem.WheelType;
+                RecWheelStyle = TemDataGridSelectedItem.WheelStyle;
+                //var sDB = new SqlAccess().SystemDataAccess;
+                //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
+            }
+        }
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             IRegion region = _regionManager.Regions["ViewRegion"];
@@ -188,13 +210,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (activeViewName.Contains("DateSupplementView"))
                 {
                     DataInquireProduct();
+                    DataInquireTemplate();
                 }
 
                 // activeView 就是当前焦点页面（视图）
             }
         }
         /// <summary>
-        /// 数据查询
+        /// 数据查询未识别的产品
         /// </summary>
         private void DataInquireProduct()
         {
@@ -204,16 +227,42 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>().Where(exp).ToList();
             //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
             //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();
-            if (productionList.Count > UnrecognizedDatas.Count)
+            if (productionList.Count != UnrecognizedDatas.Count)
             {
                 UnrecognizedDatas?.Clear();
                 UnrecognizedDatas = new ObservableCollection<ProductionDataModel>(productionList);
             }
         }
 
+        /// <summary>
+        /// 数据查询模板数据
+        /// </summary>
         public void DataInquireTemplate()
         {
             List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
+            datas.ForEach(data => { data.WheelType = data.WheelType.Trim('_'); });
+            var datasGrb = datas.GroupBy(g => new { g.WheelType, g.WheelStyle }).ToList();
+            
+            
+
+            if (datasGrb.Count != TemplateDatas.Count)
+            {
+                List<TemplateDataModel> newDatas = new List<TemplateDataModel>();
+                int i = 0;
+                foreach (var item in datasGrb)
+                {
+                    var key = item.Key; // 获取分组键（匿名类型）
+                    newDatas.Add(new TemplateDataModel()
+                    {
+                        Index = i++,
+                        WheelType = key.WheelType,
+                        WheelStyle = key.WheelStyle
+                    });
+                }
+                TemplateDatas?.Clear();
+                TemplateDatas = new ObservableCollection<TemplateDataModel>(newDatas);
+            }
+          
 
         }
     }

@@ -68,7 +68,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelStyle}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                         </DataGrid.Columns>
                         <i:Interaction.Triggers>
                             <i:EventTrigger EventName="MouseLeftButtonDown">
