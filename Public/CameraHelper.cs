@@ -1,11 +1,16 @@
 ﻿using HalconDotNet;
+using MySqlX.XDevAPI.Common;
 using NPOI.OpenXmlFormats.Vml;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static WheelRecognitionSystem.Public.SystemDatas;
+using WheelRecognitionSystem.Models;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -99,10 +104,85 @@ namespace WheelRecognitionSystem.Public
             return ho_Image;
         }
 
-        public static void SavePic(HObject image)
+        public static void SavePic(HObject saveImage, InteractS7PLCModel data)
         {
+            if (saveImage == null)
+            {
+                return;
+            }
+            //月文件夹路径
+            string monthPath = HistoricalImagesPath + @"\" + data.endTime.Month + "月";
+            //日文件夹路径
+            string dayPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + "日";
+            //当日未识别文件夹路径
+            string ngPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + @"日\NG";
+            if (Directory.Exists(monthPath) == false) 
+                Directory.CreateDirectory(monthPath);
+            if (Directory.Exists(dayPath) == false)
+                Directory.CreateDirectory(dayPath);
+            if (Directory.Exists(ngPath) == false)
+                Directory.CreateDirectory(ngPath);
+            var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
+            if (diskFree > 200)
+            {
+                if (data.status == "识别成功")
+                {
+                    //保存轮型的目录
+                    string saveWheelTypePath = dayPath + @"\" + data.wheelType.Trim('_');
+                    if (Directory.Exists(saveWheelTypePath) == false) Directory.CreateDirectory(saveWheelTypePath);
+                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.wheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
+                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    data.imagePath = saveImagePath;
+                }
+                else
+                {
+                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
+                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    data.imagePath = saveImagePath;
+                }
+                //if (gateResult == "NG")
+                //{
+                //    string saveGateNGImagePath = gateNGPath.Replace(@"\", "/") + "/GateNG&" + data.WheelType + "&" + data.RecognitionTime.ToString("yyMMddHHmmss") + ".tif";
+                //    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveGateNGImagePath);
+                //}
+            }
+            else
+                EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
             //以当前日期保存图像到D盘下
-            HOperatorSet.WriteImage(image, "png", 0, "D:\\" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
+            //HOperatorSet.WriteImage(image, "png", 0, "D:\\" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
         }
+
+        ///  <summary> 
+        /// 获取指定驱动器的剩余空间总大小(单位为MB) 
+        ///  </summary> 
+        ///  <param name="HardDiskName">代表驱动器的字母(必须大写字母) </param> 
+        ///  <returns> </returns> 
+        private static long GetHardDiskFreeSpace(string HardDiskName)
+        {
+            long freeSpace = new long();
+            HardDiskName = HardDiskName + ":\\";
+            System.IO.DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
+            foreach (System.IO.DriveInfo drive in drives)
+            {
+                if (drive.Name == HardDiskName)
+                {
+                    freeSpace = drive.TotalFreeSpace / (1024 * 1024);
+                }
+            }
+            return freeSpace;
+        }
+
+        /// <summary>
+        /// 保存图像数据
+        /// </summary>
+        /// <param name="saveImage">需要保存的图像</param>
+        /// <param name="data">识别数据</param>
+        /// <param name="dateTime">识别的时间</param>
+        /// <param name="gateResult">浇口检测结果</param>
+        private void SaveImageDatas(HObject saveImage, ProductionDataModel data, DateTime dateTime, string gateResult)
+        {
+            
+        }
+
     }
 }

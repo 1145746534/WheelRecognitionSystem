@@ -935,7 +935,8 @@ namespace WheelRecognitionSystem.ViewModels
                                     RecognitionTime = DateTime.Parse(endTime.ToString("yyyy/MM/dd HH:mm:ss"))
                                 };
                                 pDB.Insertable(productionDataModel).ExecuteCommand();
-                                if (SaveImageDays != 0) SaveImageDatas(CurrentImage, productionDataModel, endTime, GateResult);
+                                if (SaveImageDays != 0) 
+                                    SaveImageDatas(CurrentImage, productionDataModel, endTime, GateResult);
                             }
                             catch (Exception ex)
                             {
@@ -1009,6 +1010,12 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
+        /// <summary>
+        /// 监控轮毂状态
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private async Task DoJob(CancellationToken token, int index)
         {
             while (!token.IsCancellationRequested)
@@ -1095,6 +1102,35 @@ namespace WheelRecognitionSystem.ViewModels
                     Colour5 = model.colour;
                     break;
             }
+            
+            //插入数据库
+            SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
+            ProductionDataModel dataModel = new ProductionDataModel();
+            dataModel.WheelType = model.wheelType;
+            dataModel.TimeConsumed = model.Interval.ToString();
+            dataModel.Similarity = model.similarity.ToString();
+            dataModel.WheelHeight = model.ArrivalHeight;
+            dataModel.WheelStyle = model.wheelStyle;
+            dataModel.RecognitionTime = model.endTime;
+            dataModel.Reserve1 = model.wheelType.Trim('_');
+            dataModel.Station = "";
+            dataModel.ImagePath = model.imagePath;
+            dataModel.ResultBool = model.ResultBol;
+            dataModel.Describe = "";
+            pDB.Insertable(dataModel).ExecuteCommand();
+            //var dc = new Dictionary<string, object>();
+            //dc.Add("WheelType", "");
+            //dc.Add("TimeConsumed", "");
+            //dc.Add("Similarity", "");
+            //dc.Add("WheelHeight", "");
+            //dc.Add("WheelStyle", "");
+            //dc.Add("RecognitionTime", "");
+            //dc.Add("Reserve1", "");
+            //dc.Add("Station", "");
+            //dc.Add("ImagePath", "");
+            //dc.Add("ResultBool", "");
+            //dc.Add("Describe", "");
+
 
         }
 
@@ -1942,7 +1978,8 @@ namespace WheelRecognitionSystem.ViewModels
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveGateNGImagePath);
                 }
             }
-            else EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
+            else 
+                EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
         }
 
         ///  <summary> 

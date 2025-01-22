@@ -33,7 +33,22 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 识别状态
         /// </summary>
-        public string status;
+        public string status = "识别成功";
+
+        /// <summary>
+        /// 识别结果bool值
+        /// </summary>
+        public bool ResultBol
+        {
+            get
+            {
+                if (status.Equals("识别成功"))
+                    return true;
+                else
+                    return false;
+            }
+        }
+
         /// <summary>
         /// 识别轮型类型
         /// </summary>
@@ -43,6 +58,10 @@ namespace WheelRecognitionSystem.Models
         /// 匹配相似度
         /// </summary>
         public float similarity;
+        /// <summary>
+        /// 轮毂样式
+        /// </summary>
+        public string wheelStyle;
 
         /***
         0<=h<20， 红色
@@ -70,12 +89,14 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public DateTime endTime;
 
+        public string imagePath;
+
         /// <summary>
         /// 间隔时间
         /// </summary>
         public TimeSpan Interval
         {
-            get {  return endTime.Subtract(starTime); }
+            get { return endTime.Subtract(starTime); }
         }
 
     }

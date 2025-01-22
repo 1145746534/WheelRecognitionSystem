@@ -8,7 +8,7 @@
         xmlns:c="clr-namespace:WheelRecognitionSystem.Public.Converter"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen" FontFamily="Microsoft YaHei" FontSize="13" Foreground="#333" FontWeight="ExtraLight"
-        Title="轮毂识别系统" Icon="{StaticResource icon}" Height="1000" Width="1580" MinHeight="600" MinWidth="800">
+        Title="终检系统" Icon="{StaticResource icon}" Height="1000" Width="1580" MinHeight="600" MinWidth="800">
     <WindowChrome.WindowChrome>
         <WindowChrome GlassFrameThickness="-1"/>
     </WindowChrome.WindowChrome>

@@ -362,6 +362,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (interact != null && interact.ArrivalSignal)
             {
+                //显示
                 switch (interact.Index)
                 {
                     case 1:
@@ -381,6 +382,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         break;
                 }
                 Thread.Sleep(interact.ArrivalDelay);
+                //处理
                 PhotoAndTackle(interact);
             }
             else if (interact != null && !interact.ArrivalSignal)
@@ -420,8 +422,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     interact.starTime = DateTime.Now;
                     image = CameraHelper.Grabimage(cameras[index].acqHandle);
-                    Tackle(interact, image);
-                    //ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = index + 1 });
+                    AutoRecognitionResultDisplayModel resultDisplayModel= Tackle(interact, image);
+                    ResultDisplay(resultDisplayModel);
                 }
                 catch (Exception ex)
                 {
@@ -433,6 +435,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 interact.status = "相机未连接";
             }
+            //保存图片
+            CameraHelper.SavePic(image, interact);
             //回复消息
             EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
         }
@@ -442,10 +446,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         /// <param name="interact"></param>
         /// <param name="CurrentImage"></param>
-        public void Tackle(InteractS7PLCModel interact, HObject CurrentImage)
+        public AutoRecognitionResultDisplayModel Tackle(InteractS7PLCModel interact, HObject CurrentImage)
         {
 
-            DateTime startTime = DateTime.Now;
             //定位轮毂
             PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
@@ -460,7 +463,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             }
-            #region======结果显示与识别暂停判断======
+
             HObject templateContour = new HObject();
             if (recognitionResult.RecognitionWheelType != "NG")
             {
@@ -482,17 +485,20 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 CurrentImage = CurrentImage,
                 WheelContour = pResult.WheelContour,
                 TemplateContour = templateContour,
-
+                index = interact.Index
 
             };
+
+            interact.endTime = DateTime.Now;
+            return autoRecognitionResult;
             //图像结果显示
-            EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
-            
-            #endregion
+            //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
+           
+
         }
 
         /// <summary>
-        /// 相机连接
+        /// 相机连接 - 循环扫描
         /// </summary>
         /// <param name="token"></param>
         private void MyMethod(CancellationToken token)
@@ -515,7 +521,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
                     }
                 }
-                Thread.Sleep(2000);
+                Thread.Sleep(3000);
 
             }
         }

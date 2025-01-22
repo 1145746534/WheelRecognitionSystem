@@ -9,7 +9,7 @@
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:p="http://prismlibrary.com/"
              mc:Ignorable="d" 
-             d:DesignHeight="850" d:DesignWidth="1000">
+             d:DesignHeight="850" d:DesignWidth="1200">
     <UserControl.Resources>
         <c:BackgroundConverter x:Key="BackgroundConverter"/>
         <c:BtuBackgroundConverter x:Key="BtuBackgroundConverter"/>

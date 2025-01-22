@@ -1,4 +1,5 @@
-﻿using NPOI.SS.Formula.Functions;
+﻿using HalconDotNet;
+using NPOI.SS.Formula.Functions;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
@@ -140,9 +141,24 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             set { SetProperty(ref _recWheelStyle, value); }
         }
 
+        public ICommand HubChangesCommand { get; set; }
+
+
         #endregion
 
+        #region  图像显示
 
+        private HObject _currentImage;
+        /// <summary>
+        /// 当前图像
+        /// </summary>
+        public HObject CurrentImage
+        {
+            get { return _currentImage; }
+            set { SetProperty<HObject>(ref _currentImage, value); }
+        }
+
+        #endregion
 
 
         private IRegionManager _regionManager;
@@ -151,6 +167,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             UnrMouseLeftButtonDownCommand = new DelegateCommand<object>(UnrMouseLeftButtonDown);
             TemMouseLeftButtonDownCommand = new DelegateCommand<object>(TemMouseLeftButtonDown);
+            HubChangesCommand = new DelegateCommand(HubChanges);
             _regionManager = regionManager;
             UnrecognizedDatas = new ObservableCollection<ProductionDataModel>();
             TemplateDatas = new ObservableCollection<TemplateDataModel>();
@@ -163,7 +180,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
-
+       
 
         private void UnrMouseLeftButtonDown(object obj)
         {
@@ -200,20 +217,40 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
             }
         }
+
+        /// <summary>
+        /// 确认修改
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void HubChanges()
+        {
+            SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
+            var result = pDB.Updateable<ProductionDataModel>()
+                .SetColumns(it => new ProductionDataModel() { 
+                    Reserve1 = RecWheelType ,
+                    WheelType = RecWheelType,
+                    WheelStyle = RecWheelStyle
+                }).Where(it => it.Index == Convert.ToInt32(UnrIndex)).ExecuteCommand();
+            DataInquireProduct();
+            RecWheelType = "";
+            RecWheelStyle = "";
+            UnrIndex = "";
+            UnrWheelType = "";
+        }
+
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             IRegion region = _regionManager.Regions["ViewRegion"];
 
             if (region.ActiveViews.Count() > 0)
             {
+                // activeView 就是当前焦点页面（视图）
                 string activeViewName = region.ActiveViews.First().ToString();
                 if (activeViewName.Contains("DateSupplementView"))
                 {
                     DataInquireProduct();
                     DataInquireTemplate();
-                }
-
-                // activeView 就是当前焦点页面（视图）
+                }  
             }
         }
         /// <summary>
