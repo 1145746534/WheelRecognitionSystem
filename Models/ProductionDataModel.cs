@@ -35,6 +35,11 @@ namespace WheelRecognitionSystem.Models
         public  float WheelHeight { get; set; }
 
         /// <summary>
+        /// 轮毂温度
+        /// </summary>
+        public  float WheelTemperature { get; set; }
+
+        /// <summary>
         /// 样式
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true)]

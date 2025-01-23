@@ -28,6 +28,10 @@ namespace WheelRecognitionSystem.Models
         /// 轮毂到位高度
         /// </summary>
         public float ArrivalHeight;
+        /// <summary>
+        /// 轮毂到位温度
+        /// </summary>
+        public float ArrivalTemperature;
 
 
         /// <summary>

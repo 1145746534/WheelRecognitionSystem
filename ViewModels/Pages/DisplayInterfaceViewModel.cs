@@ -411,11 +411,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void ReceiveS7PLC(InteractS7PLCModel interact)
         {
             if (interact != null && interact.ArrivalSignal)
-            {                              
+            {
                 Thread.Sleep(interact.ArrivalDelay);
                 //处理
                 PhotoAndTackle(interact);
-            }          
+            }
         }
 
         /// <summary>
@@ -661,8 +661,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     {
                         camera.info.LinkID = newLinkID;
                         camera.Disconnect();
-                        camera.Connect();
+                        bool isSuc = camera.Connect();
                         LoadCameraConnStatus();
+                        if (isSuc)
+                            EventMessage.MessageDisplay("相机连接成功！", true, false);
                         //设置曝光时间
                         if (newExposure != 0 && camera.info.Exposure != newExposure)
                         {
@@ -670,6 +672,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             {
                                 camera.info.Exposure = newExposure;
                                 camera.SetExposureTime();
+                                EventMessage.MessageDisplay("曝光设置成功！", true, false);
                             }
                             catch (Exception ex) { }
                         }
@@ -683,6 +686,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     {
                         cameras[index] = camera;
                         //数据库更新
+                        SqlSugarClient sDB = new SqlAccess().CameraInformationDataAccess;
+                        var result = sDB.Updateable<CameraInformation>()
+                        .SetColumns(it => new CameraInformation()
+                        {
+                            Exposure = newExposure,
+                            LinkID = newLinkID
+                        }).Where(it => it.Name == camera.info.Name).ExecuteCommand();
+                        EventMessage.MessageDisplay("参数保存成功！", true, false);
                     }
                 }
 
@@ -827,7 +838,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //}
 
         }
-
+        /// <summary>
+        /// 加载相机连接状态
+        /// </summary>
         public void LoadCameraConnStatus()
         {
             CameraStatus1 = cameras[0].IsConnected ? "1" : "0";
