@@ -935,7 +935,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     RecognitionTime = DateTime.Parse(endTime.ToString("yyyy/MM/dd HH:mm:ss"))
                                 };
                                 pDB.Insertable(productionDataModel).ExecuteCommand();
-                                if (SaveImageDays != 0) 
+                                if (SaveImageDays != 0)
                                     SaveImageDatas(CurrentImage, productionDataModel, endTime, GateResult);
                             }
                             catch (Exception ex)
@@ -1061,76 +1061,86 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
-            //发送PLC数据
+            if (!model.ResultBol)
+            {
+                //发送PLC-NG信号
+                EventMessage.MessageDisplay(model.Index +"号"+model.status, true, false);
+                SetStatus(model.Index, model.status);
 
 
-            //显示状态信息
-            SetStatus(model.Index, model.status);
-            string similarity = model.similarity == 0 ? "" : model.similarity.ToString();
-            string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
-            switch (model.Index)
+            }
+            else
             {
 
-                case 1:
-                    RecognitionWheelType1 = model.wheelType;
-                    Similarity1 = similarity;
-                    TimeConsumed1 = timeConsumed;
-                    Colour1 = model.colour;
-                    break;
-                case 2:
-                    RecognitionWheelType2 = model.wheelType;
-                    Similarity2 = similarity;
-                    TimeConsumed2 = timeConsumed;
-                    Colour2 = model.colour;
-                    break;
-                case 3:
-                    RecognitionWheelType3 = model.wheelType;
-                    Similarity3 = similarity;
-                    TimeConsumed3 = timeConsumed;
-                    Colour3 = model.colour;
-                    break;
-                case 4:
-                    RecognitionWheelType4 = model.wheelType;
-                    Similarity4 = similarity;
-                    TimeConsumed4 = timeConsumed;
-                    Colour4 = model.colour;
-                    break;
-                case 5:
-                    RecognitionWheelType5 = model.wheelType;
-                    Similarity5 = similarity;
-                    TimeConsumed5 = timeConsumed;
-                    Colour5 = model.colour;
-                    break;
-            }
-            
-            //插入数据库
-            SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
-            ProductionDataModel dataModel = new ProductionDataModel();
-            dataModel.WheelType = model.wheelType;
-            dataModel.TimeConsumed = model.Interval.ToString();
-            dataModel.Similarity = model.similarity.ToString();
-            dataModel.WheelHeight = model.ArrivalHeight;
-            dataModel.WheelStyle = model.wheelStyle;
-            dataModel.RecognitionTime = model.endTime;
-            dataModel.Reserve1 = model.wheelType.Trim('_');
-            dataModel.Station = "";
-            dataModel.ImagePath = model.imagePath;
-            dataModel.ResultBool = model.ResultBol;
-            dataModel.Describe = "";
-            pDB.Insertable(dataModel).ExecuteCommand();
-            //var dc = new Dictionary<string, object>();
-            //dc.Add("WheelType", "");
-            //dc.Add("TimeConsumed", "");
-            //dc.Add("Similarity", "");
-            //dc.Add("WheelHeight", "");
-            //dc.Add("WheelStyle", "");
-            //dc.Add("RecognitionTime", "");
-            //dc.Add("Reserve1", "");
-            //dc.Add("Station", "");
-            //dc.Add("ImagePath", "");
-            //dc.Add("ResultBool", "");
-            //dc.Add("Describe", "");
+                //发送PLC数据
 
+                //显示状态信息
+                SetStatus(model.Index, model.status);
+                string similarity = model.similarity == 0 ? "" : model.similarity.ToString();
+                string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
+                switch (model.Index)
+                {
+
+                    case 1:
+                        RecognitionWheelType1 = model.wheelType;
+                        Similarity1 = similarity;
+                        TimeConsumed1 = timeConsumed;
+                        Colour1 = model.colour;
+                        break;
+                    case 2:
+                        RecognitionWheelType2 = model.wheelType;
+                        Similarity2 = similarity;
+                        TimeConsumed2 = timeConsumed;
+                        Colour2 = model.colour;
+                        break;
+                    case 3:
+                        RecognitionWheelType3 = model.wheelType;
+                        Similarity3 = similarity;
+                        TimeConsumed3 = timeConsumed;
+                        Colour3 = model.colour;
+                        break;
+                    case 4:
+                        RecognitionWheelType4 = model.wheelType;
+                        Similarity4 = similarity;
+                        TimeConsumed4 = timeConsumed;
+                        Colour4 = model.colour;
+                        break;
+                    case 5:
+                        RecognitionWheelType5 = model.wheelType;
+                        Similarity5 = similarity;
+                        TimeConsumed5 = timeConsumed;
+                        Colour5 = model.colour;
+                        break;
+                }
+
+                //插入数据库
+                SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
+                ProductionDataModel dataModel = new ProductionDataModel();
+                dataModel.WheelType = model.wheelType;
+                dataModel.TimeConsumed = model.Interval.ToString();
+                dataModel.Similarity = model.similarity.ToString();
+                dataModel.WheelHeight = model.ArrivalHeight;
+                dataModel.WheelStyle = model.wheelStyle;
+                dataModel.RecognitionTime = model.endTime;
+                dataModel.Reserve1 = model.wheelType.Trim('_');
+                dataModel.Station = "";
+                dataModel.ImagePath = model.imagePath;
+                dataModel.ResultBool = model.ResultBol;
+                dataModel.Describe = "";
+                pDB.Insertable(dataModel).ExecuteCommand();
+                //var dc = new Dictionary<string, object>();
+                //dc.Add("WheelType", "");
+                //dc.Add("TimeConsumed", "");
+                //dc.Add("Similarity", "");
+                //dc.Add("WheelHeight", "");
+                //dc.Add("WheelStyle", "");
+                //dc.Add("RecognitionTime", "");
+                //dc.Add("Reserve1", "");
+                //dc.Add("Station", "");
+                //dc.Add("ImagePath", "");
+                //dc.Add("ResultBool", "");
+                //dc.Add("Describe", "");
+            }
 
         }
 
@@ -1978,7 +1988,7 @@ namespace WheelRecognitionSystem.ViewModels
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveGateNGImagePath);
                 }
             }
-            else 
+            else
                 EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
         }
 
@@ -2051,6 +2061,11 @@ namespace WheelRecognitionSystem.ViewModels
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="status"></param>
         private void SetStatus(int index, string status)
         {
             switch (index)

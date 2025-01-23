@@ -8,6 +8,7 @@ using SqlSugar.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
@@ -174,14 +175,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             _dispatcherTimer = new DispatcherTimer();
             _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5000);//设置时间间隔为5000ms
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
             _dispatcherTimer.Start();//启动定时器
-            //DataInquire();
-
         }
 
-       
 
+        /// <summary>
+        /// 单击未识别数据表格
+        /// </summary>
+        /// <param name="obj"></param>
         private void UnrMouseLeftButtonDown(object obj)
         {
             DataGrid dataGrid = (DataGrid)obj;
@@ -195,6 +197,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 UnrDataGridSelectedItem = UnrecognizedDatas[UnrDataGridSelectedIndex];
                 UnrIndex = UnrDataGridSelectedItem.Index.ToString();
                 UnrWheelType = UnrDataGridSelectedItem.WheelType;
+                string path = UnrDataGridSelectedItem.ImagePath;
+                EventMessage.MessageHelper.GetEvent<ClearEvent>().Publish("");
+                CurrentImage?.Dispose();
+                if (File.Exists(path))
+                {
+                    HObject image = new HObject();
+                    HOperatorSet.ReadImage(out image, path);
+
+                    CurrentImage = image.Clone();
+                    image.Dispose();
+                }
+
                 //var sDB = new SqlAccess().SystemDataAccess;
                 //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
             }
@@ -226,8 +240,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
             var result = pDB.Updateable<ProductionDataModel>()
-                .SetColumns(it => new ProductionDataModel() { 
-                    Reserve1 = RecWheelType ,
+                .SetColumns(it => new ProductionDataModel()
+                {
+                    Reserve1 = RecWheelType,
                     WheelType = RecWheelType,
                     WheelStyle = RecWheelStyle
                 }).Where(it => it.Index == Convert.ToInt32(UnrIndex)).ExecuteCommand();
@@ -236,6 +251,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             RecWheelStyle = "";
             UnrIndex = "";
             UnrWheelType = "";
+            CurrentImage = null;
         }
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
@@ -250,7 +266,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     DataInquireProduct();
                     DataInquireTemplate();
-                }  
+                }
             }
         }
         /// <summary>
@@ -279,8 +295,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
             datas.ForEach(data => { data.WheelType = data.WheelType.Trim('_'); });
             var datasGrb = datas.GroupBy(g => new { g.WheelType, g.WheelStyle }).ToList();
-            
-            
+
+
 
             if (datasGrb.Count != TemplateDatas.Count)
             {
@@ -299,7 +315,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateDatas?.Clear();
                 TemplateDatas = new ObservableCollection<TemplateDataModel>(newDatas);
             }
-          
+
 
         }
     }

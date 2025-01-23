@@ -349,21 +349,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Subscribe(ResultDisplay);
             EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Subscribe(ReceiveS7PLC);
+            EventMessage.MessageHelper.GetEvent<InplaceEvent>().Subscribe(Inplace); //轮毂到位信号显示
+
 
         }
 
-
-
-        /// <summary>
-        /// 接收主界面传过来的PLC数据
-        /// </summary>
-        /// <param name="interact"></param>
-        private void ReceiveS7PLC(InteractS7PLCModel interact)
+        private void Inplace(KeyValuePair<bool, int> obj)
         {
-            if (interact != null && interact.ArrivalSignal)
+            if (obj.Key)
             {
                 //显示
-                switch (interact.Index)
+                switch (obj.Value)
                 {
                     case 1:
                         Inplace1 = "1";
@@ -381,13 +377,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         Inplace5 = "1";
                         break;
                 }
-                Thread.Sleep(interact.ArrivalDelay);
-                //处理
-                PhotoAndTackle(interact);
             }
-            else if (interact != null && !interact.ArrivalSignal)
+            else
             {
-                switch (interact.Index)
+                switch (obj.Value)
                 {
                     case 1:
                         Inplace1 = "0";
@@ -408,6 +401,23 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
+
+
+
+        /// <summary>
+        /// 接收主界面传过来的PLC数据
+        /// </summary>
+        /// <param name="interact"></param>
+        private void ReceiveS7PLC(InteractS7PLCModel interact)
+        {
+            if (interact != null && interact.ArrivalSignal)
+            {                              
+                Thread.Sleep(interact.ArrivalDelay);
+                //处理
+                PhotoAndTackle(interact);
+            }          
+        }
+
         /// <summary>
         /// 相机拍照&处理
         /// </summary>
@@ -422,7 +432,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     interact.starTime = DateTime.Now;
                     image = CameraHelper.Grabimage(cameras[index].acqHandle);
-                    AutoRecognitionResultDisplayModel resultDisplayModel= Tackle(interact, image);
+                    AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);
                     ResultDisplay(resultDisplayModel);
                 }
                 catch (Exception ex)
@@ -493,7 +503,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             return autoRecognitionResult;
             //图像结果显示
             //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
-           
+
 
         }
 

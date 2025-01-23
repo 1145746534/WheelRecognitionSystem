@@ -88,6 +88,8 @@ namespace WheelRecognitionSystem.Public
     /// 自动识别结果显示事件
     /// </summary>
     public class AutoRecognitionResultDisplayEvent : PubSubEvent<AutoRecognitionResultDisplayModel> { }
+
+    public class InplaceEvent: PubSubEvent<KeyValuePair<bool,int>> { }
     /// <summary>
     /// 信号交互-处理事件
     /// </summary>
@@ -97,6 +99,11 @@ namespace WheelRecognitionSystem.Public
     /// 信号交互-回复事件
     /// </summary>
     public class InteractCallEvent : PubSubEvent<InteractS7PLCModel> { }
+
+    /// <summary>
+    /// 清除事件
+    /// </summary>
+    public class ClearEvent: PubSubEvent<string> { }
 
     /// <summary>
     /// 分选数据显示事件

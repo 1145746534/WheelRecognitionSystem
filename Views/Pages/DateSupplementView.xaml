@@ -28,16 +28,18 @@
             </Grid.ColumnDefinitions>
             <GridSplitter Grid.Row="0" Grid.Column="1" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center" 
                ShowsPreview="False"></GridSplitter>
-            <h:HSmartWindowControlWPF Grid.Row="0" HKeepAspectRatio="True" HLineWidth="2">
+            <h:HSmartWindowControlWPF Name="HSmart" Grid.Row="0" HKeepAspectRatio="True" HLineWidth="2">
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage}"/>
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour4}" HColor="magenta"/>
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour4}" HColor="medium slate blue"/>
             </h:HSmartWindowControlWPF>
             <GroupBox Grid.Row="0" Grid.Column="2"  Style="{StaticResource NewGroupBoxStyle}" Header="待补录轮毂" >
                 <Grid Margin="2,28,2,2">
+                    <TextBlock Text="(双击查看未补录轮毂信息)" FontSize="9"  Foreground="#AAA" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,-18,0,0"/>
                     <DataGrid ItemsSource="{Binding UnrecognizedDatas}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
                         FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False" 
-                        SelectedItem="{Binding UnrDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding UnrDataGridSelectedIndex, Mode=TwoWay}">
+                        SelectedItem="{Binding UnrDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding UnrDataGridSelectedIndex, Mode=TwoWay}" Grid.ColumnSpan="2">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
@@ -62,6 +64,8 @@
             </Grid.ColumnDefinitions>
             <GroupBox Style="{StaticResource NewGroupBoxStyle}" Header="轮毂列表" >
                 <Grid Margin="2,28,2,2">
+                    <TextBlock Text="(双击选择轮毂型号)" FontSize="9"  Foreground="#AAA" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,-18,0,0"/>
                     <DataGrid ItemsSource="{Binding TemplateDatas}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
                         FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False" 
                         SelectedItem="{Binding TemDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding TemDataGridSelectedIndex, Mode=TwoWay}">
@@ -84,50 +88,52 @@
             <GroupBox Grid.Column="2"  Header="补录信息区" Style="{StaticResource NewGroupBoxStyle}">
                 <Grid Margin="1,28,1,1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel  Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="5,0,0,0">
+                    <StackPanel  Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="5,0,0,2">
                         <TextBlock Text="ID号" FontSize="16" VerticalAlignment="Bottom" />
                     </StackPanel>
-                    <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding UnrIndex}" Style="{StaticResource NewTextBoxStyle}" FontSize="16" Height="26" Width="120" 
-                    HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,0,0,0" />
+                    <TextBox Grid.Row="1" Text="{Binding UnrIndex}" Style="{StaticResource NewTextBoxStyle}" FontSize="16" Height="26" Width="120" 
+                    HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,6,0,0" />
+                    <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
 
-                    <StackPanel  Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Margin="5,0,0,0">
+                    <StackPanel  Grid.Row="2" Orientation="Horizontal"  Margin="5,0,0,2">
                         <TextBlock Text="轮毂型号" FontSize="16" VerticalAlignment="Bottom" />
                         <TextBlock Text="临时轮毂型号->正确轮毂型号(可从左边轮毂列表中选择)" FontSize="12" VerticalAlignment="Bottom"  Foreground="#AAA" Margin="5,0,0,0"/>
                     </StackPanel>
-                    <StackPanel  Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Margin="5,0,0,0">
+                    <Border Grid.Row="2" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+
+                    <StackPanel  Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Margin="5,6,0,0">
                         <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding UnrWheelType}" Style="{StaticResource NewTextBoxStyle}" FontSize="16" Height="26" Width="220"
                             HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" />
                         <TextBlock Text="->" FontSize="12"  Foreground="#AAA" Margin="5,5,5,0"/>
                         <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding RecWheelType}" Style="{StaticResource NewTextBoxStyle}" FontSize="16" Height="26" Width="220"
-                            HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" />              
+                            HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" />
                     </StackPanel>
-
-                    <StackPanel  Orientation="Horizontal" Grid.Row="4" Grid.Column="0" Margin="5,0,0,0">
+                    <StackPanel  Orientation="Horizontal" Grid.Row="4" Grid.Column="0" Margin="5,0,0,2">
                         <TextBlock Text="轮毂样式" FontSize="16" VerticalAlignment="Bottom" />
                         <TextBlock Text="(可从左边轮毂列表中选择)" FontSize="12" VerticalAlignment="Bottom"  Foreground="#AAA" Margin="5,0,0,0"/>
                     </StackPanel>
-
-                    <StackPanel  Orientation="Horizontal" Grid.Row="5" Grid.Column="0" Margin="5,0,0,0">
+                    <Border Grid.Row="4" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+                    <StackPanel  Orientation="Horizontal" Grid.Row="5" Grid.Column="0" Margin="5,6,0,0">
                         <TextBox Grid.Row="5" Grid.Column="0" Text="{Binding RecWheelStyle}" Style="{StaticResource NewTextBoxStyle}" FontSize="16" Height="26" Width="120"
                             HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                         <Button Content="确认修改"  Width="100" Height="28" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{StaticResource NormalButtonStyle}"
                             Command="{Binding HubChangesCommand}" Margin="100,0"/>
 
                     </StackPanel>
-                  
-                    
+
+
                 </Grid>
             </GroupBox>
         </Grid>

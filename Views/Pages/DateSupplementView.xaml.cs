@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WheelRecognitionSystem.Public;
 
 namespace WheelRecognitionSystem.Views.Pages
 {
@@ -23,6 +24,11 @@ namespace WheelRecognitionSystem.Views.Pages
         public DateSupplementView()
         {
             InitializeComponent();
+            EventMessage.MessageHelper.GetEvent<ClearEvent>().Subscribe(ClearHalconWindow);
+        }
+        public void ClearHalconWindow(string value)
+        {
+            HSmart.HalconWindow.ClearWindow();
         }
     }
 }

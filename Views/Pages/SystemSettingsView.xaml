@@ -73,7 +73,7 @@
                     <TextBox Grid.Row="7" Height="30"  Text="{Binding MinSimilarity}"  Margin="5,0,300,0" Style="{StaticResource NewTextBoxStyle}" HorizontalContentAlignment="Left"/>
                 </Grid>
             </GroupBox>
-            <GroupBox Grid.Column="1" Header="浇口检测参数设置" Style="{StaticResource NewGroupBoxStyle}" Margin="1">
+            <GroupBox Grid.Column="1" Header="" Style="{StaticResource NewGroupBoxStyle}" Margin="1">
                 <Grid Margin="10,28,80,2.5">
                     <Grid.RowDefinitions>
                         <RowDefinition/>
@@ -85,33 +85,17 @@
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="浇口区域最小半径" FontSize="18" Foreground="#444" Margin="5,0"/>
-                        <TextBlock Text="图像中以浇口为中心定位存在浇口区域的最小半径，取值范围：10 -> 60" FontSize="12" Grid.Row="1" Foreground="#AAA" Margin="5,0,0,2"/>
-                    </StackPanel>
+                    
                     <Border BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
-                    <TextBox Grid.Row="1" Height="30"  Text="{Binding PositioningGateRadius}"  Margin="5,0,300,0" Style="{StaticResource NewTextBoxStyle}" HorizontalContentAlignment="Left"/>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="2">
-                        <TextBlock Text="浇口区域轮毂最小阈值" FontSize="18" Foreground="#444" Margin="5,0"/>
-                        <TextBlock Text="图像上除浇口位置外轮毂的最小阈值，取值范围：30 -> 200" FontSize="12" Grid.Row="1" Foreground="#AAA" Margin="5,0,0,2"/>
-                    </StackPanel>
+                    
                     <Border Grid.Row="2" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
-                    <TextBox Grid.Row="3" Height="30"  Text="{Binding GateOutMinThreshold}"  Margin="5,0,300,0" Style="{StaticResource NewTextBoxStyle}" HorizontalContentAlignment="Left"/>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="4">
-                        <TextBlock Text="浇口最小面积" FontSize="18" Foreground="#444" Margin="5,0"/>
-                        <TextBlock Text="判断浇口存在的最小面积，取值范围：300 -> 2000" FontSize="12" Grid.Row="1" Foreground="#AAA" Margin="5,0,0,2"/>
-                    </StackPanel>
+                    
                     <Border Grid.Row="4" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
-                    <TextBox Grid.Row="5" Height="30"  Text="{Binding GateMinArea}"  Margin="5,0,300,0" Style="{StaticResource NewTextBoxStyle}" HorizontalContentAlignment="Left"/>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="6">
-                        <TextBlock Text="浇口最小半径" FontSize="18" Foreground="#444" Margin="5,0"/>
-                        <TextBlock Text="判断浇口存在的最小半径，取值范围：8 -> 20" FontSize="12" Grid.Row="1" Foreground="#AAA" Margin="5,0,0,2"/>
-                    </StackPanel>
+                  
                     <Border Grid.Row="6" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
-                    <TextBox Grid.Row="7" Height="30"  Text="{Binding GateMinRadius}"  Margin="5,0,300,0" Style="{StaticResource NewTextBoxStyle}" HorizontalContentAlignment="Left"/>
                     <CheckBox Style="{StaticResource CheckBoxStyle}" Content="浇口检测开关" IsChecked="{Binding GateDetectionSwitch}" 
                               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="200,-25,0,0" FontSize="12" VerticalContentAlignment="Center"/>
                 </Grid>
