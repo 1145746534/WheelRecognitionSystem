@@ -1641,7 +1641,8 @@ namespace WheelRecognitionSystem.ViewModels
                         int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
                         if (result == 0 && PlcCilent.Connected)
                         {
-                            if (PlcStatus != "1") PlcStatus = "1";
+                            if (PlcStatus != "1") 
+                                PlcStatus = "1";
                             //复位再次识别使能信号
                             S7.SetBitAt(ref WriteBuffer, 12, 5, true);
                             HeartbeatThread();
