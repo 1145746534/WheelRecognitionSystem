@@ -242,7 +242,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var result = pDB.Updateable<ProductionDataModel>()
                 .SetColumns(it => new ProductionDataModel()
                 {
-                    Reserve1 = RecWheelType,
+                    Model = RecWheelType,
                     WheelType = RecWheelType,
                     WheelStyle = RecWheelStyle
                 }).Where(it => it.Index == Convert.ToInt32(UnrIndex)).ExecuteCommand();
@@ -276,7 +276,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
             var exp = Expressionable.Create<ProductionDataModel>()
-                .And(it => it.Reserve1 == "").Or(it => it.Reserve1 == null).ToExpression();
+                .And(it => it.Model == "").Or(it => it.Model == null).ToExpression();
             List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>().Where(exp).ToList();
             //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
             //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();

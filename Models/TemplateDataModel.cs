@@ -30,10 +30,12 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 轮毂高度
         /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true)]
         public float WheelHeight { get; set; }
         /// <summary>
         /// 轮毂样式
         /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true)]
         public string WheelStyle { get; set; }
 
         private bool _sortingEnable;

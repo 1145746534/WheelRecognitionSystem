@@ -223,6 +223,7 @@
     <Compile Include="Models\AutoRecognitionResultDisplayModel.cs" />
     <Compile Include="Models\Camera.cs" />
     <Compile Include="Models\CameraInformation.cs" />
+    <Compile Include="Models\Defect.cs" />
     <Compile Include="Models\GateDetectionResultModel.cs" />
     <Compile Include="Models\GetDateTimeModel.cs" />
     <Compile Include="Models\IdentityDataModel.cs" />
@@ -231,7 +232,9 @@
     <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Models\MessageType.cs" />
     <Compile Include="Models\PositioningWheelResultModel.cs" />
+    <Compile Include="Models\Processingtechnology.cs" />
     <Compile Include="Models\ProductionDataModel.cs" />
+    <Compile Include="Models\ReadPLCSignal.cs" />
     <Compile Include="Models\RecognitionResultModel.cs" />
     <Compile Include="Models\ScreenedDataModel.cs" />
     <Compile Include="Models\ServletInfoModel.cs" />

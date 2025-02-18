@@ -452,7 +452,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         }
 
         /// <summary>
-        /// 处理识别结果
+        /// 处理识别-接收主控发送的消息
         /// </summary>
         /// <param name="interact"></param>
         /// <param name="CurrentImage"></param>
@@ -686,7 +686,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     {
                         cameras[index] = camera;
                         //数据库更新
-                        SqlSugarClient sDB = new SqlAccess().CameraInformationDataAccess;
+                        SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
                         var result = sDB.Updateable<CameraInformation>()
                         .SetColumns(it => new CameraInformation()
                         {
@@ -734,8 +734,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         public void LoadCameraInfo()
         {
-            SqlSugarClient sDB = new SqlAccess().CameraInformationDataAccess;
-            //SqlSugarClient sDB = new DB().CameraInformationDataAccess;
+            SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
             ExternalConnections.DatasCamera = sDB.Queryable<CameraInformation>().OrderBy(o => o.ID).ToList();
             for (int i = 0; i < cameras.Length; i++)
             {

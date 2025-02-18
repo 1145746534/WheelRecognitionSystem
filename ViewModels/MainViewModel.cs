@@ -27,6 +27,7 @@ using System.Windows.Shapes;
 using NPOI.SS.Formula.Functions;
 using System.Threading;
 using System.Reflection;
+using ZstdSharp.Unsafe;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -563,6 +564,12 @@ namespace WheelRecognitionSystem.ViewModels
         /// 轮毂到位延时
         /// </summary>
         private int _ArrivalDelay;
+
+        /// <summary>
+        /// 读取PLC信号数据组
+        /// </summary>
+        private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[5];
+
         /// <summary>
         /// 轮毂到位信号
         /// </summary>
@@ -572,6 +579,22 @@ namespace WheelRecognitionSystem.ViewModels
         /// 轮毂到位信号数组
         /// </summary>
         private bool[] ArrivalSignals = new bool[5];
+
+        /// <summary>
+        /// 轮毂到位高度数组
+        /// </summary>
+        private float[] ArrivalHeights = new float[5];
+
+        /// <summary>
+        /// 轮毂到位温度数组
+        /// </summary>
+        private float[] ArrivalTemperatures = new float[5];
+
+        /// <summary>
+        /// 结果通知数组
+        /// </summary>
+        private bool[] ResultNotifications = new bool[5];
+
 
         /// <summary>
         /// 信息显示定时器
@@ -649,7 +672,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
             LoadSystemDatas();
             ExternalConnectionThread();
-            MainThread();
+            //MainThread();
             MainThread5();
 
             //初始化数据库
@@ -1036,8 +1059,16 @@ namespace WheelRecognitionSystem.ViewModels
                         ArrivalDelay = _ArrivalDelay,
                         //ArrivalSignal = ArrivalSignals[index],
                         ArrivalSignal = true,
-                        ArrivalHeight = 0
+                        ArrivalHeight = ArrivalHeights[index],
+                        ArrivalTemperature = ArrivalTemperatures[index]
                     });
+                }
+
+
+                //通知轮毂缺陷结果               自动模式        PLC已连接              电机非故障
+                if (ResultNotifications[index] && SystemModel && PlcCilent.Connected && !MotorFailureSignal)
+                {
+
                 }
             }
 
@@ -1055,7 +1086,7 @@ namespace WheelRecognitionSystem.ViewModels
             EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Publish(model);
         }
         /// <summary>
-        /// 处理回复显示
+        /// 轮毂到位处理回复显示
         /// </summary>
         /// <param name="model"></param>
         /// <exception cref="NotImplementedException"></exception>
@@ -1064,8 +1095,9 @@ namespace WheelRecognitionSystem.ViewModels
             if (!model.ResultBol)
             {
                 //发送PLC-NG信号
-                EventMessage.MessageDisplay(model.Index +"号"+model.status, true, false);
+                EventMessage.MessageDisplay(model.Index + "号" + model.status, true, false);
                 SetStatus(model.Index, model.status);
+                //加密数据发送给PLC WriteBuffer - 缓冲区定义数据
 
 
             }
@@ -1122,7 +1154,7 @@ namespace WheelRecognitionSystem.ViewModels
                 dataModel.WheelHeight = model.ArrivalHeight;
                 dataModel.WheelStyle = model.wheelStyle;
                 dataModel.RecognitionTime = model.endTime;
-                dataModel.Reserve1 = model.wheelType.Trim('_');
+                dataModel.Model = model.wheelType.Trim('_');
                 dataModel.Station = "";
                 dataModel.ImagePath = model.imagePath;
                 dataModel.ResultBool = model.ResultBol;
@@ -1555,70 +1587,70 @@ namespace WheelRecognitionSystem.ViewModels
                     if (PlcCilent.Connected)
                     {
                         //写心跳数据
-                        S7.SetBitAt(ref WriteBuffer, 12, 1, true);
-                        if (IsScreenedResult)
-                        {
-                            //大屏分选数据处理
-                            ScreenedDatas = ParseScreenedDatas(BigScreenDataBuffer);
-                            List<ScreenedDataModel> screenedDatas = new List<ScreenedDataModel>();
-                            if (ScreenedDatas.Count >= 18)
-                            {
-                                //A1 - A8
-                                for (int i = 0; i < 8; i++)
-                                {
-                                    ScreenedDataModel dataA1A8 = new ScreenedDataModel
-                                    {
-                                        Unit = ScreenedDatas[i].Unit,
-                                        State = ScreenedDatas[i].State,
-                                        WheelType = ScreenedDatas[i].WheelType,
-                                        OnlineQuantity = ScreenedDatas[i].OnlineQuantity,
-                                        TargetQuantity = ScreenedDatas[i].TargetQuantity
-                                    };
-                                    screenedDatas.Add(dataA1A8);
-                                }
-                                //A9
-                                ScreenedDataModel dataA9 = new ScreenedDataModel
-                                {
-                                    Unit = ScreenedDatas[16].Unit,
-                                    State = ScreenedDatas[16].State,
-                                    WheelType = ScreenedDatas[16].WheelType,
-                                    OnlineQuantity = ScreenedDatas[16].OnlineQuantity,
-                                    TargetQuantity = ScreenedDatas[16].TargetQuantity
-                                };
-                                screenedDatas.Add(dataA9);
+                        S7.SetBitAt(ref WriteBuffer, 0, 0, true);
+                        //if (IsScreenedResult)
+                        //{
+                        //    //大屏分选数据处理
+                        //    ScreenedDatas = ParseScreenedDatas(BigScreenDataBuffer);
+                        //    List<ScreenedDataModel> screenedDatas = new List<ScreenedDataModel>();
+                        //    if (ScreenedDatas.Count >= 18)
+                        //    {
+                        //        //A1 - A8
+                        //        for (int i = 0; i < 8; i++)
+                        //        {
+                        //            ScreenedDataModel dataA1A8 = new ScreenedDataModel
+                        //            {
+                        //                Unit = ScreenedDatas[i].Unit,
+                        //                State = ScreenedDatas[i].State,
+                        //                WheelType = ScreenedDatas[i].WheelType,
+                        //                OnlineQuantity = ScreenedDatas[i].OnlineQuantity,
+                        //                TargetQuantity = ScreenedDatas[i].TargetQuantity
+                        //            };
+                        //            screenedDatas.Add(dataA1A8);
+                        //        }
+                        //        //A9
+                        //        ScreenedDataModel dataA9 = new ScreenedDataModel
+                        //        {
+                        //            Unit = ScreenedDatas[16].Unit,
+                        //            State = ScreenedDatas[16].State,
+                        //            WheelType = ScreenedDatas[16].WheelType,
+                        //            OnlineQuantity = ScreenedDatas[16].OnlineQuantity,
+                        //            TargetQuantity = ScreenedDatas[16].TargetQuantity
+                        //        };
+                        //        screenedDatas.Add(dataA9);
 
-                                //B1-B8
-                                for (int i = 15; i >= 8; i--)
-                                {
-                                    ScreenedDataModel dataB1B8 = new ScreenedDataModel
-                                    {
-                                        Unit = ScreenedDatas[i].Unit,
-                                        State = ScreenedDatas[i].State,
-                                        WheelType = ScreenedDatas[i].WheelType,
-                                        OnlineQuantity = ScreenedDatas[i].OnlineQuantity,
-                                        TargetQuantity = ScreenedDatas[i].TargetQuantity
-                                    };
-                                    screenedDatas.Add(dataB1B8);
-                                }
-                                //B9
-                                ScreenedDataModel dataB9 = new ScreenedDataModel
-                                {
-                                    Unit = ScreenedDatas[17].Unit,
-                                    State = ScreenedDatas[17].State,
-                                    WheelType = ScreenedDatas[17].WheelType,
-                                    OnlineQuantity = ScreenedDatas[17].OnlineQuantity,
-                                    TargetQuantity = ScreenedDatas[17].TargetQuantity
-                                };
-                                screenedDatas.Add(dataB9);
-                            }
-                            //大屏分选数据显示
-                            EventMessage.MessageHelper.GetEvent<ScreenedDataDisplayEvent>().Publish(screenedDatas);
-                        }
+                        //        //B1-B8
+                        //        for (int i = 15; i >= 8; i--)
+                        //        {
+                        //            ScreenedDataModel dataB1B8 = new ScreenedDataModel
+                        //            {
+                        //                Unit = ScreenedDatas[i].Unit,
+                        //                State = ScreenedDatas[i].State,
+                        //                WheelType = ScreenedDatas[i].WheelType,
+                        //                OnlineQuantity = ScreenedDatas[i].OnlineQuantity,
+                        //                TargetQuantity = ScreenedDatas[i].TargetQuantity
+                        //            };
+                        //            screenedDatas.Add(dataB1B8);
+                        //        }
+                        //        //B9
+                        //        ScreenedDataModel dataB9 = new ScreenedDataModel
+                        //        {
+                        //            Unit = ScreenedDatas[17].Unit,
+                        //            State = ScreenedDatas[17].State,
+                        //            WheelType = ScreenedDatas[17].WheelType,
+                        //            OnlineQuantity = ScreenedDatas[17].OnlineQuantity,
+                        //            TargetQuantity = ScreenedDatas[17].TargetQuantity
+                        //        };
+                        //        screenedDatas.Add(dataB9);
+                        //    }
+                        //    //大屏分选数据显示
+                        //    EventMessage.MessageHelper.GetEvent<ScreenedDataDisplayEvent>().Publish(screenedDatas);
+                        //}
                     }
                     else
                     {
-                        List<ScreenedDataModel> screenedDatas = new List<ScreenedDataModel>();
-                        EventMessage.MessageHelper.GetEvent<ScreenedDataDisplayEvent>().Publish(screenedDatas);
+                        //List<ScreenedDataModel> screenedDatas = new List<ScreenedDataModel>();
+                        //EventMessage.MessageHelper.GetEvent<ScreenedDataDisplayEvent>().Publish(screenedDatas);
                     }
                     await Task.Delay(1000);
                 }
@@ -1641,7 +1673,7 @@ namespace WheelRecognitionSystem.ViewModels
                         int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
                         if (result == 0 && PlcCilent.Connected)
                         {
-                            if (PlcStatus != "1") 
+                            if (PlcStatus != "1")
                                 PlcStatus = "1";
                             //复位再次识别使能信号
                             S7.SetBitAt(ref WriteBuffer, 12, 5, true);
@@ -1689,6 +1721,11 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
+            readPLCSignals[0].Name = "1检1";
+            readPLCSignals[1].Name = "1检2A";
+            readPLCSignals[2].Name = "1检2B";
+            readPLCSignals[3].Name = "1检3";
+            readPLCSignals[4].Name = "2检1";
             PlcDataInteractionControl = true;
             Task.Run(async () =>
             {
@@ -1697,50 +1734,88 @@ namespace WheelRecognitionSystem.ViewModels
                     if (PlcCilent != null && PlcCilent.Connected)
                     {
                         //读PLC给视觉的数据
-                        PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
-                        //获取PLC轮毂到位信号
-                        ArrivalSignal = S7.GetBitAt(ReadBuffer, 0, 0);
-                        if (ArrivalSignal)
+                        //                               0         1290
+                        int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
+                        if (bytes_read == 0) // 成功读取
                         {
-                            if (SignalInPlace != "1")
-                                SignalInPlace = "1";
+                            //获取PLC轮毂到位信号
+
+                            readPLCSignals[0].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 0);
+                            readPLCSignals[1].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 1);
+                            readPLCSignals[2].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 2);
+                            readPLCSignals[3].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 3);
+                            readPLCSignals[4].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 4);
+
+                            readPLCSignals[0].WheelCoding = GetBytesToString(ReadBuffer, 2, 256);//1检1轮型编码
+                            readPLCSignals[1].WheelCoding = GetBytesToString(ReadBuffer, 258, 256);//1检2A轮型编码
+                            readPLCSignals[2].WheelCoding = GetBytesToString(ReadBuffer, 514, 256);//1检2B轮型编码
+                            readPLCSignals[3].WheelCoding = GetBytesToString(ReadBuffer, 770, 256);//1检3轮型编码
+                            readPLCSignals[4].WheelCoding = GetBytesToString(ReadBuffer, 1026, 256);//2检1轮型编码
+
+                           
+
+                            
+
+                           
+
                         }
                         else
                         {
-                            if (SignalInPlace != "2")
-                                SignalInPlace = "2";
+                            //读取失败
+
                         }
+
+
+                        //轮毂高度 - 解析数据
+
+
+
+                        //轮毂温度 - 解析数据
+
+                        //ArrivalSignal = S7.GetBitAt(ReadBuffer, 0, 0);
+                        //if (ArrivalSignal)
+                        //{
+                        //    SignalInPlace = "1";
+                        //}
+                        //else
+                        //{
+                        //    SignalInPlace = "2";
+                        //}
+
+
+
+
                         //      再次识别使能信号,               在识别中 
-                        if (S7.GetBitAt(ReadBuffer, 0, 3) && IsIdentifying)
-                        {
-                            //复位识别中信号
-                            IsIdentifying = false;
-                            RecognitionStatus1 = "等待识别";
-                            //复位再次识别使能信号
-                            S7.SetBitAt(ref WriteBuffer, 12, 5, true);
-                        }
-                        //再次识别使能信号状态显示
-                        if (S7.GetBitAt(ReadBuffer, 0, 3))
-                        {
-                            if (AgainRecognitionBackground != "0")
-                            {
-                                Application.Current.Dispatcher.Invoke(new Action(() =>
-                                {
-                                    AgainRecognitionBackground = "0";
-                                }));
-                            }
-                        }
-                        else
-                        {
-                            var sss = AgainRecognitionBackground;
-                            if (AgainRecognitionBackground != "1")
-                            {
-                                Application.Current.Dispatcher.Invoke(new Action(() =>
-                                {
-                                    AgainRecognitionBackground = "1";
-                                }));
-                            }
-                        }
+                        //if (S7.GetBitAt(ReadBuffer, 0, 3) && IsIdentifying)
+                        //{
+                        //    //复位识别中信号
+                        //    IsIdentifying = false;
+                        //    RecognitionStatus1 = "等待识别";
+                        //    //复位再次识别使能信号
+                        //    S7.SetBitAt(ref WriteBuffer, 12, 5, true);
+                        //}
+                        ////再次识别使能信号状态显示
+                        //if (S7.GetBitAt(ReadBuffer, 0, 3))
+                        //{
+                        //    if (AgainRecognitionBackground != "0")
+                        //    {
+                        //        Application.Current.Dispatcher.Invoke(new Action(() =>
+                        //        {
+                        //            AgainRecognitionBackground = "0";
+                        //        }));
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    var sss = AgainRecognitionBackground;
+                        //    if (AgainRecognitionBackground != "1")
+                        //    {
+                        //        Application.Current.Dispatcher.Invoke(new Action(() =>
+                        //        {
+                        //            AgainRecognitionBackground = "1";
+                        //        }));
+                        //    }
+                        //}
 
                         //如果视觉拍照工位电机故障
                         if (!S7.GetBitAt(ReadBuffer, 0, 1) && !MotorFailureSignal)
@@ -1753,7 +1828,8 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                         else
                         {
-                            if (S7.GetBitAt(ReadBuffer, 0, 1)) MotorFailureSignal = false;
+                            if (S7.GetBitAt(ReadBuffer, 0, 1))
+                                MotorFailureSignal = false;
                         }
                         //   视觉策略完成信号                      识别完成
                         if (S7.GetBitAt(ReadBuffer, 0, 2) && S7.GetBitAt(WriteBuffer, 12, 2))
@@ -1766,11 +1842,11 @@ namespace WheelRecognitionSystem.ViewModels
                         //写给PLC的视觉系统数据
                         PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
 
-                        if (IsScreenedResult)
-                        {
-                            //读PLC的大屏分选数据
-                            PlcCilent.DBRead(BigScreenDataDB, BigScreenDataStartByte, BigScreenDataLength, BigScreenDataBuffer);
-                        }
+                        //if (IsScreenedResult)
+                        //{
+                        //    //读PLC的大屏分选数据
+                        //    PlcCilent.DBRead(BigScreenDataDB, BigScreenDataStartByte, BigScreenDataLength, BigScreenDataBuffer);
+                        //}
 
                     }
                     else
@@ -1790,6 +1866,13 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
 
+        private string GetBytesToString(byte[] bytes, int startIndex, int length)
+        {
+            byte[] bytesTarget = new byte[length];
+            Array.Copy(bytes, startIndex, bytesTarget, 0, length);
+            string result = System.Text.Encoding.UTF8.GetString(bytesTarget);
+            return result;
+        }
 
         /// <summary>
         /// 执行数据更新

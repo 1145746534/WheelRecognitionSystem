@@ -12,7 +12,7 @@ namespace WheelRecognitionSystem.Models
     /// </summary>
     public class ProductionDataModel
     {
-        [SugarColumn(IsPrimaryKey = true, IsIdentity = true)] ////IsIdentity为True时Id为自增型
+        [SugarColumn(IsPrimaryKey = true, IsIdentity = true)] //IsIdentity为True时Id为自增型
         public int Index { get; set; }
         /// <summary>
         /// 轮型
@@ -46,6 +46,18 @@ namespace WheelRecognitionSystem.Models
         public string WheelStyle { get; set; }
 
         /// <summary>
+        /// 颜色
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true)]
+        public string WheelColor { get; set; }
+
+        /// <summary>
+        /// 标签位置
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true)]
+        public float LabelPosition {  get; set; }
+
+        /// <summary>
         /// 记录时间
         /// </summary>
         public DateTime RecognitionTime { get; set; }
@@ -54,10 +66,10 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public string ImagePath { get; set; }
         /// <summary>
-        /// 预留1
+        /// 型号
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true)]
-        public string Reserve1 { get; set; }
+        public string Model { get; set; }
         /// <summary>
         /// 工站
         /// </summary>
