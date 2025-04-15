@@ -12,7 +12,7 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 模板数据模型
     /// </summary>
-    public class TemplateDataModel : BindableBase
+    public class sys_bd_Templatedatamodel : BindableBase
     {
         /// <summary>
         /// 序号

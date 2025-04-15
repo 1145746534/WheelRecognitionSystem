@@ -99,10 +99,10 @@ namespace WheelRecognitionSystem.DataAccess
         /// </summary>
         public void InitializeTable()
         {
-            SystemDataAccess.CodeFirst.InitTables(typeof(TemplateDataModel));
+            SystemDataAccess.CodeFirst.InitTables(typeof(sys_bd_Templatedatamodel));
             SystemDataAccess.CodeFirst.InitTables(typeof(SystemSettingsDataModel));
             SystemDataAccess.CodeFirst.InitTables(typeof(ActiveWheelTypeDataModel));
-            SystemDataAccess.CodeFirst.InitTables(typeof(CameraInformation));
+            SystemDataAccess.CodeFirst.InitTables(typeof(Sys_bd_camerainformation));
             SystemDataAccess.CodeFirst.InitTables(typeof(Processingtechnology));
             SystemDataAccess.CodeFirst.InitTables(typeof(Defect));
             ProductionDataAccess.CodeFirst.InitTables(typeof(ProductionDataModel));

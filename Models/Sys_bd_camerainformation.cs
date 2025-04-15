@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WheelRecognitionSystem.Models
 {
-    public class CameraInformation
+    public class Sys_bd_camerainformation
     {
         [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
         public int ID { get; set; }

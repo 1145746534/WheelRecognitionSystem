@@ -128,7 +128,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             }
             
             SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-            List<TemplateDataModel> datas = sDB.Queryable<TemplateDataModel>().ToList();
+            List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
             int result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' ') 
             && x.WheelHeight.ToString() ==WheelHeight && x.WheelStyle == WheelStyle);
             if (result >= 0)
@@ -136,7 +136,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 EventMessage.SystemMessageDisplay("轮型重复，请重新输入！", MessageType.Error);
                 return;
             }
-            TemplateDataModel data = new TemplateDataModel
+            sys_bd_Templatedatamodel data = new sys_bd_Templatedatamodel
             {
                 Index = int.Parse(Id),
                 WheelType = WheelType,
@@ -156,10 +156,10 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 newDatas[i].Index = i + 1;
             }
             //修改数据库
-            sDB.DbMaintenance.TruncateTable<TemplateDataModel>();
+            sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
             sDB.Insertable(newDatas).ExecuteCommand();
             //获取排序后的新增数据
-            TemplateDataModel d = newDatas.Find(x => x.WheelType == WheelType
+            sys_bd_Templatedatamodel d = newDatas.Find(x => x.WheelType == WheelType
              && x.WheelHeight.ToString() == WheelHeight && x.WheelStyle == WheelStyle);
             //定义弹窗结果
             IDialogResult dialogResult = new DialogResult();
@@ -190,7 +190,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         public void OnDialogOpened(IDialogParameters parameters)
         {
             var sDB = new SqlAccess().SystemDataAccess;
-            var data = sDB.Queryable<TemplateDataModel>().Max(it => it.Index);
+            var data = sDB.Queryable<sys_bd_Templatedatamodel>().Max(it => it.Index);
             Id = (data + 1).ToString();
         }
     }

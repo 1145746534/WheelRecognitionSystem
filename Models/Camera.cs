@@ -16,7 +16,7 @@ namespace WheelRecognitionSystem.Models
         public HTuple acqHandle;
         public bool IsConnected { get; set; } = false;
 
-        public CameraInformation info;
+        public Sys_bd_camerainformation info;
         /// <summary>
         /// 用于实时采集
         /// </summary>

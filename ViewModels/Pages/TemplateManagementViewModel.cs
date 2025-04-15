@@ -36,11 +36,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         #region======属性字段定义======
         public string Title { get; set; } = "模板管理";
 
-        private ObservableCollection<TemplateDataModel> _templateDatas;
+        private ObservableCollection<sys_bd_Templatedatamodel> _templateDatas;
         /// <summary>
         /// 模板数据
         /// </summary>
-        public ObservableCollection<TemplateDataModel> TemplateDatas
+        public ObservableCollection<sys_bd_Templatedatamodel> TemplateDatas
         {
             get { return _templateDatas; }
             set { SetProperty(ref _templateDatas, value); }
@@ -107,11 +107,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         }
 
 
-        private TemplateDataModel _dataGridSelectedItem;
+        private sys_bd_Templatedatamodel _dataGridSelectedItem;
         /// <summary>
         /// 模板数据窗口选中的行
         /// </summary>
-        public TemplateDataModel DataGridSelectedItem
+        public sys_bd_Templatedatamodel DataGridSelectedItem
         {
             get { return _dataGridSelectedItem; }
             set
@@ -300,7 +300,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DisplayWheelContour = new HObject();
             DisplayTemplateContour = new HObject();
             DisplayInGateContour = new HObject();
-            TemplateDatas = new ObservableCollection<TemplateDataModel>();
+            TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
             LoadedTemplateDatas();
             RecognitionResultDisplay = Visibility.Collapsed;
             GateDetectionVisibility = Visibility.Collapsed;
@@ -379,12 +379,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void LoadedTemplateDatas()
         {
-            List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
+            List<sys_bd_Templatedatamodel> datas = new SqlAccess().SystemDataAccess.Queryable<sys_bd_Templatedatamodel>().ToList();
             //此处必须使用Invoke
             System.Windows.Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 TemplateDatas.Clear();
-                TemplateDatas = new ObservableCollection<TemplateDataModel>(datas);
+                TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(datas);
             }));
         }
         /// <summary>
@@ -423,7 +423,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (result.Parameters.Count != 0)
                 {
                     LoadedTemplateDatas();
-                    DataGridSelectedItem = result.Parameters.GetValue<TemplateDataModel>("set");
+                    DataGridSelectedItem = result.Parameters.GetValue<sys_bd_Templatedatamodel>("set");
                     DataGridSelectedIndex = DataGridSelectedItem.Index - 1;
                     //发布修改项用于模板数据显示控件滚动到修改项
                     EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Publish(DataGridSelectedItem);
@@ -723,7 +723,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 //修改数据库
                 var sDB = new SqlAccess().SystemDataAccess;
-                sDB.DbMaintenance.TruncateTable<TemplateDataModel>();
+                sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                 sDB.Insertable(datas).ExecuteCommand();
                 //修改自动模式匹配用模板数据
                 if (!TemplateDataUpdataControl) TemplateDataUpdataControl = true;
@@ -885,7 +885,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 //1.检查模板表格数据中是否包含合并后的模板名列表中的每一个轮型
                 List<string> wheels = TemplateDatas.Select(x => x.WheelType).ToList();
-                List<TemplateDataModel> templates = new List<TemplateDataModel>();
+                List<sys_bd_Templatedatamodel> templates = new List<sys_bd_Templatedatamodel>();
                 for (int i = 0; i < templateNameList.Count; i++)
                 {
                     bool r = wheels.Contains(templateNameList[i]);
@@ -898,7 +898,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     //如果不包含，则新建当前模板数据再添加到新的模板数据列表
                     else
                     {
-                        TemplateDataModel data = new TemplateDataModel
+                        sys_bd_Templatedatamodel data = new sys_bd_Templatedatamodel
                         {
                             Index = 999,
                             WheelType = templateNameList[i],
@@ -934,10 +934,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //修改显示数据与匹配数据
                 AutoTemplateDataLoadControl = true;
                 TemplateDatas.Clear();
-                TemplateDatas = new ObservableCollection<TemplateDataModel>(newTemplateDatas);
+                TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newTemplateDatas);
                 //修改数据库
                 var sDB = new SqlAccess().SystemDataAccess;
-                sDB.DbMaintenance.TruncateTable<TemplateDataModel>();
+                sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                 sDB.Insertable(newTemplateDatas).ExecuteCommand();
                 EventMessage.SystemMessageDisplay("模板检查执行成功！", MessageType.Success);
                 EventMessage.MessageDisplay("模板检查执行成功！", true, true);

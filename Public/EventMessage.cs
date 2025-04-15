@@ -75,7 +75,7 @@ namespace WheelRecognitionSystem.Public
     /// <summary>
     /// 模板表格数据编辑事件，用于编辑数据时将表格显示滚动到编辑的项
     /// </summary>
-    public class TemplateDataEditEvent : PubSubEvent<TemplateDataModel> { }
+    public class TemplateDataEditEvent : PubSubEvent<sys_bd_Templatedatamodel> { }
     /// <summary>
     /// 系统消息框信息事件的发布和订阅
     /// </summary>

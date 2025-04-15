@@ -874,7 +874,7 @@ namespace WheelRecognitionSystem.ViewModels
                             #region======轮毂分选判断======
                             if (IsScreenedResult)
                             {
-                                TemplateDataModel templateDate = null;
+                                sys_bd_Templatedatamodel templateDate = null;
                                 bool screenedResult = false;
                                 if (recognitionResult.RecognitionWheelType != "NG")
                                 {
@@ -996,7 +996,7 @@ namespace WheelRecognitionSystem.ViewModels
                     {
                         try
                         {
-                            List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
+                            List<sys_bd_Templatedatamodel> datas = new SqlAccess().SystemDataAccess.Queryable<sys_bd_Templatedatamodel>().ToList();
                             TemplateDataList.Clear();
                             TemplateDataList = datas;
                         }
@@ -1891,7 +1891,7 @@ namespace WheelRecognitionSystem.ViewModels
                     List<string> activeWheels = sDB.Queryable<ActiveWheelTypeDataModel>().Select(x => x.WheelType).ToList();
                     sDB.DbMaintenance.TruncateTable<ActiveWheelTypeDataModel>();
                     TodayWheels.Clear();
-                    List<TemplateDataModel> datas = sDB.Queryable<TemplateDataModel>().ToList();
+                    List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
                     if (datas.Count > 0)
                     {
                         //第2步：获取模板数据库中所有数据，并将所有轮型的未用天数+1
@@ -1928,7 +1928,7 @@ namespace WheelRecognitionSystem.ViewModels
                             }
                         }
                         //第5步：更新模板数据库，并重新读取所有模板到内存中
-                        sDB.DbMaintenance.TruncateTable<TemplateDataModel>();
+                        sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                         sDB.Insertable(datas).ExecuteCommand();
                         AutoTemplateDataLoadControl = true;
                         EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Publish("");

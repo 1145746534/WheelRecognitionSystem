@@ -687,8 +687,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         cameras[index] = camera;
                         //数据库更新
                         SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-                        var result = sDB.Updateable<CameraInformation>()
-                        .SetColumns(it => new CameraInformation()
+                        var result = sDB.Updateable<Sys_bd_camerainformation>()
+                        .SetColumns(it => new Sys_bd_camerainformation()
                         {
                             Exposure = newExposure,
                             LinkID = newLinkID
@@ -735,11 +735,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public void LoadCameraInfo()
         {
             SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-            ExternalConnections.DatasCamera = sDB.Queryable<CameraInformation>().OrderBy(o => o.ID).ToList();
+            ExternalConnections.DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
             for (int i = 0; i < cameras.Length; i++)
             {
                 cameras[i] = new Camera();
-                cameras[i].info = new CameraInformation();
+                cameras[i].info = new Sys_bd_camerainformation();
                 if (ExternalConnections.DatasCamera.Count > i)
                 {
                     cameras[i].info = ExternalConnections.DatasCamera[i];

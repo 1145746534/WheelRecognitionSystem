@@ -72,11 +72,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         #endregion
 
         #region  模板数据属性
-        private ObservableCollection<TemplateDataModel> _templateDatas;
+        private ObservableCollection<sys_bd_Templatedatamodel> _templateDatas;
         /// <summary>
         /// 未识别数据
         /// </summary>
-        public ObservableCollection<TemplateDataModel> TemplateDatas
+        public ObservableCollection<sys_bd_Templatedatamodel> TemplateDatas
         {
             get { return _templateDatas; }
             set { SetProperty(ref _templateDatas, value); }
@@ -92,11 +92,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             set { SetProperty(ref _temDataGridSelectedIndex, value); }
         }
 
-        private TemplateDataModel _temDataGridSelectedItem;
+        private sys_bd_Templatedatamodel _temDataGridSelectedItem;
         /// <summary>
         /// 模板数据窗口选中的行
         /// </summary>
-        public TemplateDataModel TemDataGridSelectedItem
+        public sys_bd_Templatedatamodel TemDataGridSelectedItem
         {
             get { return _temDataGridSelectedItem; }
             set
@@ -171,7 +171,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HubChangesCommand = new DelegateCommand(HubChanges);
             _regionManager = regionManager;
             UnrecognizedDatas = new ObservableCollection<ProductionDataModel>();
-            TemplateDatas = new ObservableCollection<TemplateDataModel>();
+            TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
 
             _dispatcherTimer = new DispatcherTimer();
             _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
@@ -292,7 +292,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         public void DataInquireTemplate()
         {
-            List<TemplateDataModel> datas = new SqlAccess().SystemDataAccess.Queryable<TemplateDataModel>().ToList();
+            List<sys_bd_Templatedatamodel> datas = new SqlAccess().SystemDataAccess.Queryable<sys_bd_Templatedatamodel>().ToList();
             datas.ForEach(data => { data.WheelType = data.WheelType.Trim('_'); });
             var datasGrb = datas.GroupBy(g => new { g.WheelType, g.WheelStyle }).ToList();
 
@@ -300,12 +300,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             if (datasGrb.Count != TemplateDatas.Count)
             {
-                List<TemplateDataModel> newDatas = new List<TemplateDataModel>();
+                List<sys_bd_Templatedatamodel> newDatas = new List<sys_bd_Templatedatamodel>();
                 int i = 0;
                 foreach (var item in datasGrb)
                 {
                     var key = item.Key; // 获取分组键（匿名类型）
-                    newDatas.Add(new TemplateDataModel()
+                    newDatas.Add(new sys_bd_Templatedatamodel()
                     {
                         Index = i++,
                         WheelType = key.WheelType,
@@ -313,7 +313,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     });
                 }
                 TemplateDatas?.Clear();
-                TemplateDatas = new ObservableCollection<TemplateDataModel>(newDatas);
+                TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newDatas);
             }
 
 

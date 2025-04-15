@@ -32,7 +32,7 @@ namespace WheelRecognitionSystem.Views.Pages
         }
 
         //将模板数据窗口的显示滚动到model项
-        private void Edit(TemplateDataModel model)
+        private void Edit(sys_bd_Templatedatamodel model)
         {
             TemplateDataGrid.ScrollIntoView(model);
         }
