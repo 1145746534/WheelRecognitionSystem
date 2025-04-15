@@ -60,7 +60,7 @@ namespace WheelRecognitionSystem.DataAccess
             //用于存储系统数据的数据库
             SystemDataAccess = new SqlSugarClient(new ConnectionConfig()
             {
-                ConnectionString = "server=127.0.0.1;uid=root;pwd=123456;database=systemdata",
+                ConnectionString = "server=127.0.0.1;uid=root;pwd=Csdk@2025;database=csdk_zj",
                 DbType = DbType.MySql,
                 InitKeyType = InitKeyType.Attribute,
                 IsAutoCloseConnection = true
@@ -104,7 +104,7 @@ namespace WheelRecognitionSystem.DataAccess
             SystemDataAccess.CodeFirst.InitTables(typeof(ActiveWheelTypeDataModel));
             SystemDataAccess.CodeFirst.InitTables(typeof(Sys_bd_camerainformation));
             SystemDataAccess.CodeFirst.InitTables(typeof(Processingtechnology));
-            SystemDataAccess.CodeFirst.InitTables(typeof(Defect));
+            SystemDataAccess.CodeFirst.InitTables(typeof(tbl_defect_code));
             ProductionDataAccess.CodeFirst.InitTables(typeof(ProductionDataModel));
         }
     }

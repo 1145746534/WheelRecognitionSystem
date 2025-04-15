@@ -22,6 +22,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 轮毂型号
         /// </summary>
+        [SugarColumn(IsNullable = false, Length = 255)]
         public string WheelType { get; set; }
         /// <summary>
         /// 未用天数
