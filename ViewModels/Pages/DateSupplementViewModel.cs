@@ -32,11 +32,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public string Title { get; set; } = "数据补录";
 
         #region  未识别数据属性
-        private ObservableCollection<ProductionDataModel> _unrecognizedDatas;
+        private ObservableCollection<Tbl_productiondatamodel> _unrecognizedDatas;
         /// <summary>
         /// 未识别数据
         /// </summary>
-        public ObservableCollection<ProductionDataModel> UnrecognizedDatas
+        public ObservableCollection<Tbl_productiondatamodel> UnrecognizedDatas
         {
             get { return _unrecognizedDatas; }
             set { SetProperty(ref _unrecognizedDatas, value); }
@@ -52,11 +52,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             set { SetProperty(ref _unrDataGridSelectedIndex, value); }
         }
 
-        private ProductionDataModel _unrDataGridSelectedItem;
+        private Tbl_productiondatamodel _unrDataGridSelectedItem;
         /// <summary>
         /// 模板数据窗口选中的行
         /// </summary>
-        public ProductionDataModel UnrDataGridSelectedItem
+        public Tbl_productiondatamodel UnrDataGridSelectedItem
         {
             get { return _unrDataGridSelectedItem; }
             set
@@ -170,7 +170,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             TemMouseLeftButtonDownCommand = new DelegateCommand<object>(TemMouseLeftButtonDown);
             HubChangesCommand = new DelegateCommand(HubChanges);
             _regionManager = regionManager;
-            UnrecognizedDatas = new ObservableCollection<ProductionDataModel>();
+            UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>();
             TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
 
             _dispatcherTimer = new DispatcherTimer();
@@ -195,7 +195,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 int columnIndex = dataGrid.CurrentCell.Column.DisplayIndex;
 
                 UnrDataGridSelectedItem = UnrecognizedDatas[UnrDataGridSelectedIndex];
-                UnrIndex = UnrDataGridSelectedItem.Index.ToString();
+                UnrIndex = UnrDataGridSelectedItem.ID.ToString();
                 UnrWheelType = UnrDataGridSelectedItem.WheelType;
                 string path = UnrDataGridSelectedItem.ImagePath;
                 EventMessage.MessageHelper.GetEvent<ClearEvent>().Publish("");
@@ -238,14 +238,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void HubChanges()
         {
-            SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
-            var result = pDB.Updateable<ProductionDataModel>()
-                .SetColumns(it => new ProductionDataModel()
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+            var result = pDB.Updateable<Tbl_productiondatamodel>()
+                .SetColumns(it => new Tbl_productiondatamodel()
                 {
                     Model = RecWheelType,
                     WheelType = RecWheelType,
                     WheelStyle = RecWheelStyle
-                }).Where(it => it.Index == Convert.ToInt32(UnrIndex)).ExecuteCommand();
+                }).Where(it => it.ID == Convert.ToInt32(UnrIndex)).ExecuteCommand();
             DataInquireProduct();
             RecWheelType = "";
             RecWheelStyle = "";
@@ -274,16 +274,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void DataInquireProduct()
         {
-            SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
-            var exp = Expressionable.Create<ProductionDataModel>()
-                .And(it => it.Model == "").Or(it => it.Model == null).ToExpression();
-            List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>().Where(exp).ToList();
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+            var exp = Expressionable.Create<Tbl_productiondatamodel>()
+                .And(it => it.Model == "error").Or(it => it.Model == null).ToExpression();
+            List<Tbl_productiondatamodel> productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(exp).ToList();
             //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
             //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();
             if (productionList.Count != UnrecognizedDatas.Count)
             {
                 UnrecognizedDatas?.Clear();
-                UnrecognizedDatas = new ObservableCollection<ProductionDataModel>(productionList);
+                UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
             }
         }
 

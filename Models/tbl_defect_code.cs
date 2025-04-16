@@ -10,7 +10,7 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 缺陷名称类
     /// </summary>
-    public class Defect
+    public class tbl_defect_code
     {
         [SugarColumn(IsPrimaryKey = true, IsIdentity = false)]
         public int ID { get; set; }
@@ -25,7 +25,7 @@ namespace WheelRecognitionSystem.Models
         /// 名称
         /// </summary>
         [SugarColumn(IsNullable = true, Length = 50)]
-        public string Name { get; set; }
+        public string name { get; set; }
 
         /// <summary>
         /// 是否启用（0正常 1停用）
@@ -48,7 +48,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 创建时间
         /// </summary>
-        [SugarColumn(ColumnDataType = "datetime")]
+        [SugarColumn(IsNullable = false, ColumnDataType = "datetime")]
         public DateTime create_time { get; set; }
 
         /// <summary>
@@ -60,13 +60,13 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 更新时间
         /// </summary>
-        [SugarColumn(ColumnDataType = "datetime")]
-        public string update_time { get; set; }
+        [SugarColumn(IsNullable = true, ColumnDataType = "datetime")]
+        public DateTime update_time { get; set; }
 
         /// <summary>
         /// 是否删除
         /// </summary>
-        [SugarColumn(IsNullable = true,  ColumnDataType = "char(1)")]
+        [SugarColumn(IsNullable = true,  Length =1)]
         public string del_flag { get; set; }
 
 

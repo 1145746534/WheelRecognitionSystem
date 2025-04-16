@@ -16,10 +16,7 @@ namespace WheelRecognitionSystem.DataAccess
         /// 系统数据访问
         /// </summary>
         public SqlSugarClient SystemDataAccess;
-        /// <summary>
-        /// 生产数据访问
-        /// </summary>
-        public SqlSugarClient ProductionDataAccess;
+       
         
 
         public SqlAccess()
@@ -28,32 +25,7 @@ namespace WheelRecognitionSystem.DataAccess
             MySqlLink();
         }
 
-        public void MySqlite()
-        {
-
-            //用于存储系统数据的数据库
-            SystemDataAccess = new SqlSugarClient(new ConnectionConfig()
-            {
-                ConnectionString = @"Data Source=" + Environment.CurrentDirectory + @"\SystemData.db",
-
-                DbType = DbType.Sqlite,
-                InitKeyType = InitKeyType.Attribute,
-                IsAutoCloseConnection = true
-            });
-            SystemDataAccess.DbMaintenance.CreateDatabase();
-
-            //用于存储历史生产数据的数据库
-            ProductionDataAccess = new SqlSugarClient(new ConnectionConfig()
-            {
-                ConnectionString = @"Data Source=" + Environment.CurrentDirectory + @"\ProductionData.db",
-                DbType = DbType.Sqlite,
-                InitKeyType = InitKeyType.Attribute,
-                IsAutoCloseConnection = true
-            });
-            ProductionDataAccess.DbMaintenance.CreateDatabase();
-
-           
-        }
+        
 
         public void MySqlLink()
         {
@@ -67,15 +39,7 @@ namespace WheelRecognitionSystem.DataAccess
             });
             SystemDataAccess.DbMaintenance.CreateDatabase();
 
-            //用于存储历史生产数据的数据库
-            ProductionDataAccess = new SqlSugarClient(new ConnectionConfig()
-            {
-                ConnectionString = "server=127.0.0.1;uid=root;pwd=123456;database=ProductionData",
-                DbType = DbType.MySql,//设置数据库类型     
-                InitKeyType = InitKeyType.Attribute, //从实体特性中读取主键自增列信息  
-                IsAutoCloseConnection = true //自动释放数据务，如果存在事务，在事务结束后释放     
-            });
-            ProductionDataAccess.DbMaintenance.CreateDatabase();
+            
 
            
 
@@ -88,7 +52,7 @@ namespace WheelRecognitionSystem.DataAccess
         public static void SystemDatasWrite(string name, string value)
         {
             var sDB = new SqlAccess().SystemDataAccess;
-            SystemSettingsDataModel data = new SystemSettingsDataModel();
+            sys_bd_systemsettingsdatamodel data = new sys_bd_systemsettingsdatamodel();
             data.Name = name;
             data.Value = value;
             sDB.Updateable(data).Where(x => x.Name == name).ExecuteCommand();
@@ -99,13 +63,13 @@ namespace WheelRecognitionSystem.DataAccess
         /// </summary>
         public void InitializeTable()
         {
-            SystemDataAccess.CodeFirst.InitTables(typeof(sys_bd_Templatedatamodel));
-            SystemDataAccess.CodeFirst.InitTables(typeof(SystemSettingsDataModel));
-            SystemDataAccess.CodeFirst.InitTables(typeof(ActiveWheelTypeDataModel));
-            SystemDataAccess.CodeFirst.InitTables(typeof(Sys_bd_camerainformation));
-            SystemDataAccess.CodeFirst.InitTables(typeof(Processingtechnology));
-            SystemDataAccess.CodeFirst.InitTables(typeof(tbl_defect_code));
-            ProductionDataAccess.CodeFirst.InitTables(typeof(ProductionDataModel));
+            SystemDataAccess.CodeFirst.InitTables(typeof(sys_bd_Templatedatamodel)); //*
+            SystemDataAccess.CodeFirst.InitTables(typeof(sys_bd_systemsettingsdatamodel));
+            SystemDataAccess.CodeFirst.InitTables(typeof(Sys_bd_activewheeltypedatamodel));
+            SystemDataAccess.CodeFirst.InitTables(typeof(Sys_bd_camerainformation)); //*
+            //SystemDataAccess.CodeFirst.InitTables(typeof(Processingtechnology));
+            SystemDataAccess.CodeFirst.InitTables(typeof(tbl_defect_code)); //*
+            SystemDataAccess.CodeFirst.InitTables(typeof(Tbl_productiondatamodel));
         }
     }
 }

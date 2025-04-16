@@ -42,8 +42,36 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _arrivalSignal, value); }
         }
 
+        private int _wheelDefect;
+        /// <summary>
+        /// 缺陷编码
+        /// </summary>
+        public int WheelDefect
+        {
+            get { return _wheelDefect; }
+            set { SetProperty(ref _wheelDefect, value); }
+        }
+
+        private float _wheelTemperature;
+        /// <summary>
+        /// 轮毂温度
+        /// </summary>
+        public float WheelTemperature
+        {
+            get { return _wheelTemperature; }
+            set { SetProperty(ref _wheelTemperature, value); }
+        }
 
 
+        private float _wheelHeight;
+        /// <summary>
+        /// 轮毂高度
+        /// </summary>
+        public float WheelHeight
+        {
+            get { return _wheelHeight; }
+            set { SetProperty(ref _wheelHeight, value); }
+        }
 
     }
 }

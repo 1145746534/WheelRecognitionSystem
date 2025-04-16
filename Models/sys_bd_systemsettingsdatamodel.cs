@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WheelRecognitionSystem.Models
 {
-    public class SystemSettingsDataModel
+    public class sys_bd_systemsettingsdatamodel
     {
         [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
         public int Index { get; set; }

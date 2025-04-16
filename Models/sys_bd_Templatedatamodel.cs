@@ -27,16 +27,17 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 未用天数
         /// </summary>
+        [SugarColumn(IsNullable = false)]
         public int UnusedDays { get; set; }
         /// <summary>
         /// 轮毂高度
         /// </summary>
-        [SqlSugar.SugarColumn(IsNullable = true)]
+        [SqlSugar.SugarColumn(IsNullable = false)]
         public float WheelHeight { get; set; }
         /// <summary>
         /// 轮毂样式
         /// </summary>
-        [SqlSugar.SugarColumn(IsNullable = true)]
+        [SqlSugar.SugarColumn(IsNullable = true, Length = 255)]
         public string WheelStyle { get; set; }
 
         private bool _sortingEnable;
@@ -53,6 +54,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 创建时间
         /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true, Length = 255)]
         public string CreationTime
         {
             get { return _creationTime; }

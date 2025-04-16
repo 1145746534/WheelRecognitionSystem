@@ -28,6 +28,9 @@ using NPOI.SS.Formula.Functions;
 using System.Threading;
 using System.Reflection;
 using ZstdSharp.Unsafe;
+using MySqlX.XDevAPI.Common;
+using MySqlX.XDevAPI;
+using Mysqlx.Session;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -476,7 +479,6 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private List<string> TodayWheels { get; set; } = new List<string>();
 
-        private string Plc2ConnectStatus = "0";
 
         /// <summary>
         /// PLC连接
@@ -487,10 +489,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// PLC IP地址
         /// </summary>
         private string PlcIP;
-        /// <summary>
-        /// PLC IP2地址
-        /// </summary>
-        private string PlcIP2;
+
         /// <summary>
         /// 读取PLC数据的DB块
         /// </summary>
@@ -506,15 +505,12 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 读缓冲区
         /// </summary>
-        private byte[] ReadBuffer = new byte[1];
+        private byte[] ReadBuffer = new byte[1400];
         /// <summary>
         /// 写入PLC数据的DB块
         /// </summary>
         private int WriteDB;
-        /// <summary>
-        /// 写入PLC2数据的DB块
-        /// </summary>
-        private int WriteDB2;
+
         /// <summary>
         /// 写入PLC数据的起始地址
         /// </summary>
@@ -544,29 +540,17 @@ namespace WheelRecognitionSystem.ViewModels
         /// 大屏显示的分选数据
         /// </summary>
         private List<ScreenedDataModel> ScreenedDatas = new List<ScreenedDataModel>();
-        /// <summary>
-        /// 大屏数据缓冲区
-        /// </summary>
-        private byte[] BigScreenDataBuffer = new byte[300];
-        /// <summary>
-        /// 大屏数据DB
-        /// </summary>
-        private int BigScreenDataDB;
-        /// <summary>
-        /// 大屏数据起始位
-        /// </summary>
-        private int BigScreenDataStartByte;
-        /// <summary>
-        /// 大屏数据长度
-        /// </summary>
-        private int BigScreenDataLength;
+
+
+
+
         /// <summary>
         /// 轮毂到位延时
         /// </summary>
         private int _ArrivalDelay;
 
         /// <summary>
-        /// 读取PLC信号数据组
+        /// 读取PLC信号数据信息组
         /// </summary>
         private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[5];
 
@@ -931,11 +915,11 @@ namespace WheelRecognitionSystem.ViewModels
                                 TodayWheels.Add(recognitionResult.RecognitionWheelType);
                                 //添加到数据库，防止停电或系统崩溃
                                 var sDB = new SqlAccess().SystemDataAccess;
-                                var d = sDB.Queryable<ActiveWheelTypeDataModel>().First(x => x.WheelType == recognitionResult.RecognitionWheelType);
+                                var d = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().First(x => x.WheelType == recognitionResult.RecognitionWheelType);
                                 if (d == null)
                                 {
-                                    var id = sDB.Queryable<ActiveWheelTypeDataModel>().Max(x => x.ID);
-                                    ActiveWheelTypeDataModel activeWheelTypeDataModel = new ActiveWheelTypeDataModel()
+                                    var id = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().Max(x => x.ID);
+                                    Sys_bd_activewheeltypedatamodel activeWheelTypeDataModel = new Sys_bd_activewheeltypedatamodel()
                                     {
                                         ID = id + 1,
                                         WheelType = recognitionResult.RecognitionWheelType,
@@ -947,11 +931,11 @@ namespace WheelRecognitionSystem.ViewModels
                             #region======构建数据并保存======
                             try
                             {
-                                var pDB = new SqlAccess().ProductionDataAccess;
-                                int maxIndex = pDB.Queryable<ProductionDataModel>().Max(i => i.Index);
-                                ProductionDataModel productionDataModel = new ProductionDataModel
+                                var pDB = new SqlAccess().SystemDataAccess;
+                                int maxIndex = pDB.Queryable<Tbl_productiondatamodel>().Max(i => i.ID);
+                                Tbl_productiondatamodel productionDataModel = new Tbl_productiondatamodel
                                 {
-                                    Index = maxIndex + 1,
+                                    ID = maxIndex + 1,
                                     WheelType = RecognitionWheelType1,
                                     TimeConsumed = TimeConsumed1,
                                     Similarity = Similarity1,
@@ -1146,8 +1130,8 @@ namespace WheelRecognitionSystem.ViewModels
                 }
 
                 //插入数据库
-                SqlSugarClient pDB = new SqlAccess().ProductionDataAccess;
-                ProductionDataModel dataModel = new ProductionDataModel();
+                SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+                Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
                 dataModel.WheelType = model.wheelType;
                 dataModel.TimeConsumed = model.Interval.ToString();
                 dataModel.Similarity = model.similarity.ToString();
@@ -1158,7 +1142,7 @@ namespace WheelRecognitionSystem.ViewModels
                 dataModel.Station = "";
                 dataModel.ImagePath = model.imagePath;
                 dataModel.ResultBool = model.ResultBol;
-                dataModel.Describe = "";
+                dataModel.Remark = "";
                 pDB.Insertable(dataModel).ExecuteCommand();
                 //var dc = new Dictionary<string, object>();
                 //dc.Add("WheelType", "");
@@ -1262,6 +1246,11 @@ namespace WheelRecognitionSystem.ViewModels
         {
             try
             {
+                //实例化数据组
+                for (int i = 0; i < readPLCSignals.Length; i++)
+                {
+                    readPLCSignals[i] = new ReadPLCSignal();
+                }
                 ReadAppSettings("UpdateTime", out string updateTime);
                 UpdateTime = int.Parse(updateTime);
                 #region======图像处理数据======
@@ -1293,12 +1282,9 @@ namespace WheelRecognitionSystem.ViewModels
                 WriteStartAddress = int.Parse(writeStartAddress);
                 ReadAppSettings("WriteLenght", out string writeLenght);
                 WriteLenght = int.Parse(writeLenght);
-                ReadAppSettings("BigScreenDataDB", out string bigScreenDataDB);
-                BigScreenDataDB = int.Parse(bigScreenDataDB);
-                ReadAppSettings("BigScreenDataStartByte", out string bigScreenDataStartByte);
-                BigScreenDataStartByte = int.Parse(bigScreenDataStartByte);
-                ReadAppSettings("BigScreenDataLength", out string bigScreenDataLength);
-                BigScreenDataLength = int.Parse(bigScreenDataLength);
+
+
+
                 ReadAppSettings("ArrivalDelay", out string arrivalDelay);
                 _ArrivalDelay = int.Parse(arrivalDelay);
 
@@ -1311,19 +1297,11 @@ namespace WheelRecognitionSystem.ViewModels
                 bool r1 = bool.TryParse(isCroppingOrNot, out bool result1);
                 if (r1) CroppingOrNot = result1;
                 else CroppingOrNot = false;
-                //---PLC2 用来发浇口NG
-                ReadAppSettings("PlcIP2", out string plcIP2);
-                PlcIP2 = plcIP2;
-                ReadAppSettings("WriteDB2", out string writeDB2);
-                WriteDB2 = int.Parse(writeDB2);
-                ReadAppSettings("WriteStartAddress2", out string writeStartAddress2);
-                WriteStartAddress2 = int.Parse(writeStartAddress2);
-                ReadAppSettings("WriteLenght2", out string writeLenght2);
-                WriteLenght2 = int.Parse(writeLenght2);
+
                 #endregion
                 #region======系统其他数据======
                 var sDB = new SqlAccess().SystemDataAccess;
-                var systemDatas = sDB.Queryable<SystemSettingsDataModel>().ToList();
+                var systemDatas = sDB.Queryable<sys_bd_systemsettingsdatamodel>().ToList();
                 WheelMinThreshold = int.Parse(systemDatas.First(x => x.Name == "WheelMinThreshold").Value);
                 WindowMaxThreshold = int.Parse(systemDatas.First(x => x.Name == "WindowMaxThreshold").Value);
                 RemoveMixArea = double.Parse(systemDatas.First(x => x.Name == "RemoveMixArea").Value);
@@ -1343,7 +1321,7 @@ namespace WheelRecognitionSystem.ViewModels
                 #endregion
                 //加载活跃轮型数据
                 TodayWheels.Clear();
-                var datas = sDB.Queryable<ActiveWheelTypeDataModel>().ToList();
+                var datas = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().ToList();
                 for (int i = 0; i < datas.Count; i++) TodayWheels.Add(datas[i].WheelType);
                 EventMessage.MessageDisplay("系统数据加载完成。", true, false);
             }
@@ -1735,34 +1713,55 @@ namespace WheelRecognitionSystem.ViewModels
                     {
                         //读PLC给视觉的数据
                         //                               0         1290
+                        ReadBuffer = new byte[ReadLenght - ReadStartAddress];
                         int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
                         if (bytes_read == 0) // 成功读取
                         {
                             //获取PLC轮毂到位信号
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                readPLCSignals[i].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, i);
+                            }
+                            //readPLCSignals[0].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 0);
+                            //readPLCSignals[1].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 1);
+                            //readPLCSignals[2].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 2);
+                            //readPLCSignals[3].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 3);
+                            //readPLCSignals[4].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 4);
 
-                            readPLCSignals[0].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 0);
-                            readPLCSignals[1].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 1);
-                            readPLCSignals[2].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 2);
-                            readPLCSignals[3].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 3);
-                            readPLCSignals[4].ArrivalSignal = S7.GetBitAt(ReadBuffer, 1292, 4);
+                            //轮型编码 =  分秒 + 轮型 
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                readPLCSignals[i].WheelCoding = GetBytesToString(ReadBuffer, 2 + i * 14, 14).Trim();
+                            }
 
-                            readPLCSignals[0].WheelCoding = GetBytesToString(ReadBuffer, 2, 256);//1检1轮型编码
-                            readPLCSignals[1].WheelCoding = GetBytesToString(ReadBuffer, 258, 256);//1检2A轮型编码
-                            readPLCSignals[2].WheelCoding = GetBytesToString(ReadBuffer, 514, 256);//1检2B轮型编码
-                            readPLCSignals[3].WheelCoding = GetBytesToString(ReadBuffer, 770, 256);//1检3轮型编码
-                            readPLCSignals[4].WheelCoding = GetBytesToString(ReadBuffer, 1026, 256);//2检1轮型编码
 
-                           
+                            //readPLCSignals[0].WheelCoding = GetBytesToString(ReadBuffer, 2, 14);//1检1轮型编码
+                            //readPLCSignals[1].WheelCoding = GetBytesToString(ReadBuffer, 18, 14);//1检2A轮型编码
+                            //readPLCSignals[2].WheelCoding = GetBytesToString(ReadBuffer, 34, 14);//1检2B轮型编码
+                            //readPLCSignals[3].WheelCoding = GetBytesToString(ReadBuffer, 50, 14);//1检3轮型编码
+                            //readPLCSignals[4].WheelCoding = GetBytesToString(ReadBuffer, 66, 14);//2检1轮型编码
 
-                            
+                            //缺陷
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                readPLCSignals[i].WheelDefect = BitConverter.ToInt16(new byte[] { ReadBuffer[99 + i * 2], ReadBuffer[98 + i * 2] }, 0);
+                            }
 
-                           
+                            //轮毂温度
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                readPLCSignals[i].WheelTemperature = S7.GetRealAt(ReadBuffer, 124);
+                            }
+
+                            //
+
 
                         }
                         else
                         {
                             //读取失败
 
+                            Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
                         }
 
 
@@ -1818,29 +1817,31 @@ namespace WheelRecognitionSystem.ViewModels
                         //}
 
                         //如果视觉拍照工位电机故障
-                        if (!S7.GetBitAt(ReadBuffer, 0, 1) && !MotorFailureSignal)
-                        {
-                            MotorFailureSignal = true;
-                            Application.Current.Dispatcher.Invoke(new Action(() =>
-                            {
-                                WMessageBox.Show("视觉拍照工位电机故障，请检查！", MessageType.Error);
-                            }));
-                        }
-                        else
-                        {
-                            if (S7.GetBitAt(ReadBuffer, 0, 1))
-                                MotorFailureSignal = false;
-                        }
-                        //   视觉策略完成信号                      识别完成
-                        if (S7.GetBitAt(ReadBuffer, 0, 2) && S7.GetBitAt(WriteBuffer, 12, 2))
-                        {
-                            //复位识别完成信号
-                            S7.SetBitAt(ref WriteBuffer, 12, 2, false);
-                            //清空轮型区域
-                            Array.Clear(WriteBuffer, 0, 10);
-                        }
+                        //if (!S7.GetBitAt(ReadBuffer, 0, 1) && !MotorFailureSignal)
+                        //{
+                        //    MotorFailureSignal = true;
+                        //    Application.Current.Dispatcher.Invoke(new Action(() =>
+                        //    {
+                        //        WMessageBox.Show("视觉拍照工位电机故障，请检查！", MessageType.Error);
+                        //    }));
+                        //}
+                        //else
+                        //{
+                        //    if (S7.GetBitAt(ReadBuffer, 0, 1))
+                        //        MotorFailureSignal = false;
+                        //}
+                        ////   视觉策略完成信号                      识别完成
+                        //if (S7.GetBitAt(ReadBuffer, 0, 2) && S7.GetBitAt(WriteBuffer, 12, 2))
+                        //{
+                        //    //复位识别完成信号
+                        //    S7.SetBitAt(ref WriteBuffer, 12, 2, false);
+                        //    //清空轮型区域
+                        //    Array.Clear(WriteBuffer, 0, 10);
+                        //}
+
+
                         //写给PLC的视觉系统数据
-                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                        //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
 
                         //if (IsScreenedResult)
                         //{
@@ -1868,9 +1869,7 @@ namespace WheelRecognitionSystem.ViewModels
 
         private string GetBytesToString(byte[] bytes, int startIndex, int length)
         {
-            byte[] bytesTarget = new byte[length];
-            Array.Copy(bytes, startIndex, bytesTarget, 0, length);
-            string result = System.Text.Encoding.UTF8.GetString(bytesTarget);
+            string result = System.Text.Encoding.UTF8.GetString(bytes.Skip(startIndex + 2).Take(length).ToArray());
             return result;
         }
 
@@ -1888,8 +1887,8 @@ namespace WheelRecognitionSystem.ViewModels
                     #region======模板动态调整======
                     var sDB = new SqlAccess().SystemDataAccess;
                     //第1步：读取活跃轮型数据库中的所有轮型，并清空活跃轮型数据库
-                    List<string> activeWheels = sDB.Queryable<ActiveWheelTypeDataModel>().Select(x => x.WheelType).ToList();
-                    sDB.DbMaintenance.TruncateTable<ActiveWheelTypeDataModel>();
+                    List<string> activeWheels = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().Select(x => x.WheelType).ToList();
+                    sDB.DbMaintenance.TruncateTable<Sys_bd_activewheeltypedatamodel>();
                     TodayWheels.Clear();
                     List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
                     if (datas.Count > 0)
@@ -1981,16 +1980,16 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     #region======删除识别数据======
                     DateTime delTime = DateTime.Now.AddDays(-SaveDataMonths * 30);
-                    var pDB = new SqlAccess().ProductionDataAccess;
-                    int minIndex = pDB.Queryable<ProductionDataModel>().Min(x => x.Index);
-                    var startData = pDB.Queryable<ProductionDataModel>().First(x => x.Index == minIndex);
+                    var pDB = new SqlAccess().SystemDataAccess;
+                    int minIndex = pDB.Queryable<Tbl_productiondatamodel>().Min(x => x.ID);
+                    var startData = pDB.Queryable<Tbl_productiondatamodel>().First(x => x.ID == minIndex);
                     //如果设定的删除时间大于表内最早保存数据的时间，说明有数据达到删除条件，执行删除
                     if (startData != null && startData.RecognitionTime < delTime)
                     {
-                        var ds = pDB.Queryable<ProductionDataModel>().Where(x => SqlFunc.Between(x.RecognitionTime, startData.RecognitionTime, delTime)).ToList();
+                        var ds = pDB.Queryable<Tbl_productiondatamodel>().Where(x => SqlFunc.Between(x.RecognitionTime, startData.RecognitionTime, delTime)).ToList();
                         foreach (var d in ds)
                         {
-                            pDB.Deleteable<ProductionDataModel>().Where(x => x.Index == d.Index).ExecuteCommand();
+                            pDB.Deleteable<Tbl_productiondatamodel>().Where(x => x.ID == d.ID).ExecuteCommand();
                         }
                         EventMessage.MessageDisplay($"已自动删除{SaveDataMonths}个月之前的识别数据", true, true);
                     }
@@ -2036,7 +2035,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="data">识别数据</param>
         /// <param name="dateTime">识别的时间</param>
         /// <param name="gateResult">浇口检测结果</param>
-        private void SaveImageDatas(HObject saveImage, ProductionDataModel data, DateTime dateTime, string gateResult)
+        private void SaveImageDatas(HObject saveImage, Tbl_productiondatamodel data, DateTime dateTime, string gateResult)
         {
             //月文件夹路径
             string monthPath = HistoricalImagesPath + @"\" + dateTime.Month + "月";

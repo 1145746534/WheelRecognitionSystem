@@ -226,7 +226,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             SaveImageDays = SystemDatas.SaveImageDays;
             SaveDataMonths = SystemDatas.SaveDataMonths;
             var sDB = new SqlAccess().SystemDataAccess;
-            var datas = sDB.Queryable<SystemSettingsDataModel>().First(x => x.Name == "RecognitionPauseSetting");
+            var datas = sDB.Queryable<sys_bd_systemsettingsdatamodel>().First(x => x.Name == "RecognitionPauseSetting");
             SystemDatas.RecognitionPauseSetting = int.Parse(datas.Value);
             RecognitionPauseSetting = SystemDatas.RecognitionPauseSetting;
             TemplateAdjustDays = SystemDatas.TemplateAdjustDays;
