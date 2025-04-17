@@ -410,7 +410,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="interact"></param>
         private void ReceiveS7PLC(InteractS7PLCModel interact)
         {
-            if (interact != null && interact.ArrivalSignal)
+            if (interact != null)
             {
                 Thread.Sleep(interact.ArrivalDelay);
                 //处理
