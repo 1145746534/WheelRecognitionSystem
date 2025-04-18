@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static WheelRecognitionSystem.Public.SystemDatas;
 using WheelRecognitionSystem.Models;
+using System.Runtime.Remoting.Channels;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -27,6 +28,8 @@ namespace WheelRecognitionSystem.Public
             //HOperatorSet.CloseAllFramegrabbers(); //释放相机句柄  
             try
             {
+                //open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', '34bd2022b18b_Hikrobot_MVCS05010GC', 0, -1, AcqHandle)
+
                 HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive",
                         -1, "default", -1, "false", "default", cameraIdentifier,
                         0, -1, out HTuple acqHandle);
@@ -93,6 +96,14 @@ namespace WheelRecognitionSystem.Public
             HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
             //采集图像
             HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
+            //HOperatorSet.CountChannels(ho_Image, out HTuple Channels);
+
+            //if (isGray && Channels.I ==3)
+            //{
+            //    HOperatorSet.Decompose3(ho_Image, out HObject image1, out HObject image2, out HObject image3);
+            //    return image1;
+            //}
+
             //图片自适应窗口
             //HOperatorSet.GetImageSize(ho_Image, out imageWidth, out imageHeight);
             //HOperatorSet.SetPart(HW.HalconWindow, 0, 0, imageHeight - 1, imageWidth - 1);

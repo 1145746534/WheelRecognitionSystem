@@ -329,6 +329,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         private Task _task;
 
+        /// <summary>
+        /// 相机列表
+        /// </summary>
         public Camera[] cameras = new Camera[5];
         /// <summary>
         /// 弹窗服务
@@ -724,8 +727,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
             }
         }
-
-
 
 
 

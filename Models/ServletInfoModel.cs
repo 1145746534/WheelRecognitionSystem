@@ -26,5 +26,10 @@ namespace WheelRecognitionSystem.Models
         /// 窗口图片
         /// </summary>
         public HObject image { get; set; }
+
+        /// <summary>
+        /// 窗口相机
+        /// </summary>
+        public Camera camera { get; set; }
     }
 }

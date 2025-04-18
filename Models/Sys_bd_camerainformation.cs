@@ -23,5 +23,11 @@ namespace WheelRecognitionSystem.Models
         /// 曝光
         /// </summary>
         public int Exposure { get; set; }
+
+        /// <summary>
+        /// 是否灰度图
+        /// </summary>
+        [SugarColumn(IsNullable = false )]
+        public bool Grayscale { get; set; }
     }
 }

@@ -311,7 +311,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
-       
+
 
         private void TemplateDataUpdata(string obj)
         {
@@ -324,9 +324,20 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void PicUpdate(ServletInfoModel model)
         {
-            if (model.image !=null)
+
+            if (model.image != null && model.camera != null)
             {
-                TemplateWindowDisplay(model.image, null, null, null, null);
+                HObject image1 = new HObject();
+                HOperatorSet.CountChannels(model.image, out HTuple Channels);
+                if (model.camera.info.Grayscale && Channels.I == 3)
+                {
+                    HOperatorSet.Decompose3(model.image, out image1, out HObject image2, out HObject image3);
+                }else
+                {
+                    image1 = model.image;
+                }
+
+                TemplateWindowDisplay(image1, null, null, null, null);
                 ImageDisVisibility = Visibility.Visible;
                 ImageDisName = model.DisplayName;
             }
@@ -960,9 +971,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DisplayWheelContour.Dispose();
             DisplayTemplateContour.Dispose();
             DisplayInGateContour.Dispose();
-            if (sourceImage != null) 
+            if (sourceImage != null)
                 DisplayTemplateImage = sourceImage.Clone();
-            if (templateImage != null) 
+            if (templateImage != null)
                 DisplayTemplate = templateImage.Clone();
             if (wheelContour != null)
             {
