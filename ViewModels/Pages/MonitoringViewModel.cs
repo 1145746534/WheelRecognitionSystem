@@ -232,17 +232,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             Task.Run(() =>
             {
-                var pDB = new SqlAccess().ProductionDataAccess;
-                List<ProductionDataModel> productionList = new List<ProductionDataModel>();
+                var pDB = new SqlAccess().SystemDataAccess;
+                List<Tbl_productiondatamodel> productionList = new List<Tbl_productiondatamodel>();
                 if (DateTime.Now.Hour < 8)
                 {
                     DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day - 1, 8, 0, 0);
-                    productionList = pDB.Queryable<ProductionDataModel>().Where(it => SqlFunc.Between(it.RecognitionTime, startTime, DateTime.Now)).ToList();
+                    productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, startTime, DateTime.Now)).ToList();
                 }
                 else
                 {
                     DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 8, 0, 0);
-                    productionList = pDB.Queryable<ProductionDataModel>().Where(it => SqlFunc.Between(it.RecognitionTime, startTime, DateTime.Now.AddDays(1))).ToList();
+                    productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, startTime, DateTime.Now.AddDays(1))).ToList();
                 }
                 if (productionList.Count > 0)
                 {

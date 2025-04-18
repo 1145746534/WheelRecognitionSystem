@@ -179,7 +179,7 @@ namespace WheelRecognitionSystem.Public
         /// <param name="data">识别数据</param>
         /// <param name="dateTime">识别的时间</param>
         /// <param name="gateResult">浇口检测结果</param>
-        private void SaveImageDatas(HObject saveImage, ProductionDataModel data, DateTime dateTime, string gateResult)
+        private void SaveImageDatas(HObject saveImage, Tbl_productiondatamodel data, DateTime dateTime, string gateResult)
         {
             
         }

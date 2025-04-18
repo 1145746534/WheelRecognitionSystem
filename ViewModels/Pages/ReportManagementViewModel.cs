@@ -101,11 +101,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public DelegateCommand DataExportCommand { get; set; }
         #endregion
 
-        private ObservableCollection<ProductionDataModel> _identificationDatas;
+        private ObservableCollection<Tbl_productiondatamodel> _identificationDatas;
         /// <summary>
         /// 识别数据
         /// </summary>
-        public ObservableCollection<ProductionDataModel> IdentificationDatas
+        public ObservableCollection<Tbl_productiondatamodel> IdentificationDatas
         {
             get { return _identificationDatas; }
             set {SetProperty(ref _identificationDatas, value); }
@@ -156,26 +156,26 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DataStatisticsCommand = new DelegateCommand(DataStatistics);
             DataExportCommand = new DelegateCommand(DataExport);
 
-            IdentificationDatas = new ObservableCollection<ProductionDataModel>();
+            IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>();
             StatisticsDatas = new ObservableCollection<StatisticsDataModel>();
         }
         private void DataRefresh()
         {
-            var pDB = new SqlAccess().ProductionDataAccess;
-            int maxId = pDB.Queryable<ProductionDataModel>().Max(x => x.Index);
+            var pDB = new SqlAccess().SystemDataAccess;
+            int maxId = pDB.Queryable<Tbl_productiondatamodel>().Max(x => x.ID);
             StatisticsDataVisibility = Visibility.Collapsed;
-            List<ProductionDataModel> productionList = new List<ProductionDataModel>();
+            List<Tbl_productiondatamodel> productionList = new List<Tbl_productiondatamodel>();
             if (maxId > 100)
             {
                 //查询两个序号区间的数据
-                productionList = pDB.Queryable<ProductionDataModel>().Where(it => SqlFunc.Between(it.Index, maxId - 100, maxId)).OrderBy((sc) => sc.Index, OrderByType.Desc).ToList();
+                productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.ID, maxId - 100, maxId)).OrderBy((sc) => sc.ID, OrderByType.Desc).ToList();
             }
             else
             {
-                productionList = pDB.Queryable<ProductionDataModel>().Where(it => SqlFunc.Between(it.Index, 0, maxId)).OrderBy((sc) => sc.Index, OrderByType.Desc).ToList();
+                productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.ID, 0, maxId)).OrderBy((sc) => sc.ID, OrderByType.Desc).ToList();
             }
             IdentificationDatas?.Clear();
-            IdentificationDatas = new ObservableCollection<ProductionDataModel>(productionList);
+            IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
             IdentificationDataVisibility = Visibility.Visible;
         }
         private void DataInquire()
@@ -184,12 +184,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (r)
             {
                 StatisticsDataVisibility = Visibility.Collapsed;
-                var pDB = new SqlAccess().ProductionDataAccess;
-                var productionList = pDB.Queryable<ProductionDataModel>().
+                var pDB = new SqlAccess().SystemDataAccess;
+                var productionList = pDB.Queryable<Tbl_productiondatamodel>().
                     Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).
-                    OrderBy((sc) => sc.Index, OrderByType.Desc).ToList();
+                    OrderBy((sc) => sc.ID, OrderByType.Desc).ToList();
                 IdentificationDatas?.Clear();
-                IdentificationDatas = new ObservableCollection<ProductionDataModel>(productionList);
+                IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
                 IdentificationDataVisibility = Visibility.Visible;
             }
             else EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
@@ -200,8 +200,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (r)
             {
                 IdentificationDataVisibility = Visibility.Hidden;
-                var pDB = new SqlAccess().ProductionDataAccess;
-                var productionList = pDB.Queryable<ProductionDataModel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();
+                var pDB = new SqlAccess().SystemDataAccess;
+                var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();
                 List<StatisticsDataModel> statisticsDatas = new List<StatisticsDataModel>();
                 for (int i = 0; i < productionList.Count; i++)
                 {
