@@ -327,17 +327,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             if (model.image != null && model.camera != null)
             {
-                HObject image1 = new HObject();
-                HOperatorSet.CountChannels(model.image, out HTuple Channels);
-                if (model.camera.info.Grayscale && Channels.I == 3)
-                {
-                    HOperatorSet.Decompose3(model.image, out image1, out HObject image2, out HObject image3);
-                }else
-                {
-                    image1 = model.image;
-                }
+                SourceTemplateImage.Dispose();
 
-                TemplateWindowDisplay(image1, null, null, null, null);
+                HOperatorSet.CountChannels(model.image, out HTuple Channels);
+                if (model.camera.info.Grayscale && Channels.I == 3)               
+                    HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);               
+                else                
+                    SourceTemplateImage = model.image;
+                
+
+                TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
                 ImageDisVisibility = Visibility.Visible;
                 ImageDisName = model.DisplayName;
             }
@@ -527,7 +526,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
+                HOperatorSet.Intensity(SourceTemplateImage, SourceTemplateImage, out HTuple mean, out HTuple deviation);
+
+
+                HOperatorSet.Threshold(SourceTemplateImage, out HObject region, mean, 255);
+                //HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
@@ -569,8 +572,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HOperatorSet.ReduceDomain(InPoseWheelImage, circleSector, out HObject reduced);
             HOperatorSet.Threshold(reduced, out HObject region, 0, WindowMaxThreshold);
             HOperatorSet.Connection(region, out HObject connectedRegions);
-            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 10);
-            HOperatorSet.SelectShape(regionClosing, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
+            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 30);
+            HOperatorSet.FillUp(regionClosing, out HObject regionFillUp);
+            HOperatorSet.SelectShape(regionFillUp, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
             HOperatorSet.Union1(selectedRegions, out HObject regionUnion);
             HOperatorSet.Difference(reduced, regionUnion, out HObject regionDifference);
             TemplateImage.Dispose();

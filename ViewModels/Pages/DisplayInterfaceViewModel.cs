@@ -587,9 +587,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnTemplate(string obj)
         {
-            ServletInfoModel model = new ServletInfoModel();
+            ServletInfoModel model = new ServletInfoModel();          
             model.Path = "TemplateManagementView";
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
+            model.camera = cameras[index];
             switch (index)
             {
                 case 0:

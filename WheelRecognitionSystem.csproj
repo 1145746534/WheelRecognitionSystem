@@ -219,6 +219,7 @@
     </Compile>
     <Compile Include="DataAccess\ExcelDataAccess.cs" />
     <Compile Include="DataAccess\SqlAccess.cs" />
+    <Compile Include="Models\Tbl_user.cs" />
     <Compile Include="Models\Sys_bd_activewheeltypedatamodel.cs" />
     <Compile Include="Models\AutoRecognitionResultDisplayModel.cs" />
     <Compile Include="Models\Camera.cs" />

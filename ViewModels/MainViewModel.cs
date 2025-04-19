@@ -1327,7 +1327,7 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadAppSettings("WriteLenght", out string writeLenght);
                 WriteLenght = int.Parse(writeLenght);
 
-
+                WriteBuffer = new byte[WriteLenght - WriteStartAddress];
 
                 ReadAppSettings("ArrivalDelay", out string arrivalDelay);
                 _ArrivalDelay = int.Parse(arrivalDelay);
@@ -1628,7 +1628,6 @@ namespace WheelRecognitionSystem.ViewModels
                         {
                             if (PlcStatus != "1")
                                 PlcStatus = "1";
-
                             HeartbeatThread();
                             PlcDataInteractionThread();
                         }
@@ -1735,6 +1734,26 @@ namespace WheelRecognitionSystem.ViewModels
                                 readPLCSignals[i].WheelHeight = S7.GetRealAt(ReadBuffer, 136 + i * 4);
                             }
 
+                            //读取登录信号
+                            for (int i = 0; i < 5; i++)
+                            {
+                                S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
+                                bool loginTrigger = S7.GetBitAt(ReadBuffer, 191, i);
+                                string name = GetBytesToString(ReadBuffer, 194 + i * 12, 10).Replace("\0", "");
+                                string password = GetBytesToString(ReadBuffer, 254 + i * 12, 10).Replace("\0", "");
+                                if (loginTrigger)
+                                {
+                                    bool isLogin = LoginCheck(name, password);
+                                    if (isLogin)
+                                        S7.SetBitAt(ref WriteBuffer, 142, i, true);
+                                    else
+                                        S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
+
+                                    S7.SetBitAt(ref WriteBuffer, 141, i, true);
+                                }
+
+                            }
+
 
 
                         }
@@ -1747,7 +1766,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
 
-                        WriteBuffer = new byte[WriteLenght];
+
                         ////发送PLC的数据
                         //string prefix = DateTime.Now.ToString("ddss");
                         //string text = prefix + "-" + "08124C05__".Trim('_');
@@ -1779,6 +1798,29 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
+        /// <summary>
+        /// 登录校验
+        /// </summary>
+        /// <returns></returns>
+        private bool LoginCheck(string name, string pass)
+        {
+            try
+            {
+                var sDB = new SqlAccess().SystemDataAccess;
+                List<Tbl_user> listUsers = sDB.Queryable<Tbl_user>().Where(x => x.User_name == name
+                                                && x.Password == pass
+                                                && x.Del_flag == "0"
+                                                && x.Status == "0").ToList();
+                if (listUsers.Count > 0)
+                    return true;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"LoginCheck : {e.Message}");
+            }
+            return false;
+        }
 
         private string GetBytesToString(byte[] bytes, int startIndex, int length)
         {
