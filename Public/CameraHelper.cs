@@ -121,6 +121,10 @@ namespace WheelRecognitionSystem.Public
             {
                 return;
             }
+            if (data.wheelType == null)
+            {
+                return;
+            }
             //月文件夹路径
             string monthPath = HistoricalImagesPath + @"\" + data.endTime.Month + "月";
             //日文件夹路径

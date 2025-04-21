@@ -143,7 +143,6 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 UnusedDays = 0,
                 WheelHeight = float.Parse(WheelHeight),
                 WheelStyle = WheelStyle,
-                SortingEnable = false,
                 CreationTime = DateTime.Now.ToString("yy-MM-dd")
             };
 

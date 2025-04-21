@@ -41,14 +41,7 @@ namespace WheelRecognitionSystem.Models
         public string WheelStyle { get; set; }
 
         private bool _sortingEnable;
-        /// <summary>
-        /// 分选使能
-        /// </summary>
-        public bool SortingEnable
-        {
-            get { return _sortingEnable; }
-            set { SetProperty(ref _sortingEnable, value); }
-        }
+        
 
         private string _creationTime;
         /// <summary>

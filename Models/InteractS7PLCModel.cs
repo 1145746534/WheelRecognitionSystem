@@ -101,6 +101,11 @@ namespace WheelRecognitionSystem.Models
         public string imagePath;
 
         /// <summary>
+        /// 是否灰度图
+        /// </summary>
+        public bool IsGrayscale  { get; set; }
+
+        /// <summary>
         /// 间隔时间
         /// </summary>
         public TimeSpan Interval

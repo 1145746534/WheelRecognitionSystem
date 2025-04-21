@@ -330,7 +330,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 SourceTemplateImage.Dispose();
 
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
-                if (model.camera.info.Grayscale && Channels.I == 3)               
+                if (Channels.I == 3)               
                     HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);               
                 else                
                     SourceTemplateImage = model.image;
@@ -377,7 +377,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //强制分选设置
                 if (columnIndex == 4)
                 {
-                    TemplateDatas[DataGridSelectedIndex].SortingEnable = !TemplateDatas[DataGridSelectedIndex].SortingEnable;
                     DataGridSelectedItem = TemplateDatas[DataGridSelectedIndex];
                     var sDB = new SqlAccess().SystemDataAccess;
                     sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
@@ -526,11 +525,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                HOperatorSet.Intensity(SourceTemplateImage, SourceTemplateImage, out HTuple mean, out HTuple deviation);
-
-
-                HOperatorSet.Threshold(SourceTemplateImage, out HObject region, mean, 255);
-                //HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
+                //HOperatorSet.Intensity(SourceTemplateImage, SourceTemplateImage, out HTuple mean, out HTuple deviation);
+                //HOperatorSet.Threshold(SourceTemplateImage, out HObject region, mean, 255);
+                HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
@@ -653,8 +650,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateDatas[DataGridSelectedIndex].CreationTime = DataGridSelectedItem.CreationTime;
 
                 //修改自动模式匹配用模板数据
-                if (!TemplateDataUpdataControl) TemplateDataUpdataControl = true;
-                if (!AutoTemplateDataLoadControl) AutoTemplateDataLoadControl = true;
+                if (!TemplateDataUpdataControl)
+                    TemplateDataUpdataControl = true;
+                if (!AutoTemplateDataLoadControl) 
+                    AutoTemplateDataLoadControl = true;
 
                 SourceTemplateImage.Dispose();
                 InPoseWheelImage.Dispose();
@@ -918,7 +917,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             Index = 999,
                             WheelType = templateNameList[i],
                             UnusedDays = 0,
-                            SortingEnable = false,
                             CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm")
                         };
                         EventMessage.MessageDisplay($"增加模板数据，轮型是：{templateNameList[i]}", true, true);

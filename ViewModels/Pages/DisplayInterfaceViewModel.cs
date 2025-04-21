@@ -433,6 +433,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 try
                 {
+                    //清空显示                    
+                    ResultDisplay(new AutoRecognitionResultDisplayModel() {
+                        CurrentImage = new HObject(),
+                        WheelContour = new HObject(),
+                        TemplateContour = new HObject(),
+                        index = interact.Index
+                    });
+                    interact.IsGrayscale = cameras[index].info.Grayscale;
                     interact.starTime = DateTime.Now;
                     image = CameraHelper.Grabimage(cameras[index].acqHandle);
                     AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);
@@ -461,9 +469,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="CurrentImage"></param>
         public AutoRecognitionResultDisplayModel Tackle(InteractS7PLCModel interact, HObject CurrentImage)
         {
+            HObject image = new HObject();
+            //彩色图需转成灰度图
+            HOperatorSet.CountChannels(CurrentImage, out HTuple Channels);
+            if (Channels.I == 3)
+            {
+                HOperatorSet.Decompose3(CurrentImage, out HObject image1, out HObject image2, out HObject image3);
+                image = image1;
+            }
+            else
+            {
+                image = CurrentImage;
+            }
 
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(CurrentImage, WheelMinThreshold, 255, WheelMinRadius);
+            PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             //如果定位到轮毂
@@ -471,10 +491,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 //轮毂识别
                 recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+                
+                interact.wheelType = recognitionResult.RecognitionWheelType.Trim('_');
             }
             else//没有定位到轮毂
             {
-                recognitionResult = WheelRecognitionAlgorithm(CurrentImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+                recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+           
+            
             }
 
             HObject templateContour = new HObject();
@@ -482,15 +506,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                 //根据高度确定为哪个轮型
-
+                interact.status = "识别成功";
             }
-            if (recognitionResult.RecognitionWheelType == "NG" && RecognitionPauseSetting != 0)
+            if (recognitionResult.RecognitionWheelType == "NG" )
             {
                 //NG的轮型需要保存图片-后续人工补录
-
+                //根据高度确定为哪个轮型
+                interact.status = "识别失败";
             }
 
-
+            //显示需要的参数
             AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
             autoRecognitionResult = new AutoRecognitionResultDisplayModel
             {
@@ -587,7 +612,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnTemplate(string obj)
         {
-            ServletInfoModel model = new ServletInfoModel();          
+            ServletInfoModel model = new ServletInfoModel();
             model.Path = "TemplateManagementView";
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             model.camera = cameras[index];
