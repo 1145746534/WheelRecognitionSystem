@@ -121,7 +121,7 @@ namespace WheelRecognitionSystem.Public
             {
                 return;
             }
-            if (data.wheelType == null)
+            if (data.resultModel.WheelType == null)
             {
                 return;
             }
@@ -131,7 +131,7 @@ namespace WheelRecognitionSystem.Public
             string dayPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + "日";
             //当日未识别文件夹路径
             string ngPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + @"日\NG";
-            if (Directory.Exists(monthPath) == false) 
+            if (Directory.Exists(monthPath) == false)
                 Directory.CreateDirectory(monthPath);
             if (Directory.Exists(dayPath) == false)
                 Directory.CreateDirectory(dayPath);
@@ -140,19 +140,19 @@ namespace WheelRecognitionSystem.Public
             var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
             if (diskFree > 200)
             {
-                if (data.status == "识别成功")
+                if (data.resultModel.ResultBol)
                 {
                     //保存轮型的目录
-                    string saveWheelTypePath = dayPath + @"\" + data.wheelType.Trim('_');
+                    string saveWheelTypePath = dayPath + @"\" + data.resultModel.WheelType.Trim('_');
                     if (Directory.Exists(saveWheelTypePath) == false) Directory.CreateDirectory(saveWheelTypePath);
-                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.wheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
-                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.resultModel.WheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
                     data.imagePath = saveImagePath;
                 }
                 else
                 {
-                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
-                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
                     data.imagePath = saveImagePath;
                 }
                 //if (gateResult == "NG")
@@ -196,7 +196,7 @@ namespace WheelRecognitionSystem.Public
         /// <param name="gateResult">浇口检测结果</param>
         private void SaveImageDatas(HObject saveImage, Tbl_productiondatamodel data, DateTime dateTime, string gateResult)
         {
-            
+
         }
 
     }

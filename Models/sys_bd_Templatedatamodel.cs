@@ -40,7 +40,6 @@ namespace WheelRecognitionSystem.Models
         [SqlSugar.SugarColumn(IsNullable = true, Length = 255)]
         public string WheelStyle { get; set; }
 
-        private bool _sortingEnable;
         
 
         private string _creationTime;
