@@ -37,10 +37,36 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 轮毂到达信号-允许拍照
         /// </summary>
-        public bool ArrivalSignal { 
-            get { return _arrivalSignal; }
-            set { SetProperty(ref _arrivalSignal, value); }
+        public bool ArrivalSignal
+        {
+            get
+            {
+
+                if (newArrival - oldArrival > 0)  //上升沿
+                {
+                    oldArrival = newArrival;
+                    return true;
+                }
+                else if (newArrival - oldArrival == 0) //平峰
+                {
+                   
+                }
+                else  //下降沿
+                {
+                    
+                }
+                oldArrival = newArrival;
+                return false;
+
+            }
+            
         }
+
+
+        private int oldArrival = 0;
+
+        public int newArrival = 0;
+
 
         private int _wheelDefect;
         /// <summary>

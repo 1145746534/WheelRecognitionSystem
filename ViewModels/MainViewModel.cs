@@ -1002,37 +1002,40 @@ namespace WheelRecognitionSystem.ViewModels
         /// <returns></returns>
         private async Task DoJob(CancellationToken token, int index)
         {
+            await Task.Delay(2000);
+
             while (!token.IsCancellationRequested)
             {
                 // 模拟一些工作
-                await Task.Delay(1000);
+                await Task.Delay(200);
                 Console.WriteLine($"任务 {index} 完成");
 
-                //  轮毂到位                                自动模式        PLC已连接             
-                if (readPLCSignals[index].ArrivalSignal && SystemModel && PlcCilent.Connected)
+                //  轮毂到位                                        PLC已连接             
+                if (readPLCSignals[index].ArrivalSignal && PlcCilent.Connected)
                 {
-                    int n = index + 1; //线体
-                    ClearDisplay(n);
-                    SetStatus(n, "识别中...");
-                    //推送到分支程序处理
-                    EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
+                    try
                     {
-                        Index = n,
-                        ArrivalDelay = _ArrivalDelay,
-                        //ArrivalSignal = ArrivalSignals[index],
-                        //ArrivalSignal = true,
-                        readPLCSignal = readPLCSignals[index],
-                        //ArrivalHeight = readPLCSignals[index].WheelHeight,
-                        //ArrivalTemperature = readPLCSignals[index].WheelTemperature
-                    });
+                        int n = index + 1; //线体
+                        ClearDisplay(n);
+                        SetStatus(n, "识别中...");
+                        
+
+                        //推送到分支程序处理
+                        EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
+                        {
+                            Index = n,
+                            ArrivalDelay = _ArrivalDelay,
+                            readPLCSignal = readPLCSignals[index],
+
+                        });
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine($"DoJob:{ex.ToString()}");
+                    }
                 }
 
 
-                //通知轮毂缺陷结果               自动模式        PLC已连接              电机非故障
-                if (ResultNotifications[index] && SystemModel && PlcCilent.Connected && !MotorFailureSignal)
-                {
-
-                }
+                
             }
 
         }
@@ -1056,13 +1059,16 @@ namespace WheelRecognitionSystem.ViewModels
         private void CallShow(InteractS7PLCModel model)
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index, true); //拍照流程完成
-            if (!model.ResultBol)
+
+            //显示状态信息
+            SetStatus(model.Index, model.resultModel.status);
+            if (!model.resultModel.ResultBol || model.resultModel.WheelType == null)
             {
                 //发送PLC-NG信号
 
 
-                EventMessage.MessageDisplay(model.Index + "号" + model.status, true, false);
-                SetStatus(model.Index, model.status);
+                EventMessage.MessageDisplay(model.Index + "号" + model.resultModel.status, true, false);
+                SetStatus(model.Index, model.resultModel.status);
 
 
 
@@ -1072,65 +1078,65 @@ namespace WheelRecognitionSystem.ViewModels
 
                 //发送PLC的数据
                 string prefix = DateTime.Now.ToString("ddss");
-                string text = prefix + model.wheelType.Trim('_');
+                string text = prefix + model.resultModel.WheelType.Trim('_');
                 int maxLength = 16;          // PLC 中定义的最大长度
                 // 转换字符串为 PLC 格式字节数组
                 byte[] buffer = StringToS7Bytes(text, maxLength);
                 CopyBytes(buffer, WriteBuffer, 10 + (model.Index - 1) * 16);
 
 
-                //显示状态信息
-                SetStatus(model.Index, model.status);
-                string similarity = model.similarity == 0 ? "" : model.similarity.ToString();
+               
+                string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
                 string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
                 switch (model.Index)
                 {
 
                     case 1:
-                        RecognitionWheelType1 = model.wheelType;
+                        RecognitionWheelType1 = model.resultModel.WheelType;
                         Similarity1 = similarity;
                         TimeConsumed1 = timeConsumed;
-                        Colour1 = model.colour;
+                        Colour1 = model.resultModel.Colour;
                         break;
                     case 2:
-                        RecognitionWheelType2 = model.wheelType;
+                        RecognitionWheelType2 = model.resultModel.WheelType;
                         Similarity2 = similarity;
                         TimeConsumed2 = timeConsumed;
-                        Colour2 = model.colour;
+                        Colour2 = model.resultModel.Colour;
                         break;
                     case 3:
-                        RecognitionWheelType3 = model.wheelType;
+                        RecognitionWheelType3 = model.resultModel.WheelType;
                         Similarity3 = similarity;
                         TimeConsumed3 = timeConsumed;
-                        Colour3 = model.colour;
+                        Colour3 = model.resultModel.Colour;
                         break;
                     case 4:
-                        RecognitionWheelType4 = model.wheelType;
+                        RecognitionWheelType4 = model.resultModel.WheelType;
                         Similarity4 = similarity;
                         TimeConsumed4 = timeConsumed;
-                        Colour4 = model.colour;
+                        Colour4 = model.resultModel.Colour;
                         break;
                     case 5:
-                        RecognitionWheelType5 = model.wheelType;
+                        RecognitionWheelType5 = model.resultModel.WheelType;
                         Similarity5 = similarity;
                         TimeConsumed5 = timeConsumed;
-                        Colour5 = model.colour;
+                        Colour5 = model.resultModel.Colour;
                         break;
                 }
 
                 //插入数据库
                 SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
                 Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
-                dataModel.WheelType = model.wheelType;
+                dataModel.GUID = Guid.NewGuid().ToString("N");
+                dataModel.WheelType = model.resultModel.WheelType;
                 dataModel.TimeConsumed = model.Interval.ToString();
-                dataModel.Similarity = model.similarity.ToString();
+                dataModel.Similarity = model.resultModel.Similarity.ToString();
                 dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
-                dataModel.WheelStyle = model.wheelStyle;
+                dataModel.WheelStyle = model.resultModel.WheelStyle;
                 dataModel.RecognitionTime = model.endTime;
-                dataModel.Model = model.wheelType.Trim('_');
+                dataModel.Model = model.resultModel.WheelType;
                 dataModel.Station = "";
                 dataModel.ImagePath = model.imagePath;
-                dataModel.ResultBool = model.ResultBol;
+                dataModel.ResultBool = model.resultModel.ResultBol;
                 dataModel.Remark = "";
                 pDB.Insertable(dataModel).ExecuteCommand();
                 //var dc = new Dictionary<string, object>();
@@ -1327,7 +1333,7 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadAppSettings("WriteLenght", out string writeLenght);
                 WriteLenght = int.Parse(writeLenght);
 
-
+                WriteBuffer = new byte[WriteLenght - WriteStartAddress];
 
                 ReadAppSettings("ArrivalDelay", out string arrivalDelay);
                 _ArrivalDelay = int.Parse(arrivalDelay);
@@ -1628,7 +1634,6 @@ namespace WheelRecognitionSystem.ViewModels
                         {
                             if (PlcStatus != "1")
                                 PlcStatus = "1";
-
                             HeartbeatThread();
                             PlcDataInteractionThread();
                         }
@@ -1694,7 +1699,8 @@ namespace WheelRecognitionSystem.ViewModels
                             //轮毂到位允许拍照信号
                             for (int i = 0; i < readPLCSignals.Length; i++)
                             {
-                                readPLCSignals[i].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, i);
+
+                                readPLCSignals[i].newArrival = Convert.ToInt32(S7.GetBitAt(ReadBuffer, 108, i));
                             }
                             //readPLCSignals[0].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 0);
                             //readPLCSignals[1].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 1);
@@ -1735,6 +1741,27 @@ namespace WheelRecognitionSystem.ViewModels
                                 readPLCSignals[i].WheelHeight = S7.GetRealAt(ReadBuffer, 136 + i * 4);
                             }
 
+                            //读取登录信号
+                            for (int i = 0; i < 5; i++)
+                            {
+                                S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
+                                S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
+                                //Console.WriteLine($"完成信号{i}：{S7.GetBitAt(WriteBuffer, 141, i)}");
+                                bool loginTrigger = S7.GetBitAt(ReadBuffer, 191, i);
+                                string name = GetBytesToString(ReadBuffer, 194 + i * 12, 10).Replace("\0", "");
+                                string password = GetBytesToString(ReadBuffer, 254 + i * 12, 10).Replace("\0", "");
+                                if (loginTrigger)
+                                {
+                                    bool isLogin = LoginCheck(name, password);
+                                    if (isLogin)
+                                        S7.SetBitAt(ref WriteBuffer, 142, i, true);
+
+                                    S7.SetBitAt(ref WriteBuffer, 141, i, true);
+                                    Console.WriteLine($"{i} : True");
+                                }
+
+                            }
+
 
 
                         }
@@ -1747,7 +1774,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
 
-                        WriteBuffer = new byte[WriteLenght];
+
                         ////发送PLC的数据
                         //string prefix = DateTime.Now.ToString("ddss");
                         //string text = prefix + "-" + "08124C05__".Trim('_');
@@ -1779,6 +1806,29 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
+        /// <summary>
+        /// 登录校验
+        /// </summary>
+        /// <returns></returns>
+        private bool LoginCheck(string name, string pass)
+        {
+            try
+            {
+                var sDB = new SqlAccess().SystemDataAccess;
+                List<Tbl_user> listUsers = sDB.Queryable<Tbl_user>().Where(x => x.User_name == name
+                                                && x.Password == pass
+                                                && x.Del_flag == "0"
+                                                && x.Status == "0").ToList();
+                if (listUsers.Count > 0)
+                    return true;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"LoginCheck : {e.Message}");
+            }
+            return false;
+        }
 
         private string GetBytesToString(byte[] bytes, int startIndex, int length)
         {
@@ -1916,31 +1966,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-        /// <summary>
-        /// 分选结果,false不需分选，true需要分选
-        /// </summary>
-        /// <param name="wheel">轮型</param>
-        /// <param name="datas">分选数据</param>
-        /// <returns>false不需分选，true需要分选</returns>
-        private bool ScreenedResult(string wheel, List<ScreenedDataModel> datas)
-        {
-            var result = datas.FindAll(x => x.WheelType == wheel);
-            if (result != null && result.Count > 0)
-            {
-                List<int> list = new List<int>();
-                for (int i = 0; i < result.Count; i++)
-                {
-                    //如果单元在线数量 大于等于 单元目标数量，则分选 并且 如果单元状态为false（停机或检修），则分选
-                    if (result[i].OnlineQuantity >= result[i].TargetQuantity || !result[i].State) list.Add(1);
-                    else list.Add(0);
-                }
-                var index = list.FindIndex(t => t == 0);
-                if (index >= 0) return false;
-                else return true;
-            }
-            else return true;
-        }
-
+      
         /// <summary>
         /// 保存图像数据
         /// </summary>

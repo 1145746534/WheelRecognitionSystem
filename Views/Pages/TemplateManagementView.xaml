@@ -95,28 +95,7 @@
                             <DataGridTextColumn Header="未用天数" Binding="{Binding UnusedDays}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂高度" Binding="{Binding WheelHeight}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelStyle}" Width="0.5*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridCheckBoxColumn Header="强制分选" Binding="{Binding SortingEnable}" Width="0.4*">
-                                <!--<DataGridCheckBoxColumn.CellStyle>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="ContentTemplate">
-                                            <Setter.Value>
-                                                <DataTemplate>
-                                                    <CheckBox Style="{StaticResource CheckBoxStyle}"/>
-                                                </DataTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#FFDDE3FB"/>
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Background" Value="#FFB7F9BE"/>
-                                                <Setter Property="BorderBrush" Value="Transparent"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGridCheckBoxColumn.CellStyle>-->
-                            </DataGridCheckBoxColumn>
+                            
                             <DataGridTextColumn Header="创建时间" Binding="{Binding CreationTime}"  Width="0.7*" FontSize="12" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                         </DataGrid.Columns>
                         <i:Interaction.Triggers>

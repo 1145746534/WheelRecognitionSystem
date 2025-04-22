@@ -70,6 +70,7 @@ namespace WheelRecognitionSystem.DataAccess
             //SystemDataAccess.CodeFirst.InitTables(typeof(Processingtechnology));
             SystemDataAccess.CodeFirst.InitTables(typeof(tbl_defect_code)); //*
             SystemDataAccess.CodeFirst.InitTables(typeof(Tbl_productiondatamodel));
+            SystemDataAccess.CodeFirst.InitTables(typeof(Tbl_user));
         }
     }
 }

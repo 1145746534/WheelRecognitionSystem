@@ -211,8 +211,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (model.CurrentImage != null) CurrentImage = model.CurrentImage;
             if (model.WheelContour != null) WheelContour = model.WheelContour;
             if (model.TemplateContour != null) TemplateContour = model.TemplateContour;
-            if (model.GateContour != null) GateContour = model.GateContour;
-            if (model.IsGate) GateContourColor = "green";
+            //if (model.GateContour != null) GateContour = model.GateContour;
+            //if (model.IsGate) GateContourColor = "green";
             else GateContourColor = "red";
             //图表数据更新
             //if(CurrentDayDataChecked)

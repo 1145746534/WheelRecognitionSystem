@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static WheelRecognitionSystem.Public.SystemDatas;
 using WheelRecognitionSystem.Models;
+using System.Runtime.Remoting.Channels;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -27,6 +28,8 @@ namespace WheelRecognitionSystem.Public
             //HOperatorSet.CloseAllFramegrabbers(); //释放相机句柄  
             try
             {
+                //open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', '34bd2022b18b_Hikrobot_MVCS05010GC', 0, -1, AcqHandle)
+
                 HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive",
                         -1, "default", -1, "false", "default", cameraIdentifier,
                         0, -1, out HTuple acqHandle);
@@ -93,6 +96,14 @@ namespace WheelRecognitionSystem.Public
             HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
             //采集图像
             HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
+            //HOperatorSet.CountChannels(ho_Image, out HTuple Channels);
+
+            //if (isGray && Channels.I ==3)
+            //{
+            //    HOperatorSet.Decompose3(ho_Image, out HObject image1, out HObject image2, out HObject image3);
+            //    return image1;
+            //}
+
             //图片自适应窗口
             //HOperatorSet.GetImageSize(ho_Image, out imageWidth, out imageHeight);
             //HOperatorSet.SetPart(HW.HalconWindow, 0, 0, imageHeight - 1, imageWidth - 1);
@@ -110,13 +121,17 @@ namespace WheelRecognitionSystem.Public
             {
                 return;
             }
+            if (data.resultModel.WheelType == null)
+            {
+                return;
+            }
             //月文件夹路径
             string monthPath = HistoricalImagesPath + @"\" + data.endTime.Month + "月";
             //日文件夹路径
             string dayPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + "日";
             //当日未识别文件夹路径
             string ngPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + @"日\NG";
-            if (Directory.Exists(monthPath) == false) 
+            if (Directory.Exists(monthPath) == false)
                 Directory.CreateDirectory(monthPath);
             if (Directory.Exists(dayPath) == false)
                 Directory.CreateDirectory(dayPath);
@@ -125,19 +140,19 @@ namespace WheelRecognitionSystem.Public
             var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
             if (diskFree > 200)
             {
-                if (data.status == "识别成功")
+                if (data.resultModel.ResultBol)
                 {
                     //保存轮型的目录
-                    string saveWheelTypePath = dayPath + @"\" + data.wheelType.Trim('_');
+                    string saveWheelTypePath = dayPath + @"\" + data.resultModel.WheelType.Trim('_');
                     if (Directory.Exists(saveWheelTypePath) == false) Directory.CreateDirectory(saveWheelTypePath);
-                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.wheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
-                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.resultModel.WheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
                     data.imagePath = saveImagePath;
                 }
                 else
                 {
-                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".BMP";
-                    HOperatorSet.WriteImage(saveImage, "BMP", 0, saveImagePath);
+                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
                     data.imagePath = saveImagePath;
                 }
                 //if (gateResult == "NG")
@@ -181,7 +196,7 @@ namespace WheelRecognitionSystem.Public
         /// <param name="gateResult">浇口检测结果</param>
         private void SaveImageDatas(HObject saveImage, Tbl_productiondatamodel data, DateTime dateTime, string gateResult)
         {
-            
+
         }
 
     }

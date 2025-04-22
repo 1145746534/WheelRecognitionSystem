@@ -12,6 +12,46 @@ namespace WheelRecognitionSystem.Models
     /// </summary>
     public class RecognitionResultModel
     {
+        /// <summary>
+        /// 识别状态
+        /// </summary>
+        public string status = "识别成功";
+
+        /// <summary>
+        /// 识别结果bool值
+        /// </summary>
+        public bool ResultBol
+        {
+            get
+            {
+                if (status.Equals("识别成功"))
+                    return true;
+                else
+                    return false;
+            }
+        }
+
+        public string WheelType
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(RecognitionWheelType))
+                    return RecognitionWheelType.Trim('_');
+                else
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// 标签颜色
+        /// </summary>
+        public string Colour { get; set; }
+
+        /// <summary>
+        /// 样式
+        /// </summary>
+        public string WheelStyle { get; set; }
+
         public List<string> WheelTypes { get; set; } = new List<string>();
         /// <summary>
         /// 相似度列表

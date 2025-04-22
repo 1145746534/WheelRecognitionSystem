@@ -32,13 +32,13 @@ namespace WheelRecognitionSystem.Models
         /// 模板轮廓
         /// </summary>
         public HObject TemplateContour { get; set; }
-        /// <summary>
-        ///  浇口轮廓
-        /// </summary>
-        public HObject GateContour { get; set; }
-        /// <summary>
-        /// 是否存在浇口轮廓
-        /// </summary>
-        public bool IsGate { get; set; }
+        ///// <summary>
+        /////  浇口轮廓
+        ///// </summary>
+        //public HObject GateContour { get; set; }
+        ///// <summary>
+        ///// 是否存在浇口轮廓
+        ///// </summary>
+        //public bool IsGate { get; set; }
     }
 }

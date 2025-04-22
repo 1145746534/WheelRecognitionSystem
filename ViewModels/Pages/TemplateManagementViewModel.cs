@@ -311,7 +311,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         }
 
-       
+
 
         private void TemplateDataUpdata(string obj)
         {
@@ -324,9 +324,19 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void PicUpdate(ServletInfoModel model)
         {
-            if (model.image !=null)
+
+            if (model.image != null && model.camera != null)
             {
-                TemplateWindowDisplay(model.image, null, null, null, null);
+                SourceTemplateImage.Dispose();
+
+                HOperatorSet.CountChannels(model.image, out HTuple Channels);
+                if (Channels.I == 3)               
+                    HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);               
+                else                
+                    SourceTemplateImage = model.image;
+                
+
+                TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
                 ImageDisVisibility = Visibility.Visible;
                 ImageDisName = model.DisplayName;
             }
@@ -367,7 +377,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //强制分选设置
                 if (columnIndex == 4)
                 {
-                    TemplateDatas[DataGridSelectedIndex].SortingEnable = !TemplateDatas[DataGridSelectedIndex].SortingEnable;
                     DataGridSelectedItem = TemplateDatas[DataGridSelectedIndex];
                     var sDB = new SqlAccess().SystemDataAccess;
                     sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
@@ -516,6 +525,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
+                //HOperatorSet.Intensity(SourceTemplateImage, SourceTemplateImage, out HTuple mean, out HTuple deviation);
+                //HOperatorSet.Threshold(SourceTemplateImage, out HObject region, mean, 255);
                 HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
@@ -558,8 +569,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HOperatorSet.ReduceDomain(InPoseWheelImage, circleSector, out HObject reduced);
             HOperatorSet.Threshold(reduced, out HObject region, 0, WindowMaxThreshold);
             HOperatorSet.Connection(region, out HObject connectedRegions);
-            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 10);
-            HOperatorSet.SelectShape(regionClosing, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
+            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 30);
+            HOperatorSet.FillUp(regionClosing, out HObject regionFillUp);
+            HOperatorSet.SelectShape(regionFillUp, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
             HOperatorSet.Union1(selectedRegions, out HObject regionUnion);
             HOperatorSet.Difference(reduced, regionUnion, out HObject regionDifference);
             TemplateImage.Dispose();
@@ -638,8 +650,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateDatas[DataGridSelectedIndex].CreationTime = DataGridSelectedItem.CreationTime;
 
                 //修改自动模式匹配用模板数据
-                if (!TemplateDataUpdataControl) TemplateDataUpdataControl = true;
-                if (!AutoTemplateDataLoadControl) AutoTemplateDataLoadControl = true;
+                if (!TemplateDataUpdataControl)
+                    TemplateDataUpdataControl = true;
+                if (!AutoTemplateDataLoadControl) 
+                    AutoTemplateDataLoadControl = true;
 
                 SourceTemplateImage.Dispose();
                 InPoseWheelImage.Dispose();
@@ -903,7 +917,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             Index = 999,
                             WheelType = templateNameList[i],
                             UnusedDays = 0,
-                            SortingEnable = false,
                             CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm")
                         };
                         EventMessage.MessageDisplay($"增加模板数据，轮型是：{templateNameList[i]}", true, true);
@@ -960,9 +973,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DisplayWheelContour.Dispose();
             DisplayTemplateContour.Dispose();
             DisplayInGateContour.Dispose();
-            if (sourceImage != null) 
+            if (sourceImage != null)
                 DisplayTemplateImage = sourceImage.Clone();
-            if (templateImage != null) 
+            if (templateImage != null)
                 DisplayTemplate = templateImage.Clone();
             if (wheelContour != null)
             {
