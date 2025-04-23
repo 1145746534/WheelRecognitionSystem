@@ -12,108 +12,253 @@ using System.Threading.Tasks;
 using static WheelRecognitionSystem.Public.SystemDatas;
 using WheelRecognitionSystem.Models;
 using System.Runtime.Remoting.Channels;
+using MvCameraControl;
+using System.Threading;
+using System.Windows;
 
 namespace WheelRecognitionSystem.Public
 {
-    public class CameraHelper
+    public class CameraHelper : IDisposable
     {
+        readonly static DeviceTLayerType enumTLayerType = DeviceTLayerType.MvGigEDevice | DeviceTLayerType.MvUsbDevice
+         | DeviceTLayerType.MvGenTLGigEDevice | DeviceTLayerType.MvGenTLCXPDevice | DeviceTLayerType.MvGenTLCameraLinkDevice | DeviceTLayerType.MvGenTLXoFDevice;
+        static List<IDeviceInfo> deviceInfoList = new List<IDeviceInfo>();
+        static IDevice device = null;
+
+
+
 
         /// <summary>
         /// 连接相机
         /// </summary>
         /// <param name="cameraIdentifier">相机标识符</param>
         /// <returns>相机句柄</returns>
-        public static HTuple ConnectCamera(string cameraIdentifier)
-        {
-            //HOperatorSet.CloseAllFramegrabbers(); //释放相机句柄  
-            try
-            {
-                //open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', '34bd2022b18b_Hikrobot_MVCS05010GC', 0, -1, AcqHandle)
+        //public static HTuple ConnectCamera(string cameraIdentifier)
+        //{
+        //    //HOperatorSet.CloseAllFramegrabbers(); //释放相机句柄  
+        //    try
+        //    {
 
-                HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive",
-                        -1, "default", -1, "false", "default", cameraIdentifier,
-                        0, -1, out HTuple acqHandle);
-                //HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0, "progressive", 8, "default", -1, "false", "auto", cameraIdentifier, 0, -1, out HTuple acqHandle);
+        //        //         open_framegrabber ('MVision', 1, 1, 0, 0, 0, 0, 'progressive',
+        //        //         8, 'default', -1, 'false', 'auto', 'GEV:DA0241653 MV-CS050-10GC',
+        //        //         0, -1, AcqHandle)
+        //        HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0, "progressive",
+        //                8, "default", -1, "false", "auto", cameraIdentifier,
+        //                0, -1, out HTuple acqHandle);
+        //        HOperatorSet.SetFramegrabberParam(acqHandle, "TriggerMode", "Off");
+        //        //开始采集图像
+        //        HOperatorSet.GrabImageStart(acqHandle, -1);
+        //        return acqHandle;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //throw ex;
+        //        return null;
+        //    }
 
-                //SetExposureTime(acqHandle, 11000.0);
-                HOperatorSet.SetFramegrabberParam(acqHandle, "TriggerMode", "Off");
-                //开始采集图像
-                HOperatorSet.GrabImageStart(acqHandle, -1);
-                return acqHandle;
-            }
-            catch (Exception ex)
-            {
-                //throw ex;
-                return null;
-            }
+        //}
 
-        }
+        /// <summary>
+        /// 连接相机
+        /// </summary>
+        /// <param name="cameraIdentifier">相机标识符</param>
+        /// <returns>相机句柄</returns>
+        //public static bool ConnectCamera1()
+        //{
+        //    //HOperatorSet.CloseAllFramegrabbers(); //释放相机句柄  
+        //    try
+        //    {
+                
+        //        IDeviceInfo deviceInfo = null;
+        //        SDKSystem.Initialize();
+        //        int nRet = DeviceEnumerator.EnumDevices(enumTLayerType, out deviceInfoList);
+        //        if (nRet == MvError.MV_OK)
+        //        {
+        //            deviceInfo = deviceInfoList.Find(x => x.SerialNumber == "00DA0879936");
+
+        //        }
+
+
+
+        //        // ch:打开设备 | en:Open device
+        //        device = DeviceFactory.CreateDevice(deviceInfo);
+        //        int result = device.Open();
+        //        if (result == MvError.MV_OK)
+        //        {
+        //            //ch: 判断是否为gige设备 | en: Determine whether it is a GigE device
+        //            if (device is IGigEDevice)
+        //            {
+        //                //ch: 转换为gigE设备 | en: Convert to Gige device
+        //                IGigEDevice gigEDevice = device as IGigEDevice;
+
+        //                // ch:探测网络最佳包大小(只对GigE相机有效) | en:Detection network optimal package size(It only works for the GigE camera)
+        //                int optionPacketSize;
+        //                result = gigEDevice.GetOptimalPacketSize(out optionPacketSize);
+        //                if (result != MvError.MV_OK)
+        //                {
+        //                }
+        //                else
+        //                {
+        //                    result = device.Parameters.SetIntValue("GevSCPSPacketSize", (long)optionPacketSize);
+        //                    if (result != MvError.MV_OK)
+        //                    {
+        //                    }
+        //                }
+        //            }
+
+        //            // ch:设置采集连续模式 | en:Set Continues Aquisition Mode
+        //            device.Parameters.SetEnumValueByString("AcquisitionMode", "Continuous");
+        //            //device.Parameters.SetEnumValueByString("TriggerMode", "Off");
+        //            device.Parameters.SetEnumValueByString("TriggerMode", "On");
+        //            //device.Parameters.SetEnumValueByString("TriggerSource", "Line0");
+        //            device.Parameters.SetEnumValueByString("TriggerSource", "Software");
+
+
+        //        }
+
+
+
+
+
+        //        //毛刺机相机参数
+        //        //open_framegrabber('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', '34bd2028ebb4_Hikrobot_MVCH25090GM', 0, -1, AcqHandle)
+
+
+        //        //open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', '34bd2022b18b_Hikrobot_MVCS05010GC', 0, -1, AcqHandle)
+
+        //        //HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive",
+        //        //        -1, "default", -1, "false", "default", cameraIdentifier,
+        //        //        0, -1, out HTuple acqHandle);
+        //        //HOperatorSet.SetFramegrabberParam(acqHandle, "continuous_grabbing", "true");
+        //        //HOperatorSet.SetFramegrabberParam(acqHandle, "realtime", "true");
+        //        //HOperatorSet.SetFramegrabberParam(acqHandle, "buffer_num", 2);
+        //        //HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0, "progressive", 8, "default", -1, "false", "auto", cameraIdentifier, 0, -1, out HTuple acqHandle);
+
+        //        //SetExposureTime(acqHandle, 11000.0);
+        //        //HOperatorSet.SetFramegrabberParam(acqHandle, "TriggerMode", "Off");
+        //        ////开始采集图像
+        //        //HOperatorSet.GrabImageStart(acqHandle, -1);
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //throw ex;
+        //        return false;
+        //    }
+
+        //}
+
         /// <summary>
         /// 设置曝光时间
         /// </summary>
         /// <param name="acqHandle"></param>
         /// <param name="value"></param>
-        public static void SetExposureTime(HTuple acqHandle, HTuple value)
-        {
-            try
-            {
-                HOperatorSet.SetFramegrabberParam(acqHandle, "ExposureTime", value);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+        //public static void SetExposureTime(HTuple acqHandle, HTuple value)
+        //{
+        //    try
+        //    {
+        //        HOperatorSet.SetFramegrabberParam(acqHandle, "ExposureTime", value);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
 
-        }
+        //}
         /// <summary>
         /// 关闭相机
         /// </summary>
         /// <param name="acqHandle"></param>
-        public static void DisconnectCamera(HTuple acqHandle)
-        {
-            try
-            {
-                if (acqHandle != null)
-                    HOperatorSet.CloseFramegrabber(acqHandle);
-            }
-            catch (Exception ex)
-            {
-                //throw ex;
-            }
-        }
+        //public static void DisconnectCamera(HTuple acqHandle)
+        //{
+        //    try
+        //    {
+               
+        //        if (acqHandle != null)
+        //            HOperatorSet.CloseFramegrabber(acqHandle);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //throw ex;
+        //    }
+        //}
+
+        /// <summary>
+        /// 关闭相机
+        /// </summary>
+        /// <param name="acqHandle"></param>
+        //public static void DisconnectCamera1()
+        //{
+        //    try
+        //    {
+        //        // ch:关闭设备 | en:Close Device
+        //        if (device != null)
+        //        {
+        //            device.Close();
+        //            device.Dispose();
+        //        }
+
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //throw ex;
+        //    }
+        //}
+
         /// <summary>
         /// 单次采集图像方法
         /// </summary>
         /// <param name="acqHandle"></param>
         /// <returns></returns>
-        public static HObject Grabimage(HTuple acqHandle)
-        {
-            if (acqHandle == null)
-            {
-                return null;
-            }
-            HObject ho_Image;//定义图片变量
-            HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
-            //采集图像
-            HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
-            //HOperatorSet.CountChannels(ho_Image, out HTuple Channels);
+        //public static HObject Grabimage(HTuple acqHandle)
+        //{
+        //    if (acqHandle == null)
+        //    {
+        //        return null;
+        //    }
+        //    HObject ho_Image;//定义图片变量
+        //    HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
+        //    //采集图像
+        //    HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
+        //    return ho_Image;
+        //}
 
-            //if (isGray && Channels.I ==3)
-            //{
-            //    HOperatorSet.Decompose3(ho_Image, out HObject image1, out HObject image2, out HObject image3);
-            //    return image1;
-            //}
+        //public static HObject Grabimage1()
+        //{
+        //    HObject ho_Image;//定义图片变量
+        //    HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
+        //    int result1 = device.StreamGrabber.StartGrabbing();
 
-            //图片自适应窗口
-            //HOperatorSet.GetImageSize(ho_Image, out imageWidth, out imageHeight);
-            //HOperatorSet.SetPart(HW.HalconWindow, 0, 0, imageHeight - 1, imageWidth - 1);
-            //显示图像
-            //HOperatorSet.DispObj(ho_Image, HW.HalconWindow);
+        //    IFrameOut frameOut;
+        //    int nRet;
+        //    int result = device.Parameters.SetCommandValue("TriggerSoftware");
+        //    if (result == MvError.MV_OK)
+        //    {
+        //        nRet = device.StreamGrabber.GetImageBuffer(1000, out frameOut);
+        //        if (MvError.MV_OK == nRet)
+        //        {
 
-            //以当前日期保存图像到D盘下
-            //HOperatorSet.WriteImage(ho_Image, "png", 0, "D:\\" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-            return ho_Image;
-        }
+        //            // 假设 frameOut.Image 是包含图像数据的对象
+        //            uint width = frameOut.Image.Width;      // 图像宽度
+        //            uint height = frameOut.Image.Height;     // 图像高度
+        //            IntPtr pData = frameOut.Image.PixelDataPtr;    // 图像数据指针
+        //            MvGvspPixelType pixelFormat = frameOut.Image.PixelType; // 像素格式（如 "Mono8", "BayerRG8", "RGB24" 等）
+
+        //            if (pixelFormat == MvGvspPixelType.PixelType_Gvsp_Mono8)
+        //            {
+        //                HOperatorSet.GenImage1(out ho_Image, "byte", width, height, pData);
+        //            }
+
+
+        //            device.StreamGrabber.FreeImageBuffer(frameOut);
+        //        }
+        //    }
+        //    int result2 = device.StreamGrabber.StopGrabbing();
+
+        //    //采集图像
+        //    return ho_Image;
+        //}
 
         public static void SavePic(HObject saveImage, InteractS7PLCModel data)
         {
@@ -198,6 +343,12 @@ namespace WheelRecognitionSystem.Public
         {
 
         }
+
+        public void Dispose()
+        {
+            
+        }
+
 
     }
 }

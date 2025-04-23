@@ -30,6 +30,6 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 窗口相机
         /// </summary>
-        public Camera camera { get; set; }
+        public MyCamera camera { get; set; }
     }
 }

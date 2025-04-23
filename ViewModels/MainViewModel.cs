@@ -1008,17 +1008,18 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 // 模拟一些工作
                 await Task.Delay(200);
-                Console.WriteLine($"任务 {index} 完成");
+                //Console.WriteLine($"任务 {index} 完成");
 
                 //  轮毂到位                                        PLC已连接             
                 if (readPLCSignals[index].ArrivalSignal && PlcCilent.Connected)
                 {
                     try
                     {
+                        Console.WriteLine($"轮毂到位：{index}");
                         int n = index + 1; //线体
                         ClearDisplay(n);
                         SetStatus(n, "识别中...");
-                        
+
 
                         //推送到分支程序处理
                         EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
@@ -1029,13 +1030,14 @@ namespace WheelRecognitionSystem.ViewModels
 
                         });
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         Console.WriteLine($"DoJob:{ex.ToString()}");
                     }
                 }
 
 
-                
+
             }
 
         }
@@ -1058,100 +1060,105 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
-            S7.SetBitAt(ref WriteBuffer, 0, model.Index, true); //拍照流程完成
+            S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
+            Console.WriteLine($"拍照流程完成: 0.{model.Index - 1} true");
 
             //显示状态信息
             SetStatus(model.Index, model.resultModel.status);
+            //if (!model.resultModel.ResultBol || model.resultModel.WheelType == null)
+            EventMessage.MessageDisplay(model.Index + "号" + model.resultModel.status, true, false);
+
+            //发送PLC的数据
+            string prefix = DateTime.Now.ToString("mmss");
+            string text;
+            // PLC 中定义的最大长度
+            // 转换字符串为 PLC 格式字节数组
             if (!model.resultModel.ResultBol || model.resultModel.WheelType == null)
             {
-                //发送PLC-NG信号
-
-
-                EventMessage.MessageDisplay(model.Index + "号" + model.resultModel.status, true, false);
-                SetStatus(model.Index, model.resultModel.status);
-
-
-
+                text = prefix + DateTime.Now.ToString("yyMMddHH");
             }
             else
             {
-
-                //发送PLC的数据
-                string prefix = DateTime.Now.ToString("ddss");
-                string text = prefix + model.resultModel.WheelType.Trim('_');
-                int maxLength = 16;          // PLC 中定义的最大长度
-                // 转换字符串为 PLC 格式字节数组
-                byte[] buffer = StringToS7Bytes(text, maxLength);
-                CopyBytes(buffer, WriteBuffer, 10 + (model.Index - 1) * 16);
-
-
-               
-                string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
-                string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
-                switch (model.Index)
-                {
-
-                    case 1:
-                        RecognitionWheelType1 = model.resultModel.WheelType;
-                        Similarity1 = similarity;
-                        TimeConsumed1 = timeConsumed;
-                        Colour1 = model.resultModel.Colour;
-                        break;
-                    case 2:
-                        RecognitionWheelType2 = model.resultModel.WheelType;
-                        Similarity2 = similarity;
-                        TimeConsumed2 = timeConsumed;
-                        Colour2 = model.resultModel.Colour;
-                        break;
-                    case 3:
-                        RecognitionWheelType3 = model.resultModel.WheelType;
-                        Similarity3 = similarity;
-                        TimeConsumed3 = timeConsumed;
-                        Colour3 = model.resultModel.Colour;
-                        break;
-                    case 4:
-                        RecognitionWheelType4 = model.resultModel.WheelType;
-                        Similarity4 = similarity;
-                        TimeConsumed4 = timeConsumed;
-                        Colour4 = model.resultModel.Colour;
-                        break;
-                    case 5:
-                        RecognitionWheelType5 = model.resultModel.WheelType;
-                        Similarity5 = similarity;
-                        TimeConsumed5 = timeConsumed;
-                        Colour5 = model.resultModel.Colour;
-                        break;
-                }
-
-                //插入数据库
-                SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
-                Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
-                dataModel.GUID = Guid.NewGuid().ToString("N");
-                dataModel.WheelType = model.resultModel.WheelType;
-                dataModel.TimeConsumed = model.Interval.ToString();
-                dataModel.Similarity = model.resultModel.Similarity.ToString();
-                dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
-                dataModel.WheelStyle = model.resultModel.WheelStyle;
-                dataModel.RecognitionTime = model.endTime;
-                dataModel.Model = model.resultModel.WheelType;
-                dataModel.Station = "";
-                dataModel.ImagePath = model.imagePath;
-                dataModel.ResultBool = model.resultModel.ResultBol;
-                dataModel.Remark = "";
-                pDB.Insertable(dataModel).ExecuteCommand();
-                //var dc = new Dictionary<string, object>();
-                //dc.Add("WheelType", "");
-                //dc.Add("TimeConsumed", "");
-                //dc.Add("Similarity", "");
-                //dc.Add("WheelHeight", "");
-                //dc.Add("WheelStyle", "");
-                //dc.Add("RecognitionTime", "");
-                //dc.Add("Reserve1", "");
-                //dc.Add("Station", "");
-                //dc.Add("ImagePath", "");
-                //dc.Add("ResultBool", "");
-                //dc.Add("Describe", "");
+                text = prefix + model.resultModel.WheelType.Trim('_');
             }
+            int maxLength = 16;
+            byte[] buffer = StringToS7Bytes(text, maxLength);
+            CopyBytes(buffer, WriteBuffer, 10 + (model.Index - 1) * 16);
+
+
+
+
+
+
+
+
+
+            string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
+            string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
+            switch (model.Index)
+            {
+
+                case 1:
+                    RecognitionWheelType1 = model.resultModel.WheelType;
+                    Similarity1 = similarity;
+                    TimeConsumed1 = timeConsumed;
+                    Colour1 = model.resultModel.Colour;
+                    break;
+                case 2:
+                    RecognitionWheelType2 = model.resultModel.WheelType;
+                    Similarity2 = similarity;
+                    TimeConsumed2 = timeConsumed;
+                    Colour2 = model.resultModel.Colour;
+                    break;
+                case 3:
+                    RecognitionWheelType3 = model.resultModel.WheelType;
+                    Similarity3 = similarity;
+                    TimeConsumed3 = timeConsumed;
+                    Colour3 = model.resultModel.Colour;
+                    break;
+                case 4:
+                    RecognitionWheelType4 = model.resultModel.WheelType;
+                    Similarity4 = similarity;
+                    TimeConsumed4 = timeConsumed;
+                    Colour4 = model.resultModel.Colour;
+                    break;
+                case 5:
+                    RecognitionWheelType5 = model.resultModel.WheelType;
+                    Similarity5 = similarity;
+                    TimeConsumed5 = timeConsumed;
+                    Colour5 = model.resultModel.Colour;
+                    break;
+            }
+
+            //插入数据库
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+            Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
+            dataModel.GUID = Guid.NewGuid().ToString("N");
+            dataModel.WheelType = model.resultModel.WheelType;
+            dataModel.TimeConsumed = model.Interval.TotalMilliseconds.ToString();
+            dataModel.Similarity = model.resultModel.Similarity.ToString();
+            dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
+            dataModel.WheelStyle = model.resultModel.WheelStyle;
+            dataModel.RecognitionTime = model.endTime;
+            dataModel.Model = model.resultModel.WheelType;
+            dataModel.Station = "";
+            dataModel.ImagePath = model.imagePath;
+            dataModel.ResultBool = model.resultModel.ResultBol;
+            dataModel.Remark = "";
+            pDB.Insertable(dataModel).ExecuteCommand();
+            //var dc = new Dictionary<string, object>();
+            //dc.Add("WheelType", "");
+            //dc.Add("TimeConsumed", "");
+            //dc.Add("Similarity", "");
+            //dc.Add("WheelHeight", "");
+            //dc.Add("WheelStyle", "");
+            //dc.Add("RecognitionTime", "");
+            //dc.Add("Reserve1", "");
+            //dc.Add("Station", "");
+            //dc.Add("ImagePath", "");
+            //dc.Add("ResultBool", "");
+            //dc.Add("Describe", "");
+
 
         }
 
@@ -1575,19 +1582,21 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void ManualRecognition()
         {
-            if (ManualIdentify)
-                return;
-            if (!PlcCilent.Connected || CameraStatus != "1")
-            {
-                EventMessage.SystemMessageDisplay("操作失败，请确认PLC、相机连接状态！", MessageType.Warning);
-                return;
-            }
-            if (TemplateDataUpdataControl || DataBeingUpdated || AutoTemplateDataLoadControl)
-            {
-                EventMessage.SystemMessageDisplay("数据更新中，请稍后再试！", MessageType.Warning);
-                return;
-            }
-            ManualIdentify = true;
+            S7.SetBitAt(ref WriteBuffer, 0, 1, false); //复位拍照流程完成
+
+            //if (ManualIdentify)
+            //    return;
+            //if (!PlcCilent.Connected || CameraStatus != "1")
+            //{
+            //    EventMessage.SystemMessageDisplay("操作失败，请确认PLC、相机连接状态！", MessageType.Warning);
+            //    return;
+            //}
+            //if (TemplateDataUpdataControl || DataBeingUpdated || AutoTemplateDataLoadControl)
+            //{
+            //    EventMessage.SystemMessageDisplay("数据更新中，请稍后再试！", MessageType.Warning);
+            //    return;
+            //}
+            //ManualIdentify = true;
         }
 
         /// <summary>
@@ -1604,7 +1613,7 @@ namespace WheelRecognitionSystem.ViewModels
                     if (PlcCilent.Connected)
                     {
                         //写心跳数据
-                        S7.SetBitAt(ref WriteBuffer, 0, 0, heartBool);
+                        S7.SetBitAt(ref WriteBuffer, 0, 5, heartBool);
                         heartBool = !heartBool;
                     }
                     else
@@ -1757,12 +1766,22 @@ namespace WheelRecognitionSystem.ViewModels
                                         S7.SetBitAt(ref WriteBuffer, 142, i, true);
 
                                     S7.SetBitAt(ref WriteBuffer, 141, i, true);
-                                    Console.WriteLine($"{i} : True");
+                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")} loginTrigger:{i} : True");
                                 }
 
                             }
 
-
+                            //读取轮毂流出信号
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                bool isOutflow = S7.GetBitAt(ReadBuffer, 193, i);
+                                //Console.WriteLine($"流出信号：143-{i} : {isOutflow}");
+                                if (isOutflow)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 0, i, false); //复位拍照流程完成
+                                    Console.WriteLine($"复位拍照：0-{i}");
+                                }
+                            }
 
                         }
                         else
@@ -1966,7 +1985,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-      
+
         /// <summary>
         /// 保存图像数据
         /// </summary>

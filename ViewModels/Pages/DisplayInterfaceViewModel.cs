@@ -27,10 +27,13 @@ using static WheelRecognitionSystem.Public.ConfigEdit;
 using static WheelRecognitionSystem.Public.ExternalConnections;
 using static WheelRecognitionSystem.Public.ImageProcessingHelper;
 using Prism.Regions;
+using System.Windows.Media.Media3D;
+using System.Runtime.InteropServices;
+using MvCameraControl;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
-    public class DisplayInterfaceViewModel : BindableBase
+    public class DisplayInterfaceViewModel : BindableBase, IDisposable
     {
 
         #region 窗口显示
@@ -332,7 +335,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 相机列表
         /// </summary>
-        public Camera[] cameras = new Camera[5];
+        public MyCamera[] cameras = new MyCamera[5];
         /// <summary>
         /// 弹窗服务
         /// </summary>
@@ -354,9 +357,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Subscribe(ReceiveS7PLC);
             EventMessage.MessageHelper.GetEvent<InplaceEvent>().Subscribe(Inplace); //轮毂到位信号显示
 
-
+            SDKSystem.Initialize();
         }
 
+        /// <summary>
+        /// 轮毂到位显示
+        /// </summary>
+        /// <param name="obj"></param>
         private void Inplace(KeyValuePair<bool, int> obj)
         {
             if (obj.Key)
@@ -443,9 +450,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         TemplateContour = new HObject(),
                         index = interact.Index
                     });
-                    interact.IsGrayscale = cameras[index].info.Grayscale;
+                    MyCamera camera = cameras[index];
+                    interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
-                    image = CameraHelper.Grabimage(cameras[index].acqHandle);
+                    image = camera.Grabimage();
                     AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);                   
                     ResultDisplay(resultDisplayModel);
                 }
@@ -460,7 +468,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 interact.resultModel.status = "相机未连接";
             }
             //保存图片
-            CameraHelper.SavePic(image, interact);
+            //CameraHelper.SavePic(image, interact);
             //清除到位显示
             Inplace(new KeyValuePair<bool, int>(false, interact.Index));
             //回复消息
@@ -509,9 +517,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             if (recognitionResult.RecognitionWheelType == "NG" )
             {
+                recognitionResult.status = "轮形未识别";
                 //NG的轮型需要保存图片-后续人工补录
-                
-                
+
+
             }
             interact.resultModel = recognitionResult;
 
@@ -544,14 +553,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             while (!token.IsCancellationRequested)
             {
 
-                foreach (Camera camera in cameras)
+                foreach (MyCamera camera in cameras)
                 {
                     try
                     {
                         if (camera?.IsConnected == false)
                         {
-                            camera.Connect();
-                            LoadCameraConnStatus();
+                            //camera.Connect();
+                            //LoadCameraConnStatus();
                         }
                     }
                     catch (Exception ex)
@@ -570,7 +579,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         public void RealTime(object obj, MyEventArgs eventArgs)
         {
-            Camera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
+            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj.ToString()));
             //启动定时器
             camera._dispatcherTimer = new DispatcherTimer();
@@ -587,7 +596,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="eventArgs"></param>
         public void StopReal(object obj, MyEventArgs eventArgs)
         {
-            Camera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
+            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj.ToString()));
             if (camera._dispatcherTimer != null)
             {
@@ -602,7 +611,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnSave(string obj)
         {
-            Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
 
         }
@@ -612,6 +621,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnTemplate(string obj)
         {
+            
+            
+
             ServletInfoModel model = new ServletInfoModel();
             model.Path = "TemplateManagementView";
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
@@ -651,7 +663,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             string newLinkID = string.Empty;
             int newExposure = 0;
 
-            Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             if (camera != null)
             {
@@ -690,7 +702,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     {
                         camera.info.LinkID = newLinkID;
                         camera.Disconnect();
-                        bool isSuc = camera.Connect();
+                        bool isSuc = camera.Connect(newLinkID);
                         LoadCameraConnStatus();
                         if (isSuc)
                             EventMessage.MessageDisplay("相机连接成功！", true, false);
@@ -700,7 +712,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             try
                             {
                                 camera.info.Exposure = newExposure;
-                                camera.SetExposureTime();
+                                camera.SetExposureTime((float)newExposure);
                                 EventMessage.MessageDisplay("曝光设置成功！", true, false);
                             }
                             catch (Exception ex) { }
@@ -737,14 +749,22 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj">相机名</param>
         private void BtnTakePhoto(string obj)
         {
-            Camera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             HObject image = null;
             if (camera != null && camera.IsConnected)
             {
                 try
                 {
-                    image = CameraHelper.Grabimage(camera.acqHandle);
+                    //清空显示                    
+                    ResultDisplay(new AutoRecognitionResultDisplayModel()
+                    {
+                        CurrentImage = new HObject(),
+                        WheelContour = new HObject(),
+                        TemplateContour = new HObject(),
+                        index = _index + 1
+                    });
+                    image = camera.Grabimage();
                     ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 });
                 }
                 catch (Exception ex)
@@ -762,15 +782,20 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public void LoadCameraInfo()
         {
             SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-            ExternalConnections.DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
+            List<Sys_bd_camerainformation> DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
             for (int i = 0; i < cameras.Length; i++)
             {
-                cameras[i] = new Camera();
+                cameras[i] = new MyCamera();
                 cameras[i].info = new Sys_bd_camerainformation();
-                if (ExternalConnections.DatasCamera.Count > i)
+                if (DatasCamera.Count > i)
                 {
-                    cameras[i].info = ExternalConnections.DatasCamera[i];
+                    cameras[i].info = DatasCamera[i];
+                    Thread.Sleep(10);
+                    bool isSuc = cameras[i].Connect(DatasCamera[i].LinkID);
+                    Console.WriteLine($"LoadCameraInfo {i} {DatasCamera[i].LinkID} {isSuc}");
+
                 }
+
             }
             LoadCameraConnStatus();
         }
@@ -876,8 +901,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             CameraStatus5 = cameras[4].IsConnected ? "1" : "0";
         }
 
-
-
-
+        public void Dispose()
+        {
+            SDKSystem.Finalize();
+        }
     }
 }

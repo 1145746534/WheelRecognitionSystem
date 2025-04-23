@@ -330,7 +330,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 SourceTemplateImage.Dispose();
 
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
-                if (Channels.I == 3)               
+                if (Channels?.I == 3)               
                     HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);               
                 else                
                     SourceTemplateImage = model.image;

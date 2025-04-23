@@ -43,9 +43,6 @@ namespace WheelRecognitionSystem.Public
         /// 相机标识符
         /// </summary>
         public static string CameraIdentifier = null;
-        /// <summary>
-        /// 多相机列表
-        /// </summary>
-        public static List<Sys_bd_camerainformation> DatasCamera { get; set; }
+        
     }
 }
