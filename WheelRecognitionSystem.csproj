@@ -230,7 +230,7 @@
     <Compile Include="Models\AutoRecognitionResultDisplayModel.cs" />
     <Compile Include="Models\MyCamera.cs" />
     <Compile Include="Models\Sys_bd_camerainformation.cs" />
-    <Compile Include="Models\tbl_defect_code.cs" />
+    <Compile Include="Models\Defect.cs" />
     <Compile Include="Models\GateDetectionResultModel.cs" />
     <Compile Include="Models\GetDateTimeModel.cs" />
     <Compile Include="Models\IdentityDataModel.cs" />
