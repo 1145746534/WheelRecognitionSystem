@@ -225,6 +225,7 @@
     <Compile Include="DataAccess\SqlAccess.cs" />
     <Compile Include="Models\IModels\IMyCamera.cs" />
     <Compile Include="Models\MyCameraHK_SDK.cs" />
+    <Compile Include="Models\tbl_defect_code.cs" />
     <Compile Include="Models\Tbl_user.cs" />
     <Compile Include="Models\Sys_bd_activewheeltypedatamodel.cs" />
     <Compile Include="Models\AutoRecognitionResultDisplayModel.cs" />
