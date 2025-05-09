@@ -30,7 +30,7 @@ namespace WheelRecognitionSystem.Public
             int x1 = 0;
             int y1 = 100;
             double w = width.D;
-            int TargetWidth = (int)(w - y1*2);
+            int TargetWidth = (int)(w - y1 * 2);
             int TargetHeight = (int)height.D;
             HOperatorSet.CropPart(image, out croppedImage, x1, y1, TargetWidth, TargetHeight);
         }
@@ -43,7 +43,7 @@ namespace WheelRecognitionSystem.Public
         /// <param name="minThreshold">最小阈值</param>
         /// <param name="maxThreshold">最大阈值</param>
         /// <returns>定位到的轮毂图像和轮毂轮廓</returns>
-        public static PositioningWheelResultModel PositioningWheel(HObject image, int minThreshold, int maxThreshold, int minRadius)
+        public static PositioningWheelResultModel PositioningWheel(HObject image, int minThreshold, int maxThreshold, int minRadius, bool isConfirmRadius = true)
         {
             PositioningWheelResultModel resultModel = new PositioningWheelResultModel();
             if (SystemDatas.CroppingOrNot)
@@ -58,23 +58,30 @@ namespace WheelRecognitionSystem.Public
             HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
             HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
             HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
-            if (row.Length == 0 || radius < minRadius)
+            resultModel.CenterRow = row;
+            resultModel.CenterColumn = column;
+            resultModel.Radius = radius;
+            resultModel.WheelImage = null;
+            resultModel.WheelContour = null;
+
+            if (row.Length != 0) //存在轮毂
             {
-                resultModel.WheelImage = null;
-                resultModel.WheelContour = null;
-                resultModel.CenterRow = null;
-                resultModel.CenterColumn = null;
+                //确认半径范围
+                if (isConfirmRadius && radius < minRadius)
+                {
+                    //半径不符合
+                }
+                else
+                {
+                    HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
+                    HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
+                    HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
+                    resultModel.WheelImage = wheelImage;
+                    resultModel.WheelContour = wheelContour;
+
+                }
             }
-            else
-            {
-                HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
-                HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
-                HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
-                resultModel.WheelImage = wheelImage;
-                resultModel.WheelContour = wheelContour;
-                resultModel.CenterRow = row;
-                resultModel.CenterColumn = column;
-            }
+            
             return resultModel;
         }
 

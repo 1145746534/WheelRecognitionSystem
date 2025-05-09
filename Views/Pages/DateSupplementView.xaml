@@ -30,8 +30,6 @@
                ShowsPreview="False"></GridSplitter>
             <h:HSmartWindowControlWPF Name="HSmart" Grid.Row="0" HKeepAspectRatio="True" HLineWidth="2">
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding CurrentImage}"/>
-                <h:HIconicDisplayObjectWPF IconicObject="{Binding WheelContour4}" HColor="magenta"/>
-                <h:HIconicDisplayObjectWPF IconicObject="{Binding TemplateContour4}" HColor="medium slate blue"/>
             </h:HSmartWindowControlWPF>
             <GroupBox Grid.Row="0" Grid.Column="2"  Style="{StaticResource NewGroupBoxStyle}" Header="待补录轮毂" >
                 <Grid Margin="2,28,2,2">

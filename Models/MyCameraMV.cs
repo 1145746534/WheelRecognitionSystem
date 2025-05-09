@@ -13,7 +13,7 @@ using WheelRecognitionSystem.Public;
 
 namespace WheelRecognitionSystem.Models
 {
-    public class MyCamera : IMyCamera, IDisposable
+    public class MyCameraMV : IMyCamera, IDisposable
     {
         /// <summary>
         /// 相机
@@ -27,7 +27,7 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public DispatcherTimer _dispatcherTimer;
 
-        public MyCamera()
+        public MyCameraMV()
         {
         }
 
@@ -107,7 +107,7 @@ namespace WheelRecognitionSystem.Models
             Disconnect();
         }
 
-        ~MyCamera()
+        ~MyCameraMV()
         {
             Disconnect();
         }

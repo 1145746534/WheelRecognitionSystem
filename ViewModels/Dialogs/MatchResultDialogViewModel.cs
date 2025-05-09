@@ -26,6 +26,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             MatchResultDatas = new ObservableCollection<MatchResultModel>();
             EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Subscribe(MatchResultDatasDisplay, ThreadOption.UIThread);
+            //EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Subscribe(MatchResultDatasDisplay);
         }
 
         private void MatchResultDatasDisplay(List<MatchResultModel> list)

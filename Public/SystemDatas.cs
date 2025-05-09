@@ -34,6 +34,11 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static string HistoricalImagesPath { get; set; }
 
+        /// <summary>
+        /// 手动图片保存路径
+        /// </summary>
+        public static string HandImagesPath { get; set; }
+
 
         /// <summary>
         /// 定位轮毂最小阈值

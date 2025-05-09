@@ -25,5 +25,11 @@ namespace WheelRecognitionSystem.Models
         /// 轮毂中心列坐标
         /// </summary>
         public HTuple CenterColumn { get; set; }
+        /// <summary>
+        /// 半径
+        /// </summary>
+        public HTuple Radius { get; set; }
+
+
     }
 }

@@ -46,6 +46,10 @@ namespace WheelRecognitionSystem
             //历史图片保存路径
             ConfigEdit.ReadAppSettings("HistoricalImageFolder", out string historicalImageFolder);
             HistoricalImagesPath = RootDirectory + @"\" + historicalImageFolder;
+            //手动图片保存路径
+            ConfigEdit.ReadAppSettings("HandImageFolder", out string handImageFolder);
+            HandImagesPath = RootDirectory + @"\" + handImageFolder;
+
             //存储Log文件路径
             string logDirectory = AppDomain.CurrentDomain.BaseDirectory + "Logs";
             //创建系统所需文件夹

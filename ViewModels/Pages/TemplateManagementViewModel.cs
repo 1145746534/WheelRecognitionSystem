@@ -27,6 +27,8 @@ using static WheelRecognitionSystem.Public.ImageProcessingHelper;
 using System.Threading;
 using static System.Net.Mime.MediaTypeNames;
 using System.Windows.Media.Media3D;
+using System.Drawing;
+using MvCameraControl;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
@@ -330,11 +332,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 SourceTemplateImage.Dispose();
 
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
-                if (Channels?.I == 3)               
-                    HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);               
-                else                
+                if (Channels?.I == 3)
+                    HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);
+                else
                     SourceTemplateImage = model.image;
-                
+
 
                 TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
                 ImageDisVisibility = Visibility.Visible;
@@ -461,17 +463,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     var File_Name = openFileDialog.FileName;
                     SourceTemplateImage.Dispose();
+                    HOperatorSet.ReadImage(out HObject image, File_Name);
+                    //彩色图需转成灰度图
+                    HOperatorSet.CountChannels(image, out HTuple Channels);
+                    if (Channels.I == 3)
+                    {
+                        HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
+                        SourceTemplateImage = image1;
+                    }
+                    else
+                        SourceTemplateImage = image;
 
-                    //if (CroppingOrNot)
-                    //{
-                    //    HOperatorSet.ReadImage(out HObject image, File_Name);                   
-                    //    Cropping(image, out SourceTemplateImage);
-                    //}
-                    //else
-                    //{
-                    //    HOperatorSet.ReadImage(out SourceTemplateImage, File_Name);
-                    //}
-                    HOperatorSet.ReadImage(out SourceTemplateImage, File_Name);
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
                 }
                 catch (Exception ex)
@@ -525,26 +527,19 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                //HOperatorSet.Intensity(SourceTemplateImage, SourceTemplateImage, out HTuple mean, out HTuple deviation);
-                //HOperatorSet.Threshold(SourceTemplateImage, out HObject region, mean, 255);
-                HOperatorSet.Threshold(SourceTemplateImage, out HObject region, WheelMinThreshold, 255);
-                HOperatorSet.Connection(region, out HObject connectedRegions);
-                HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
-                HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
-                HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
-                if (row.Length == 0)
+                PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
+                if (pResult.WheelImage == null)
                 {
                     EventMessage.SystemMessageDisplay("定位轮毂失败，请调整轮毂阈值参数后再试!", MessageType.Warning);
                     return;
                 }
                 else
                 {
-                    HOperatorSet.GenCircleContourXld(out HObject circle, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
-                    HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
+                    EventMessage.SystemMessageDisplay($"轮毂半径：{pResult.Radius}。", MessageType.Default);
                     InPoseWheelImage.Dispose();
-                    HOperatorSet.ReduceDomain(SourceTemplateImage, reducedCircle, out InPoseWheelImage);
-                    TemplateWindowDisplay(SourceTemplateImage, null, circle, null, null);
-                }
+                    InPoseWheelImage = pResult.WheelImage;
+                    TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, null, null);
+                }               
             }
             catch (Exception ex)
             {
@@ -569,9 +564,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HOperatorSet.ReduceDomain(InPoseWheelImage, circleSector, out HObject reduced);
             HOperatorSet.Threshold(reduced, out HObject region, 0, WindowMaxThreshold);
             HOperatorSet.Connection(region, out HObject connectedRegions);
-            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 30);
-            HOperatorSet.FillUp(regionClosing, out HObject regionFillUp);
-            HOperatorSet.SelectShape(regionFillUp, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
+            HOperatorSet.ClosingCircle(connectedRegions, out HObject regionClosing, 3.5);
+            HOperatorSet.OpeningCircle(regionClosing, out HObject RegionOpening, 1.5);
+            //HOperatorSet.FillUp(regionClosing, out HObject regionFillUp);
+            HOperatorSet.SelectShape(RegionOpening, out HObject selectedRegions, "area", "and", RemoveMixArea, 999999);
             HOperatorSet.Union1(selectedRegions, out HObject regionUnion);
             HOperatorSet.Difference(reduced, regionUnion, out HObject regionDifference);
             TemplateImage.Dispose();
@@ -652,7 +648,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //修改自动模式匹配用模板数据
                 if (!TemplateDataUpdataControl)
                     TemplateDataUpdataControl = true;
-                if (!AutoTemplateDataLoadControl) 
+                if (!AutoTemplateDataLoadControl)
                     AutoTemplateDataLoadControl = true;
 
                 SourceTemplateImage.Dispose();
@@ -812,27 +808,29 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 results = WheelRecognitionAlgorithm(positioningResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             }
-            else results = WheelRecognitionAlgorithm(SourceTemplateImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            else 
+                results = WheelRecognitionAlgorithm(SourceTemplateImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             DateTime endTime = DateTime.Now;
             //浇口检测
-            GateDetectionResultModel gateResult = new GateDetectionResultModel();
-            if (positioningResult.WheelImage != null)
-            {
-                gateResult = GateDetection(positioningResult.WheelImage, positioningResult.CenterRow, positioningResult.CenterColumn, PositioningGateRadius, GateOutMinThreshold, GateMinArea, GateMinRadius);
-                if (gateResult.DetectionResult)
-                {
-                    GateContourColor = "green";
-                    GateDetectionResult = "OK";
-                }
-                else
-                {
-                    GateContourColor = "red";
-                    GateDetectionResult = "NG";
-                }
-                GateArea = gateResult.GateArea.ToString();
-                GateRadiu = gateResult.GateRadiu.ToString();
-                GateDetectionVisibility = Visibility.Visible;
-            }
+            //GateDetectionResultModel gateResult = new GateDetectionResultModel();
+            //if (positioningResult.WheelImage != null)
+            //{
+            //    gateResult = GateDetection(positioningResult.WheelImage, positioningResult.CenterRow, positioningResult.CenterColumn, PositioningGateRadius, GateOutMinThreshold, GateMinArea, GateMinRadius);
+            //    if (gateResult.DetectionResult)
+            //    {
+            //        GateContourColor = "green";
+            //        GateDetectionResult = "OK";
+            //    }
+            //    else
+            //    {
+            //        GateContourColor = "red";
+            //        GateDetectionResult = "NG";
+            //    }
+            //    GateArea = gateResult.GateArea.ToString();
+            //    GateRadiu = gateResult.GateRadiu.ToString();
+            //    GateDetectionVisibility = Visibility.Visible;
+            //}
+
             HObject templateContour = null;
             if (results.RecognitionWheelType != "NG")
             {
@@ -845,7 +843,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 RecognitionWheelType = "NG";
                 RecognitionSimilarity = "0";
             }
-            TemplateWindowDisplay(SourceTemplateImage, null, positioningResult.WheelContour, templateContour, gateResult.GateContour);
+            TemplateWindowDisplay(SourceTemplateImage, null, positioningResult.WheelContour, templateContour, null);
 
             //匹配相似度结果显示
             List<MatchResultModel> matchResultModels = new List<MatchResultModel>();

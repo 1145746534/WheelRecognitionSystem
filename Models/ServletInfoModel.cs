@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WheelRecognitionSystem.Models.IModels;
 
 namespace WheelRecognitionSystem.Models
 {
@@ -30,6 +31,6 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 窗口相机
         /// </summary>
-        public MyCamera camera { get; set; }
+        public IMyCamera camera { get; set; }
     }
 }

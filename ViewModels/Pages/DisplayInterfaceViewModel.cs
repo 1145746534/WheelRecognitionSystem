@@ -30,6 +30,9 @@ using Prism.Regions;
 using System.Windows.Media.Media3D;
 using System.Runtime.InteropServices;
 using MvCameraControl;
+using System.IO;
+using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -335,7 +338,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 相机列表
         /// </summary>
-        public MyCamera[] cameras = new MyCamera[5];
+        public MyCameraMV[] cameras = new MyCameraMV[5];
         /// <summary>
         /// 弹窗服务
         /// </summary>
@@ -423,7 +426,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (interact != null)
             {
                 //显示
-                Inplace(new KeyValuePair<bool, int>( true, interact.Index));
+                Inplace(new KeyValuePair<bool, int>(true, interact.Index));
                 Thread.Sleep(interact.ArrivalDelay);
                 //处理
                 PhotoAndTackle(interact);
@@ -444,17 +447,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 try
                 {
                     //清空显示                    
-                    ResultDisplay(new AutoRecognitionResultDisplayModel() {
+                    ResultDisplay(new AutoRecognitionResultDisplayModel()
+                    {
                         CurrentImage = new HObject(),
                         WheelContour = new HObject(),
                         TemplateContour = new HObject(),
                         index = interact.Index
                     });
-                    MyCamera camera = cameras[index];
+                    MyCameraMV camera = cameras[index];
                     interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
                     image = camera.Grabimage();
-                    AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);                   
+                    AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);
                     ResultDisplay(resultDisplayModel);
                 }
                 catch (Exception ex)
@@ -490,32 +494,32 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 HOperatorSet.Decompose3(CurrentImage, out HObject image1, out HObject image2, out HObject image3);
                 image = image1;
             }
-            else           
+            else
                 image = CurrentImage;
-            
+
 
             //定位轮毂
             PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             //如果定位到轮毂
-            if (pResult.WheelImage != null)            
+            if (pResult.WheelImage != null)
                 //轮毂识别
-                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);                            
+                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             else//没有定位到轮毂            
                 recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-           
-            
-            
+
+
+
 
             HObject templateContour = new HObject();
             if (recognitionResult.RecognitionWheelType != "NG")
             {
                 templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                 //根据高度确定为哪个轮型
-               
+
             }
-            if (recognitionResult.RecognitionWheelType == "NG" )
+            if (recognitionResult.RecognitionWheelType == "NG")
             {
                 recognitionResult.status = "轮形未识别";
                 //NG的轮型需要保存图片-后续人工补录
@@ -553,7 +557,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             while (!token.IsCancellationRequested)
             {
 
-                foreach (MyCamera camera in cameras)
+                foreach (MyCameraMV camera in cameras)
                 {
                     try
                     {
@@ -579,7 +583,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         public void RealTime(object obj, MyEventArgs eventArgs)
         {
-            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
+            MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj.ToString()));
             //启动定时器
             camera._dispatcherTimer = new DispatcherTimer();
@@ -596,7 +600,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="eventArgs"></param>
         public void StopReal(object obj, MyEventArgs eventArgs)
         {
-            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
+            MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj.ToString()));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj.ToString()));
             if (camera._dispatcherTimer != null)
             {
@@ -611,8 +615,26 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnSave(string obj)
         {
-            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
+            switch (index)
+            {
+                case 0:
+                    SaveImageDatas(CurrentImage1, SaveWay.Hand);
+                    break;
+                case 1:
+                    SaveImageDatas(CurrentImage2, SaveWay.Hand);
+                    break;
+                case 2:
+                    SaveImageDatas(CurrentImage3, SaveWay.Hand);
+                    break;
+                case 3:
+                    SaveImageDatas(CurrentImage4, SaveWay.Hand);
+                    break;
+                case 4:
+                    SaveImageDatas(CurrentImage5, SaveWay.Hand);
+                    break;
+            }
 
         }
         /// <summary>
@@ -621,8 +643,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnTemplate(string obj)
         {
-            
-            
+
+
 
             ServletInfoModel model = new ServletInfoModel();
             model.Path = "TemplateManagementView";
@@ -663,7 +685,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             string newLinkID = string.Empty;
             int newExposure = 0;
 
-            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             if (camera != null)
             {
@@ -749,7 +771,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj">相机名</param>
         private void BtnTakePhoto(string obj)
         {
-            MyCamera camera = cameras.ToList().Find((x => x.info.Name == obj));
+            MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj));
             int _index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             HObject image = null;
             if (camera != null && camera.IsConnected)
@@ -785,7 +807,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             List<Sys_bd_camerainformation> DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
             for (int i = 0; i < cameras.Length; i++)
             {
-                cameras[i] = new MyCamera();
+                cameras[i] = new MyCameraMV();
                 cameras[i].info = new Sys_bd_camerainformation();
                 if (DatasCamera.Count > i)
                 {
@@ -900,6 +922,91 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             CameraStatus4 = cameras[3].IsConnected ? "1" : "0";
             CameraStatus5 = cameras[4].IsConnected ? "1" : "0";
         }
+
+
+        private string SaveImageDatas(HObject saveImage, SaveWay way, string wheelType = null)
+        {
+            string savePath = string.Empty;
+            DateTime dateTime = DateTime.Now;
+            //月文件夹路径
+            string monthPath = HistoricalImagesPath + @"\" + dateTime.Month + "月";
+            //日文件夹路径
+            string dayPath = HistoricalImagesPath + @"\" + dateTime.Month + @"月\" + dateTime.Day + "日";
+            //当日未识别文件夹路径
+            string ngPath = HistoricalImagesPath + @"\" + dateTime.Month + @"月\" + dateTime.Day + @"日\NG";
+            if (Directory.Exists(monthPath) == false)
+                Directory.CreateDirectory(monthPath);
+            if (Directory.Exists(dayPath) == false)
+                Directory.CreateDirectory(dayPath);
+            if (Directory.Exists(ngPath) == false)
+                Directory.CreateDirectory(ngPath);
+            if (Directory.Exists(HandImagesPath) == false)
+                Directory.CreateDirectory(HandImagesPath);
+            var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
+            if (diskFree > 200)
+            {
+                if (way == SaveWay.AutoOK)
+                {
+                    //保存轮型的目录
+                    string saveWheelTypePath = dayPath + @"\" + wheelType;
+                    if (Directory.Exists(saveWheelTypePath) == false)
+                        Directory.CreateDirectory(saveWheelTypePath);
+                    savePath = saveWheelTypePath + @"\" + wheelType + "&" + dateTime.ToString("yyMMddHHmmss") + ".tif";
+                    string saveImagePath = savePath.Replace(@"\", "/");
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+                }
+                else if (way == SaveWay.AutoNG)
+                {
+                    savePath = ngPath + @"/NG" + "&" + dateTime.ToString("yyMMddHHmmss") + ".tif";
+                    string saveImagePath = savePath.Replace(@"\", "/");
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+                }
+                else
+                {
+                    //保存到临时图片列表
+                    savePath = HandImagesPath + @"/" + "Hand&" + dateTime.ToString("yyMMddHHmmss") + ".tif";
+                    string saveImagePath = savePath.Replace(@"\", "/");
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+
+                }
+
+            }
+            else
+                EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
+
+            return savePath;
+        }
+
+        public enum SaveWay
+        {
+            [Description("自动OK图")]
+            AutoOK,
+            [Description("自动NG图")]
+            AutoNG,
+            [Description("手动")]
+            Hand
+        }
+
+        ///  <summary> 
+        /// 获取指定驱动器的剩余空间总大小(单位为MB) 
+        ///  </summary> 
+        ///  <param name="HardDiskName">代表驱动器的字母(必须大写字母) </param> 
+        ///  <returns> </returns> 
+        private long GetHardDiskFreeSpace(string HardDiskName)
+        {
+            long freeSpace = new long();
+            HardDiskName = HardDiskName + ":\\";
+            System.IO.DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
+            foreach (System.IO.DriveInfo drive in drives)
+            {
+                if (drive.Name == HardDiskName)
+                {
+                    freeSpace = drive.TotalFreeSpace / (1024 * 1024);
+                }
+            }
+            return freeSpace;
+        }
+
 
         public void Dispose()
         {
