@@ -539,7 +539,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     InPoseWheelImage.Dispose();
                     InPoseWheelImage = pResult.WheelImage;
                     TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, null, null);
-                }               
+                }
             }
             catch (Exception ex)
             {
@@ -808,7 +808,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 results = WheelRecognitionAlgorithm(positioningResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             }
-            else 
+            else
                 results = WheelRecognitionAlgorithm(SourceTemplateImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             DateTime endTime = DateTime.Now;
             //浇口检测
@@ -842,6 +842,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 RecognitionWheelType = "NG";
                 RecognitionSimilarity = "0";
+                //大模型推算
+                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
+                for (int i = 0; i < names.Length; i++)
+                {
+                    Console.WriteLine($"数据：{names[i].S} 结果：{confidences[i].D.ToString("0.0000")}");
+                }
+                if(names.Length > 0 )
+                {
+                    results.RecognitionWheelType = names[0].S;
+                    RecognitionWheelType = names[0].S;
+                    RecognitionSimilarity = confidences[0].D.ToString("0.0000");
+                }
+                hv_DLResult.Dispose();
             }
             TemplateWindowDisplay(SourceTemplateImage, null, positioningResult.WheelContour, templateContour, null);
 

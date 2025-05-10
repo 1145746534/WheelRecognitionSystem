@@ -258,6 +258,7 @@
     <Compile Include="Public\EventMessage.cs" />
     <Compile Include="Public\ExternalConnections.cs" />
     <Compile Include="Public\FileHelper.cs" />
+    <Compile Include="Public\HDevelopExport.cs" />
     <Compile Include="Public\ImageProcessingHelper.cs" />
     <Compile Include="Public\Style\AduTabControl.cs" />
     <Compile Include="Public\Style\AduTabItem.cs" />

@@ -46,42 +46,48 @@ namespace WheelRecognitionSystem.Public
         public static PositioningWheelResultModel PositioningWheel(HObject image, int minThreshold, int maxThreshold, int minRadius, bool isConfirmRadius = true)
         {
             PositioningWheelResultModel resultModel = new PositioningWheelResultModel();
-            if (SystemDatas.CroppingOrNot)
+            try
             {
-                HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
-                minThreshold = (int)Mean1.D;
+                if (SystemDatas.CroppingOrNot)
+                {
+                    HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
+                    minThreshold = (int)Mean1.D;
+                }
+
+
+                HOperatorSet.Threshold(image, out HObject region, minThreshold, maxThreshold);
+                HOperatorSet.Connection(region, out HObject connectedRegions);
+                HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
+                HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
+                HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
+                resultModel.CenterRow = row;
+                resultModel.CenterColumn = column;
+                resultModel.Radius = radius;
+                resultModel.WheelImage = null;
+                resultModel.WheelContour = null;
+
+                if (row.Length != 0) //存在轮毂
+                {
+                    //确认半径范围
+                    if (isConfirmRadius && radius < minRadius)
+                    {
+                        //半径不符合
+                    }
+                    else
+                    {
+                        HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
+                        HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
+                        HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
+                        resultModel.WheelImage = wheelImage;
+                        resultModel.WheelContour = wheelContour;
+
+                    }
+                }
             }
-
-
-            HOperatorSet.Threshold(image, out HObject region, minThreshold, maxThreshold);
-            HOperatorSet.Connection(region, out HObject connectedRegions);
-            HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
-            HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
-            HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
-            resultModel.CenterRow = row;
-            resultModel.CenterColumn = column;
-            resultModel.Radius = radius;
-            resultModel.WheelImage = null;
-            resultModel.WheelContour = null;
-
-            if (row.Length != 0) //存在轮毂
+            catch (Exception ex)
             {
-                //确认半径范围
-                if (isConfirmRadius && radius < minRadius)
-                {
-                    //半径不符合
-                }
-                else
-                {
-                    HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
-                    HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
-                    HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
-                    resultModel.WheelImage = wheelImage;
-                    resultModel.WheelContour = wheelContour;
-
-                }
+                Console.WriteLine($"PositioningWheelResultModel:{ex.Message}");
             }
-            
             return resultModel;
         }
 
@@ -238,6 +244,179 @@ namespace WheelRecognitionSystem.Public
                     }
                 }
             }
+        }
+
+
+        public static HTuple WheelDeepLearning(HObject ho_ImageBatch)
+        {
+            HTuple hv_DLDeviceHandles = new HTuple(), hv_DLDevice = new HTuple();
+            HTuple hv_ImageDir = new HTuple(), hv_PreprocessParamFileName = new HTuple();
+            HTuple hv_RetrainedModelFileName = new HTuple(), hv_BatchSizeInference = new HTuple();
+            HTuple hv_DLModelHandle = new HTuple(), hv_ClassNames = new HTuple();
+            HTuple hv_ClassIDs = new HTuple(), hv_DLPreprocessParam = new HTuple();
+            HTuple hv_WindowHandleDict = new HTuple(), hv_DLDataInfo = new HTuple();
+            HTuple hv_GenParam = new HTuple(), hv_ImageFiles = new HTuple();
+            HTuple hv_BatchIndex = new HTuple(), hv_Batch = new HTuple();
+            HTuple hv_DLSampleBatch = new HTuple(), hv_DLResultBatch = new HTuple();
+            HTuple hv_SampleIndex = new HTuple(), hv_DLSample = new HTuple();
+            HTuple hv_DLResult = new HTuple() , hv_WindowHandles = new HTuple();
+            //HOperatorSet.GenEmptyObj(out ho_ImageBatch);
+            try
+            {
+                //找CPU或者GPU
+                HOperatorSet.QueryAvailableDlDevices((new HTuple("runtime")).TupleConcat("runtime"),
+                    (new HTuple("gpu")).TupleConcat("cpu"), out hv_DLDeviceHandles);
+                if ((int)(new HTuple((new HTuple(hv_DLDeviceHandles.TupleLength())).TupleEqual(
+                    0))) != 0)
+                {
+                    throw new HalconException("No supported device found to continue this example.");
+                }
+                using (HDevDisposeHelper dh = new HDevDisposeHelper())
+                {
+                    hv_DLDevice = hv_DLDeviceHandles.TupleSelect(
+                        0);
+                }
+
+
+                hv_ImageDir.Dispose();
+                hv_ImageDir = "D:/ZS/终检/DLT/picture/JG12345";
+                //
+                //大模型路径跟预参路径
+                hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
+                hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
+                hv_BatchSizeInference = 1;
+                HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
+                HOperatorSet.SetDlModelParam(hv_DLModelHandle, "batch_size", hv_BatchSizeInference);
+
+                HOperatorSet.SetDlModelParam(hv_DLModelHandle, "device", hv_DLDevice);
+                HOperatorSet.GetDlModelParam(hv_DLModelHandle, "class_names", out hv_ClassNames);
+                HOperatorSet.GetDlModelParam(hv_DLModelHandle, "class_ids", out hv_ClassIDs);
+                HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
+                    out hv_DLPreprocessParam);
+
+                HOperatorSet.CreateDict(out hv_WindowHandleDict);
+                HOperatorSet.CreateDict(out hv_DLDataInfo);
+                HOperatorSet.SetDictTuple(hv_DLDataInfo, "class_names", hv_ClassNames);
+                HOperatorSet.SetDictTuple(hv_DLDataInfo, "class_ids", hv_ClassIDs);
+                HOperatorSet.CreateDict(out hv_GenParam);
+                HOperatorSet.SetDictTuple(hv_GenParam, "scale_windows", 1.1);
+
+                HDevelopExport hDevelop = new HDevelopExport();
+
+
+                hv_DLSampleBatch.Dispose();
+                hDevelop.gen_dl_samples_from_images(ho_ImageBatch, out hv_DLSampleBatch);
+                hDevelop.preprocess_dl_samples(hv_DLSampleBatch, hv_DLPreprocessParam);
+                //
+                HOperatorSet.ApplyDlModel(hv_DLModelHandle, hv_DLSampleBatch, new HTuple(),
+                    out hv_DLResultBatch);
+                //
+                Console.WriteLine(hv_DLResultBatch.Length);
+                if (hv_DLResultBatch.Length > 0)
+                {
+                    hv_SampleIndex = 0;
+                    //
+                    hv_DLSample.Dispose();
+                    using (HDevDisposeHelper dh = new HDevDisposeHelper())
+                    {
+                        hv_DLSample = hv_DLSampleBatch.TupleSelect(
+                            hv_SampleIndex);
+                    }
+                    using (HDevDisposeHelper dh = new HDevDisposeHelper())
+                    {
+                        hv_DLResult = hv_DLResultBatch.TupleSelect(
+                            hv_SampleIndex);
+                    }
+                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
+                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        Console.WriteLine($"数据：{names[i].S} 结果：{confidences[i].D.ToString("0.0000")}");
+                    }
+                    return hv_DLResult;
+
+                }
+                else
+                {
+                    return null;
+                }
+                    
+
+                //
+                //dev_display_dl_data(hv_DLSample, hv_DLResult, hv_DLDataInfo, "classification_result",
+                //    hv_GenParam, hv_WindowHandleDict);
+                //hv_WindowHandles.Dispose();
+                //HOperatorSet.GetDictTuple(hv_WindowHandleDict, "classification_result",
+                //    out hv_WindowHandles);
+                //HDevWindowStack.SetActive(hv_WindowHandles.TupleSelect(
+                //    0));
+                //using (HDevDisposeHelper dh = new HDevDisposeHelper())
+                //{
+                //    set_display_font(hv_WindowHandles.TupleSelect(0), 16, "mono", "true", "false");
+                //}
+                //if (HDevWindowStack.IsOpen())
+                //{
+                //    HOperatorSet.DispText(HDevWindowStack.GetActive(), "Press Run (F5) to continue",
+                //        "window", "bottom", "right", "black", new HTuple(), new HTuple());
+                //}
+                // stop(...); only in hdevelop
+
+
+                //
+                //Close windows used for visualization.
+                // dev_close_window_dict(hv_WindowHandleDict);
+
+            }
+            catch (HalconException HDevExpDefaultException)
+            {
+
+                hv_DLDeviceHandles.Dispose();
+                hv_DLDevice.Dispose();
+                hv_ImageDir.Dispose();
+                hv_PreprocessParamFileName.Dispose();
+                hv_RetrainedModelFileName.Dispose();
+                hv_BatchSizeInference.Dispose();
+                hv_DLModelHandle.Dispose();
+                hv_ClassNames.Dispose();
+                hv_ClassIDs.Dispose();
+                hv_DLPreprocessParam.Dispose();
+                hv_WindowHandleDict.Dispose();
+                hv_DLDataInfo.Dispose();
+                hv_GenParam.Dispose();
+                hv_ImageFiles.Dispose();
+                hv_BatchIndex.Dispose();
+                hv_Batch.Dispose();
+                hv_DLSampleBatch.Dispose();
+                hv_DLResultBatch.Dispose();
+                hv_SampleIndex.Dispose();
+                hv_DLSample.Dispose();
+                hv_DLResult.Dispose();
+                hv_WindowHandles.Dispose();
+
+                throw HDevExpDefaultException;
+            }
+            hv_DLDeviceHandles.Dispose();
+            hv_DLDevice.Dispose();
+            hv_ImageDir.Dispose();
+            hv_PreprocessParamFileName.Dispose();
+            hv_RetrainedModelFileName.Dispose();
+            hv_BatchSizeInference.Dispose();
+            hv_DLModelHandle.Dispose();
+            hv_ClassNames.Dispose();
+            hv_ClassIDs.Dispose();
+            hv_DLPreprocessParam.Dispose();
+            hv_WindowHandleDict.Dispose();
+            hv_DLDataInfo.Dispose();
+            hv_GenParam.Dispose();
+            hv_ImageFiles.Dispose();
+            hv_BatchIndex.Dispose();
+            hv_Batch.Dispose();
+            hv_DLSampleBatch.Dispose();
+            hv_DLResultBatch.Dispose();
+            hv_SampleIndex.Dispose();
+            hv_DLSample.Dispose();
+            hv_DLResult.Dispose();
+            hv_WindowHandles.Dispose();
         }
 
         /// <summary>
