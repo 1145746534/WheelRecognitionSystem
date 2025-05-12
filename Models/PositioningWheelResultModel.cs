@@ -29,7 +29,15 @@ namespace WheelRecognitionSystem.Models
         /// 半径
         /// </summary>
         public HTuple Radius { get; set; }
+        /// <summary>
+        /// 内圈灰度
+        /// </summary>
+        public float InnerCircleMean { get; set; }
 
+        /// <summary>
+        /// 全图灰度
+        /// </summary>
+        public float FullFigureGary { get; set; }
 
     }
 }

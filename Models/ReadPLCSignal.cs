@@ -13,6 +13,20 @@ namespace WheelRecognitionSystem.Models
     public class ReadPLCSignal : BindableBase
     {
 
+        //public event Action ArrivalSignalTriggered; // 定义触发事件
+
+        public event EventHandler<EventArgs> ArrivalSignalTriggered;
+
+        private int _index;
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public int Index
+        {
+            get { return _index; }
+            set { SetProperty(ref _index, value); }
+        }
+
         private string _name;
         /// <summary>
         /// 名称
@@ -39,31 +53,21 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public bool ArrivalSignal
         {
-            get
-            {
-
-                if (newArrival - oldArrival > 0)  //上升沿
+            get { return _arrivalSignal; }
+            set {
+                bool oldValue = _arrivalSignal;
+                SetProperty(ref _arrivalSignal, value);
+                // 仅在值从 false 变为 true 时触发
+                if (oldValue != value && value)
                 {
-                    oldArrival = newArrival;
-                    return true;
+                    // 触发时传递参数
+                    ArrivalSignalTriggered?.Invoke(this, EventArgs.Empty);
                 }
-                else if (newArrival - oldArrival == 0) //平峰
-                {
-                   
-                }
-                else  //下降沿
-                {
-                    
-                }
-                oldArrival = newArrival;
-                return false;
-
             }
-            
+
         }
 
 
-        private int oldArrival = 0;
 
         public int newArrival = 0;
 

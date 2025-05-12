@@ -32,6 +32,7 @@ using MySqlX.XDevAPI.Common;
 using MySqlX.XDevAPI;
 using Mysqlx.Session;
 using Org.BouncyCastle.Asn1.X509;
+using Mysqlx;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -988,9 +989,35 @@ namespace WheelRecognitionSystem.ViewModels
 
             for (int i = 0; i < readPLCSignals.Count(); i++)
             {
+                readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
                 Thread.Sleep(100);
                 int localI = i; // 创建一个局部变量来保存当前的i值
-                Task.Run(async () => await DoJob(cts.Token, localI), cts.Token);
+                //Task.Run(async () => await DoJob(cts.Token, localI), cts.Token);
+            }
+        }
+
+        private void OnArrivalSignalTriggered(object sender, EventArgs e)
+        {
+            try
+            {
+                ReadPLCSignal plcSignal = sender as ReadPLCSignal;
+                Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 轮毂到位：{plcSignal.Index}");
+                int n = plcSignal.Index + 1; //线体 下标加1
+                ClearDisplay(n);
+                SetStatus(n, "识别中...");
+
+
+                //推送到分支程序处理
+                EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
+                {
+                    Index = n,
+                    ArrivalDelay = _ArrivalDelay,
+                    readPLCSignal = readPLCSignals[plcSignal.Index],
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DoJob:{ex.ToString()}");
             }
         }
 
@@ -1000,47 +1027,48 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="token"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task DoJob(CancellationToken token, int index)
-        {
-            await Task.Delay(2000);
+        //private async Task DoJob(CancellationToken token, int index)
+        //{
+        //    await Task.Delay(2000);
 
-            while (!token.IsCancellationRequested)
-            {
-                // 模拟一些工作
-                await Task.Delay(200);
-                //Console.WriteLine($"任务 {index} 完成");
+        //    while (!token.IsCancellationRequested)
+        //    {
+        //        // 模拟一些工作
+        //        await Task.Delay(200);
+        //        //Console.WriteLine($"任务 {index} 完成");
 
-                //  轮毂到位                                        PLC已连接             
-                if (readPLCSignals[index].ArrivalSignal && PlcCilent.Connected)
-                {
-                    try
-                    {
-                        Console.WriteLine($"轮毂到位：{index}");
-                        int n = index + 1; //线体
-                        ClearDisplay(n);
-                        SetStatus(n, "识别中...");
-
-
-                        //推送到分支程序处理
-                        EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
-                        {
-                            Index = n,
-                            ArrivalDelay = _ArrivalDelay,
-                            readPLCSignal = readPLCSignals[index],
-
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"DoJob:{ex.ToString()}");
-                    }
-                }
+        //        //  轮毂到位                                        PLC已连接             
+        //        if (readPLCSignals[index].ArrivalSignal && PlcCilent.Connected)
+        //        {
+        //            try
+        //            {
+        //                Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 轮毂到位：{index}");
+        //                int n = index + 1; //线体
+        //                ClearDisplay(n);
+        //                SetStatus(n, "识别中...");
 
 
+        //                //推送到分支程序处理
+        //                EventMessage.MessageHelper.GetEvent<InteractHandleEvent>().Publish(new InteractS7PLCModel()
+        //                {
+        //                    Index = n,
+        //                    ArrivalDelay = _ArrivalDelay,
+        //                    readPLCSignal = readPLCSignals[index],
+        //                });
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Console.WriteLine($"DoJob:{ex.ToString()}");
+        //            }
+        //        }
 
-            }
 
-        }
+
+        //    }
+
+        //}
+
+
 
         /// <summary>
         /// 页面跳转显示
@@ -1061,11 +1089,17 @@ namespace WheelRecognitionSystem.ViewModels
         private void CallShow(InteractS7PLCModel model)
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
-            Console.WriteLine($"拍照流程完成: 0.{model.Index - 1} true");
-
+            Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
+            new Thread((obj) =>
+            {
+                int threadI = (int)obj;  // 将 object 类型转为 int
+                Thread.Sleep(500);
+                S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
+                Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{0}.{threadI}拍照流程完成");
+            }).Start(model.Index - 1);
             //显示状态信息
             SetStatus(model.Index, model.resultModel.status);
-            //if (!model.resultModel.ResultBol || model.resultModel.WheelType == null)
+            //if (!model.resultModel.ResultBol || wheelType == null)
             EventMessage.MessageDisplay(model.Index + "号" + model.resultModel.status, true, false);
 
             //发送PLC的数据
@@ -1073,57 +1107,53 @@ namespace WheelRecognitionSystem.ViewModels
             string text;
             // PLC 中定义的最大长度
             // 转换字符串为 PLC 格式字节数组
-            if (!model.resultModel.ResultBol || model.resultModel.WheelType == null)
+            string recognType = model.resultModel.RecognitionWheelType;
+            string wheelType = string.Empty;
+            if (!model.resultModel.ResultBol || recognType == null || recognType == "NG")
             {
                 text = prefix + DateTime.Now.ToString("yyMMddHH");
+                recognType = text;
+                wheelType = "error";
             }
             else
             {
-                text = prefix + model.resultModel.WheelType.Trim('_');
+                wheelType = recognType.Trim('_');
+                text = prefix + wheelType;
             }
             int maxLength = 16;
             byte[] buffer = StringToS7Bytes(text, maxLength);
             CopyBytes(buffer, WriteBuffer, 10 + (model.Index - 1) * 16);
-
-
-
-
-
-
-
-
-
             string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
             string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
             switch (model.Index)
             {
 
                 case 1:
-                    RecognitionWheelType1 = model.resultModel.WheelType;
+                    RecognitionWheelType1 = wheelType;
                     Similarity1 = similarity;
                     TimeConsumed1 = timeConsumed;
                     Colour1 = model.resultModel.Colour;
                     break;
                 case 2:
-                    RecognitionWheelType2 = model.resultModel.WheelType;
+                    RecognitionWheelType2 = wheelType;
                     Similarity2 = similarity;
                     TimeConsumed2 = timeConsumed;
                     Colour2 = model.resultModel.Colour;
                     break;
                 case 3:
-                    RecognitionWheelType3 = model.resultModel.WheelType;
+                    RecognitionWheelType3 = wheelType;
                     Similarity3 = similarity;
                     TimeConsumed3 = timeConsumed;
                     Colour3 = model.resultModel.Colour;
                     break;
                 case 4:
-                    RecognitionWheelType4 = model.resultModel.WheelType;
+                    RecognitionWheelType4 = wheelType;
                     Similarity4 = similarity;
                     TimeConsumed4 = timeConsumed;
                     Colour4 = model.resultModel.Colour;
                     break;
                 case 5:
-                    RecognitionWheelType5 = model.resultModel.WheelType;
+                    RecognitionWheelType5 = wheelType;
                     Similarity5 = similarity;
                     TimeConsumed5 = timeConsumed;
                     Colour5 = model.resultModel.Colour;
@@ -1134,13 +1164,13 @@ namespace WheelRecognitionSystem.ViewModels
             SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
             Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
             dataModel.GUID = Guid.NewGuid().ToString("N");
-            dataModel.WheelType = model.resultModel.WheelType;
+            dataModel.WheelType = recognType;
             dataModel.TimeConsumed = model.Interval.TotalMilliseconds.ToString();
             dataModel.Similarity = model.resultModel.Similarity.ToString();
             dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
             dataModel.WheelStyle = model.resultModel.WheelStyle;
             dataModel.RecognitionTime = model.endTime;
-            dataModel.Model = model.resultModel.WheelType;
+            dataModel.Model = wheelType;
             dataModel.Station = "";
             dataModel.ImagePath = model.imagePath;
             dataModel.ResultBool = model.resultModel.ResultBol;
@@ -1582,7 +1612,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void ManualRecognition()
         {
-            S7.SetBitAt(ref WriteBuffer, 0, 1, false); //复位拍照流程完成
+            //S7.SetBitAt(ref WriteBuffer, 0, 1, false); //复位拍照流程完成
 
             //if (ManualIdentify)
             //    return;
@@ -1688,10 +1718,15 @@ namespace WheelRecognitionSystem.ViewModels
         private void PlcDataInteractionThread()
         {
             readPLCSignals[0].Name = "1检1";
+            readPLCSignals[0].Index = 0;
             readPLCSignals[1].Name = "1检2A";
+            readPLCSignals[1].Index = 1;
             readPLCSignals[2].Name = "1检2B";
+            readPLCSignals[2].Index = 2;
             readPLCSignals[3].Name = "1检3";
+            readPLCSignals[3].Index = 3;
             readPLCSignals[4].Name = "2检1";
+            readPLCSignals[4].Index = 4;
             PlcDataInteractionControl = true;
             Task.Run(async () =>
             {
@@ -1708,28 +1743,29 @@ namespace WheelRecognitionSystem.ViewModels
                             //轮毂到位允许拍照信号
                             for (int i = 0; i < readPLCSignals.Length; i++)
                             {
-
-                                readPLCSignals[i].newArrival = Convert.ToInt32(S7.GetBitAt(ReadBuffer, 108, i));
+                                bool b = S7.GetBitAt(ReadBuffer, 108, i);
+                                readPLCSignals[i].ArrivalSignal = b;
+                                if (b)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
+                                    //S7.SetBitAt(ref WriteBuffer, 143, i, false); //复位读取拍照成功
+                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取成功。143.{i}");
+                                    new Thread((obj) =>
+                                    {
+                                        int threadI = (int)obj;  // 将 object 类型转为 int
+                                        Thread.Sleep(500);
+                                        S7.SetBitAt(ref WriteBuffer, 143, threadI, false); //复位读取成功
+                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{143}.{threadI}读取拍照成功");
+                                    }).Start(i);
+                                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                }
                             }
-                            //readPLCSignals[0].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 0);
-                            //readPLCSignals[1].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 1);
-                            //readPLCSignals[2].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 2);
-                            //readPLCSignals[3].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 3);
-                            //readPLCSignals[4].ArrivalSignal = S7.GetBitAt(ReadBuffer, 108, 4);
 
                             //轮型编码 =  分秒 + 轮型 
                             for (int i = 0; i < readPLCSignals.Length; i++)
                             {
                                 readPLCSignals[i].WheelCoding = GetBytesToString(ReadBuffer, 2 + i * 16, 14).Trim();
                             }
-
-
-                            //readPLCSignals[0].WheelCoding = GetBytesToString(ReadBuffer, 2, 14);//1检1轮型编码
-                            //readPLCSignals[1].WheelCoding = GetBytesToString(ReadBuffer, 18, 14);//1检2A轮型编码
-                            //readPLCSignals[2].WheelCoding = GetBytesToString(ReadBuffer, 34, 14);//1检2B轮型编码
-                            //readPLCSignals[3].WheelCoding = GetBytesToString(ReadBuffer, 50, 14);//1检3轮型编码
-                            //readPLCSignals[4].WheelCoding = GetBytesToString(ReadBuffer, 66, 14);//2检1轮型编码
-
                             //缺陷
                             for (int i = 0; i < readPLCSignals.Length; i++)
                             {
@@ -1770,19 +1806,6 @@ namespace WheelRecognitionSystem.ViewModels
                                 }
 
                             }
-
-                            //读取轮毂流出信号
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                bool isOutflow = S7.GetBitAt(ReadBuffer, 193, i);
-                                //Console.WriteLine($"流出信号：143-{i} : {isOutflow}");
-                                if (isOutflow)
-                                {
-                                    S7.SetBitAt(ref WriteBuffer, 0, i, false); //复位拍照流程完成
-                                    Console.WriteLine($"复位拍照：0-{i}");
-                                }
-                            }
-
                         }
                         else
                         {
@@ -1790,9 +1813,6 @@ namespace WheelRecognitionSystem.ViewModels
 
                             Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
                         }
-
-
-
 
                         ////发送PLC的数据
                         //string prefix = DateTime.Now.ToString("ddss");
@@ -1806,8 +1826,6 @@ namespace WheelRecognitionSystem.ViewModels
 
                         //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                         //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
-
-
                     }
                     else
                     {

@@ -48,18 +48,18 @@ namespace WheelRecognitionSystem.Public
             PositioningWheelResultModel resultModel = new PositioningWheelResultModel();
             try
             {
+                //全图灰度
+                HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
                 if (SystemDatas.CroppingOrNot)
                 {
-                    HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
                     minThreshold = (int)Mean1.D;
                 }
-
-
                 HOperatorSet.Threshold(image, out HObject region, minThreshold, maxThreshold);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
+                resultModel.FullFigureGary = (float)(Mean1.D);
                 resultModel.CenterRow = row;
                 resultModel.CenterColumn = column;
                 resultModel.Radius = radius;
@@ -78,6 +78,8 @@ namespace WheelRecognitionSystem.Public
                         HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
                         HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
                         HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
+                        HOperatorSet.Intensity(wheelImage, wheelImage, out HTuple mean, out HTuple deviation); //圈内灰度
+                        resultModel.InnerCircleMean = (float)(mean.D);
                         resultModel.WheelImage = wheelImage;
                         resultModel.WheelContour = wheelContour;
 

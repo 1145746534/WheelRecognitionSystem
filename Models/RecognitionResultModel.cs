@@ -31,16 +31,7 @@ namespace WheelRecognitionSystem.Models
             }
         }
 
-        public string WheelType
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(RecognitionWheelType))
-                    return RecognitionWheelType.Trim('_');
-                else
-                    return null;
-            }
-        }
+        
 
         /// <summary>
         /// 标签颜色
@@ -65,6 +56,15 @@ namespace WheelRecognitionSystem.Models
         /// 识别的相似度
         /// </summary>
         public double Similarity { get; set; }
+
+        /// <summary>
+        /// 全图灰度
+        /// </summary>
+        public float FullFigureGary { get; set; }
+        /// <summary>
+        /// 内圆灰度
+        /// </summary>
+        public float InnerCircleGary { get; set; }
 
         /// <summary>
         /// 识别的中心行坐标

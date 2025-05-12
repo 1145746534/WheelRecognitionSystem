@@ -39,7 +39,11 @@ namespace WheelRecognitionSystem.Models
         [SqlSugar.SugarColumn(IsNullable = true, Length = 255)]
         public string WheelStyle { get; set; }
 
-        
+        /// <summary>
+        /// 内圈灰度
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float InnerCircleGary { get; set; }
 
         private string _creationTime;
         /// <summary>

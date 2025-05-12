@@ -19,7 +19,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
-                <ColumnDefinition Width="500"/>
+                <ColumnDefinition Width="550"/>
             </Grid.ColumnDefinitions>
             <h:HSmartWindowControlWPF HKeepAspectRatio="True" HLineWidth="{Binding LineWidth}">
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplateImage}"/>
@@ -40,9 +40,10 @@
                      HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
             <TextBox Text="{Binding ImageDisName}" Visibility="{Binding ImageDisVisibility}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
                         HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
-            <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Visibility="{Binding RecognitionResultDisplay}">
+            <Border Width="160" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Visibility="{Binding RecognitionResultDisplay}">
                 <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
@@ -57,9 +58,26 @@
                     <TextBlock Text="{Binding RecognitionSimilarity}" Grid.Row="1" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
                     <TextBlock Text="耗   时:" Grid.Row="2" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding RecognitionConsumptionTime}" Grid.Row="2" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
-                </Grid>
+                    <TextBlock Text="识别方式:" Grid.Row="3" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding RecognitionWay}" Grid.Row="3" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+                    </Grid>
             </Border>
-            <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,80,0,0" Visibility="{Binding GateDetectionVisibility}">
+            <Border Width="160" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="3,100,0,0" Visibility="{Binding GrayDisplay}" >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="内圈灰度:" Grid.Row="0" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding InnerCircleGary}" Grid.Row="4" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
+
+                </Grid>
+                
+            </Border>
+            <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,120,0,0" Visibility="{Binding GateDetectionVisibility}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
@@ -94,8 +112,8 @@
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="未用天数" Binding="{Binding UnusedDays}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂高度" Binding="{Binding WheelHeight}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="内圈灰度" Binding="{Binding InnerCircleGary}" Width="0.4*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelStyle}" Width="0.5*"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            
                             <DataGridTextColumn Header="创建时间" Binding="{Binding CreationTime}"  Width="0.7*" FontSize="12" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                         </DataGrid.Columns>
                         <i:Interaction.Triggers>

@@ -173,10 +173,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>();
             TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
 
-            //_dispatcherTimer = new DispatcherTimer();
-            //_dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            //_dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
-            //_dispatcherTimer.Start();//启动定时器
+            _dispatcherTimer = new DispatcherTimer();
+            _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
+            _dispatcherTimer.Start();//启动定时器
         }
 
 

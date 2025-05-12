@@ -30,21 +30,7 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public RecognitionResultModel resultModel;
 
-        
-
-        ///// <summary>
-        ///// 识别轮型类型
-        ///// </summary>
-        //public string wheelType;
-
-        ///// <summary>
-        ///// 匹配相似度
-        ///// </summary>
-        //public float similarity;
-        ///// <summary>
-        ///// 轮毂样式
-        ///// </summary>
-        //public string wheelStyle;
+       
 
         /***
         0<=h<20， 红色

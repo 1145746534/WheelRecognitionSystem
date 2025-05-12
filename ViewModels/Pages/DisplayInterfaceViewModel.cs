@@ -33,6 +33,7 @@ using MvCameraControl;
 using System.IO;
 using System.ComponentModel;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Windows;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -437,7 +438,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 相机拍照&处理
         /// </summary>
         /// <param name="index"></param>
-        public void PhotoAndTackle(InteractS7PLCModel interact)
+        public async void PhotoAndTackle(InteractS7PLCModel interact)
         {
             interact.resultModel = new RecognitionResultModel();
             int index = interact.Index - 1;
@@ -454,12 +455,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         TemplateContour = new HObject(),
                         index = interact.Index
                     });
+
                     MyCameraMV camera = cameras[index];
                     interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
                     image = camera.Grabimage();
                     AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);
+                    interact.endTime = DateTime.Now;
                     ResultDisplay(resultDisplayModel);
+                    SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
+                    interact.imagePath = await SaveImageDatasAsync(image, way, resultDisplayModel.WheelType);
                 }
                 catch (Exception ex)
                 {
@@ -502,13 +507,23 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
+            HObject imageRecogn = new HObject();
             //如果定位到轮毂
             if (pResult.WheelImage != null)
-                //轮毂识别
-                recognitionResult = WheelRecognitionAlgorithm(pResult.WheelImage, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-            else//没有定位到轮毂            
-                recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            {
+                recognitionResult.FullFigureGary = pResult.FullFigureGary;
+                recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
+                imageRecogn = pResult.WheelImage;                        
+            }
+            else
+            {
+                imageRecogn = image;
+            }
+            //没有定位到轮毂            
+            //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
 
+            //轮毂识别 传统视觉
+            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
 
 
 
@@ -523,7 +538,28 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 recognitionResult.status = "轮形未识别";
                 //NG的轮型需要保存图片-后续人工补录
+                if (pResult.WheelImage == null)
+                {
+                    //大模型推算
+                    HTuple hv_DLResult = WheelDeepLearning(image);
+                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
+                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
 
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        double similar = double.Parse(confidences[i].D.ToString("0.0000"));
+                        Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
+                    }
+                    if (names.Length > 0)
+                    {
+                        recognitionResult.RecognitionWheelType = names[0].S;
+                        recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
+                        recognitionResult.status = "识别成功";
+
+                    }
+                    hv_DLResult.Dispose();
+                }
+                
 
             }
             interact.resultModel = recognitionResult;
@@ -540,7 +576,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             };
 
-            interact.endTime = DateTime.Now;
             return autoRecognitionResult;
             //图像结果显示
             //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
@@ -613,26 +648,28 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 保存图片
         /// </summary>
         /// <param name="obj"></param>
-        private void BtnSave(string obj)
+        private async void BtnSave(string obj)
         {
             MyCameraMV camera = cameras.ToList().Find((x => x.info.Name == obj));
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
             switch (index)
             {
                 case 0:
-                    SaveImageDatas(CurrentImage1, SaveWay.Hand);
+                    //SaveImageDatas(CurrentImage1, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage1, SaveWay.Hand);
                     break;
                 case 1:
-                    SaveImageDatas(CurrentImage2, SaveWay.Hand);
+                    //SaveImageDatas(CurrentImage2, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage2, SaveWay.Hand);
                     break;
                 case 2:
-                    SaveImageDatas(CurrentImage3, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage3, SaveWay.Hand);
                     break;
                 case 3:
-                    SaveImageDatas(CurrentImage4, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage4, SaveWay.Hand);
                     break;
                 case 4:
-                    SaveImageDatas(CurrentImage5, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage5, SaveWay.Hand);
                     break;
             }
 
@@ -977,6 +1014,76 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             return savePath;
         }
 
+        private async Task<string> SaveImageDatasAsync(HObject saveImage, SaveWay way, string wheelType = null)
+        {
+            string savePath = string.Empty;
+            DateTime dateTime = DateTime.Now;
+
+            // 路径定义
+            string monthPath = Path.Combine(HistoricalImagesPath, $"{dateTime.Month}月");
+            string dayPath = Path.Combine(monthPath, $"{dateTime.Day}日");
+            string ngPath = Path.Combine(dayPath, "NG");
+            string handImagesPath = HandImagesPath;
+
+            try
+            {
+                // 异步创建目录（优化多次IO操作）
+                await Task.Run(() =>
+                {
+                    Directory.CreateDirectory(monthPath); // CreateDirectory 自动处理已存在的情况
+                    Directory.CreateDirectory(dayPath);
+                    Directory.CreateDirectory(ngPath);
+                    Directory.CreateDirectory(handImagesPath);
+                });
+
+                // 异步获取磁盘空间
+                double diskFree = await Task.Run(() => GetHardDiskFreeSpace("D"));
+
+                if (diskFree <= 200)
+                {
+                    // UI 线程安全的消息显示
+                    Application.Current.Dispatcher.Invoke(() =>
+                        EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false));
+                    return savePath;
+                }
+
+                // 根据保存方式构建路径
+                string saveWheelTypePath = "";
+                if (way == SaveWay.AutoOK)
+                {
+                    saveWheelTypePath = Path.Combine(dayPath, wheelType);
+                    await Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
+                    savePath = Path.Combine(saveWheelTypePath, $"{wheelType}&{dateTime:yyMMddHHmmss}.tif");
+                }
+                else if (way == SaveWay.AutoNG)
+                {
+                    savePath = Path.Combine(ngPath, $"NG&{dateTime:yyMMddHHmmss}.tif");
+                }
+                else
+                {
+                    savePath = Path.Combine(handImagesPath, $"Hand&{dateTime:yyMMddHHmmss}.tif");
+                }
+                string saveImagePath = string.Empty;
+                // 异步保存图像
+                await Task.Run(() =>
+                {
+                    saveImagePath = savePath.Replace(@"\", "/");
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+                });
+                if (way == SaveWay.Hand)
+                    Application.Current.Dispatcher.Invoke(() =>
+                        EventMessage.MessageDisplay($"图片保存成功：{saveImagePath}", true, false));
+
+                return savePath;
+            }
+            catch (Exception ex)
+            {
+                // 异常处理（可根据需要记录日志）
+                Application.Current.Dispatcher.Invoke(() =>
+                    EventMessage.MessageDisplay($"保存失败: {ex.Message}", true, false));
+                return string.Empty;
+            }
+        }
         public enum SaveWay
         {
             [Description("自动OK图")]

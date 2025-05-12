@@ -260,57 +260,57 @@ namespace WheelRecognitionSystem.Public
         //    return ho_Image;
         //}
 
-        public static void SavePic(HObject saveImage, InteractS7PLCModel data)
-        {
-            if (saveImage == null)
-            {
-                return;
-            }
-            if (data.resultModel.WheelType == null)
-            {
-                return;
-            }
-            //月文件夹路径
-            string monthPath = HistoricalImagesPath + @"\" + data.endTime.Month + "月";
-            //日文件夹路径
-            string dayPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + "日";
-            //当日未识别文件夹路径
-            string ngPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + @"日\NG";
-            if (Directory.Exists(monthPath) == false)
-                Directory.CreateDirectory(monthPath);
-            if (Directory.Exists(dayPath) == false)
-                Directory.CreateDirectory(dayPath);
-            if (Directory.Exists(ngPath) == false)
-                Directory.CreateDirectory(ngPath);
-            var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
-            if (diskFree > 200)
-            {
-                if (data.resultModel.ResultBol)
-                {
-                    //保存轮型的目录
-                    string saveWheelTypePath = dayPath + @"\" + data.resultModel.WheelType.Trim('_');
-                    if (Directory.Exists(saveWheelTypePath) == false) Directory.CreateDirectory(saveWheelTypePath);
-                    string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.resultModel.WheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
-                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
-                    data.imagePath = saveImagePath;
-                }
-                else
-                {
-                    string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
-                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
-                    data.imagePath = saveImagePath;
-                }
-                //if (gateResult == "NG")
-                //{
-                //    string saveGateNGImagePath = gateNGPath.Replace(@"\", "/") + "/GateNG&" + data.WheelType + "&" + data.RecognitionTime.ToString("yyMMddHHmmss") + ".tif";
-                //    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveGateNGImagePath);
-                //}
-            }
-            else
-                EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
-            //以当前日期保存图像到D盘下
-            //HOperatorSet.WriteImage(image, "png", 0, "D:\\" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-        }
+        //public static void SavePic(HObject saveImage, InteractS7PLCModel data)
+        //{
+        //    if (saveImage == null)
+        //    {
+        //        return;
+        //    }
+        //    if (data.resultModel.WheelType == null)
+        //    {
+        //        return;
+        //    }
+        //    //月文件夹路径
+        //    string monthPath = HistoricalImagesPath + @"\" + data.endTime.Month + "月";
+        //    //日文件夹路径
+        //    string dayPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + "日";
+        //    //当日未识别文件夹路径
+        //    string ngPath = HistoricalImagesPath + @"\" + data.endTime.Month + @"月\" + data.endTime.Day + @"日\NG";
+        //    if (Directory.Exists(monthPath) == false)
+        //        Directory.CreateDirectory(monthPath);
+        //    if (Directory.Exists(dayPath) == false)
+        //        Directory.CreateDirectory(dayPath);
+        //    if (Directory.Exists(ngPath) == false)
+        //        Directory.CreateDirectory(ngPath);
+        //    var diskFree = GetHardDiskFreeSpace("D");//获取D盘剩余空间
+        //    if (diskFree > 200)
+        //    {
+        //        if (data.resultModel.ResultBol)
+        //        {
+        //            //保存轮型的目录
+        //            string saveWheelTypePath = dayPath + @"\" + data.resultModel.WheelType.Trim('_');
+        //            if (Directory.Exists(saveWheelTypePath) == false) Directory.CreateDirectory(saveWheelTypePath);
+        //            string saveImagePath = saveWheelTypePath.Replace(@"\", "/") + "/" + data.resultModel.WheelType + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+        //            HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+        //            data.imagePath = saveImagePath;
+        //        }
+        //        else
+        //        {
+        //            string saveImagePath = ngPath.Replace(@"\", "/") + "/NG" + "&" + data.endTime.ToString("yyMMddHHmmss") + ".tiff";
+        //            HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+        //            data.imagePath = saveImagePath;
+        //        }
+        //        //if (gateResult == "NG")
+        //        //{
+        //        //    string saveGateNGImagePath = gateNGPath.Replace(@"\", "/") + "/GateNG&" + data.WheelType + "&" + data.RecognitionTime.ToString("yyMMddHHmmss") + ".tif";
+        //        //    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveGateNGImagePath);
+        //        //}
+        //    }
+        //    else
+        //        EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false);
+        //    //以当前日期保存图像到D盘下
+        //    //HOperatorSet.WriteImage(image, "png", 0, "D:\\" + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
+        //}
 
         ///  <summary> 
         /// 获取指定驱动器的剩余空间总大小(单位为MB) 
