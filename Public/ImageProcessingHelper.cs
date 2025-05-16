@@ -127,7 +127,8 @@ namespace WheelRecognitionSystem.Public
                     columns.Add(column);
                     angles.Add(angle);
 
-                    if (score < 0.55) activeIdentifyData.Similaritys.Add(0.0);
+                    if (score < 0.55) 
+                        activeIdentifyData.Similaritys.Add(0.0);
                     else
                     {
                         activeIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
@@ -136,7 +137,8 @@ namespace WheelRecognitionSystem.Public
                 //获取活跃模板匹配中的相似度最大值
                 activeIdentifyData.Similarity = activeIdentifyData.Similaritys.Max();
             }
-            else activeIdentifyData.Similarity = 0.0;
+            else 
+                activeIdentifyData.Similarity = 0.0;
 
             //如果活跃模板匹配相似度最大值大于等于（系统设定识别成功的最小相似度 + 0.05 ），认为匹配成功 
             if (activeIdentifyData.Similarity >= minSimilarity + 0.05)

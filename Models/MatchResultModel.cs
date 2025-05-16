@@ -17,5 +17,15 @@ namespace WheelRecognitionSystem.Models
         /// 相似度
         /// </summary>
         public string Similarity { get; set; }
+
+        /// <summary>
+        /// 全图灰度
+        /// </summary>
+        public string FullFigureGary { get; set; }
+
+        /// <summary>
+        /// 内圈灰度
+        /// </summary>
+        public string InnerCircleGary { get; set; }
     }
 }

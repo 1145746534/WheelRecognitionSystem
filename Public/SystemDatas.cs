@@ -134,11 +134,6 @@ namespace WheelRecognitionSystem.Public
         public static List<string> DelTemplateNames = new List<string>();
 
         /// <summary>
-        /// 模板表格数据列表
-        /// </summary>
-        public static List<sys_bd_Templatedatamodel> TemplateDataList = new List<sys_bd_Templatedatamodel>();
-
-        /// <summary>
         /// 系统模式 True为自动模式
         /// </summary>
         public static bool SystemModel { get; set; } = false;

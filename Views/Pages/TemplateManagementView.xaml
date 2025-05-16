@@ -104,9 +104,10 @@
                     <RowDefinition Height="220"/>
                 </Grid.RowDefinitions>
                 <GroupBox  Header="模板数据" Margin="2" Style="{StaticResource NewGroupBoxStyle}">
-                    <DataGrid x:Name="TemplateDataGrid"  Margin="2,25,2,0" ItemsSource="{Binding TemplateDatas}" Background="Transparent" BorderThickness="0"  
-                                IsReadOnly="True" FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False"
-                              SelectedItem="{Binding DataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding DataGridSelectedIndex, Mode=TwoWay}">
+                    <DataGrid x:Name="TemplateDataGrid"  Margin="2,25,2,0" ItemsSource="{Binding TemplateDatas, Mode=TwoWay}" Background="Transparent" BorderThickness="0"  
+                              IsReadOnly="True" FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False"
+                              SelectedItem="{Binding DataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding DataGridSelectedIndex, Mode=TwoWay}"
+                              MouseRightButtonDown="TemplateDataGrid_MouseRightButtonDown">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>

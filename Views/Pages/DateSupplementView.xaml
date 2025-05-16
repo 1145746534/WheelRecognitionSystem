@@ -37,7 +37,8 @@
                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,-18,0,0"/>
                     <DataGrid ItemsSource="{Binding UnrecognizedDatas}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
                         FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False" 
-                        SelectedItem="{Binding UnrDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding UnrDataGridSelectedIndex, Mode=TwoWay}" Grid.ColumnSpan="2">
+                        SelectedItem="{Binding UnrDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding UnrDataGridSelectedIndex, Mode=TwoWay}" 
+                        Grid.ColumnSpan="2">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>

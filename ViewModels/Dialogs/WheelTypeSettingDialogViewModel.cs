@@ -3,7 +3,9 @@ using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,6 +28,16 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         /// 关闭弹窗
         /// </summary> 
         public event Action<IDialogResult> RequestClose;
+
+
+
+        private ObservableCollection<sys_bd_Templatedatamodel> _templateDatas;
+
+        public ObservableCollection<sys_bd_Templatedatamodel> TemplateDatas
+        {
+            get { return _templateDatas; }
+            set { SetProperty(ref _templateDatas, value); }
+        }
 
         private string _id;
         /// <summary>
@@ -127,11 +139,11 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 return;
             }
             
-            SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-            List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
-            int result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' ') 
-            && x.WheelHeight.ToString() ==WheelHeight && x.WheelStyle == WheelStyle);
-            if (result >= 0)
+            //SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
+            //List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
+            //int result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' '));
+             var filteredData = TemplateDatas.Where(item => item.WheelType == "1254GM").ToList();
+            if (filteredData!=null && filteredData.Count>0)
             {
                 EventMessage.SystemMessageDisplay("轮型重复，请重新输入！", MessageType.Error);
                 return;
@@ -143,27 +155,36 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 UnusedDays = 0,
                 WheelHeight = float.Parse(WheelHeight),
                 WheelStyle = WheelStyle,
-                CreationTime = DateTime.Now.ToString("yy-MM-dd")
+                CreationTime = DateTime.Now.ToString("yy-MM-dd"),
+                LastUsedTime = DateTime.Now.ToString("yy-MM-dd HH:mm:ss")
             };
 
-            datas.Add(data);
+            TemplateDatas.Add(data);
             //数据根据轮型还有轮毂样式排序
-            var newDatas = datas.OrderBy(x => x.WheelType ).ThenBy(x=>x.WheelStyle).ToList();
+            var newDatas = TemplateDatas.OrderBy(x => x.WheelType ).ThenBy(x=>x.WheelStyle).ToList();
             //整理Index
             for (int i = 0; i < newDatas.Count; i++)
             {
                 newDatas[i].Index = i + 1;
             }
+            TemplateDatas.Clear();
+            foreach (var item in newDatas)
+            {
+                TemplateDatas.Add(item);
+            }
+            //TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newDatas);
+
             //修改数据库
-            sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
-            sDB.Insertable(newDatas).ExecuteCommand();
+            //sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
+            //sDB.Insertable(newDatas).ExecuteCommand();
             //获取排序后的新增数据
-            sys_bd_Templatedatamodel d = newDatas.Find(x => x.WheelType == WheelType
-             && x.WheelHeight.ToString() == WheelHeight && x.WheelStyle == WheelStyle);
+            //sys_bd_Templatedatamodel d = newDatas.Find(x => x.WheelType == WheelType
+             //&& x.WheelHeight.ToString() == WheelHeight && x.WheelStyle == WheelStyle);
             //定义弹窗结果
             IDialogResult dialogResult = new DialogResult();
             //将新增数据添加到弹窗结果的Parameters
-            dialogResult.Parameters.Add("set", d);
+            dialogResult.Parameters.Add("set", "add_OK");
+            //sDB.Close();
             //关闭弹窗并返回弹窗结果
             RequestClose?.Invoke(dialogResult);
         }
@@ -188,9 +209,15 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         /// <param name="parameters"></param>
         public void OnDialogOpened(IDialogParameters parameters)
         {
-            var sDB = new SqlAccess().SystemDataAccess;
-            var data = sDB.Queryable<sys_bd_Templatedatamodel>().Max(it => it.Index);
-            Id = (data + 1).ToString();
+            if (parameters.ContainsKey("templateDatas"))
+            {
+                TemplateDatas = parameters.GetValue<ObservableCollection<sys_bd_Templatedatamodel>>("templateDatas");
+                Id = (TemplateDatas.Count+ 1).ToString();
+            }
+            //var sDB = new SqlAccess().SystemDataAccess;
+            //var data = sDB.Queryable<sys_bd_Templatedatamodel>().Max(it => it.Index);
+            //Id = (data + 1).ToString();
+            //sDB.Close();
         }
     }
 }

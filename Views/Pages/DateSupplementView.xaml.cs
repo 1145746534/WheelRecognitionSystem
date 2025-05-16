@@ -30,5 +30,12 @@ namespace WheelRecognitionSystem.Views.Pages
         {
             HSmart.HalconWindow.ClearWindow();
         }
+
+        private void DataGrid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            
+        }
+
+       
     }
 }

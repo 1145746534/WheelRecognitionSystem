@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Dialogs"
              mc:Ignorable="d" FontFamily="Microsoft YaHei" FontSize="16"
-             Height="400" Width="350">
+             Height="400" Width="440">
     <Border>
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -19,7 +19,8 @@
                 <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="50" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                 <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="150" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                 <DataGridTextColumn Header="相似度" Binding="{Binding Similarity}" Width="50"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                <DataGridTextColumn Header="内圈灰度" Binding="{Binding Similarity}" Width="80"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                <DataGridTextColumn Header="全图灰度" Binding="{Binding FullFigureGary}" Width="80"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                <DataGridTextColumn Header="内圈灰度" Binding="{Binding InnerCircleGary}" Width="80"  ElementStyle="{StaticResource CenterAlignmentStyle}"/>
             </DataGrid.Columns>
         </DataGrid>
     </Border>

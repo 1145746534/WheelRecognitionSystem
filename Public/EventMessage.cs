@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using WheelRecognitionSystem.Models;
 
 namespace WheelRecognitionSystem.Public
@@ -63,12 +64,15 @@ namespace WheelRecognitionSystem.Public
         /// <param name="Type"></param>
         public static void SystemMessageDisplay(string message, MessageType Type)
         {
+            
+            //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} {message}");
             MessageModel model = new MessageModel
             {
                 Message = message,
                 Type = Type
             };
             MessageHelper.GetEvent<SystemMessageDisplayEvent>().Publish(model);
+            
         }
     }
 

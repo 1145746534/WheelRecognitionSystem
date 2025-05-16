@@ -17,9 +17,11 @@ namespace WheelRecognitionSystem.Models
 
         public event EventHandler<EventArgs> ArrivalSignalTriggered;
 
+        public event EventHandler<EventArgs> DataModificationTriggered;
+
         private int _index;
         /// <summary>
-        /// 名称
+        /// 下标
         /// </summary>
         public int Index
         {
@@ -47,6 +49,28 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _wheelCoding, value); }
         }
 
+        private string _prefix_WheelCoding;
+        /// <summary>
+        /// 前缀_轮型编码
+        /// </summary>
+        public string Prefix_WheelCoding
+        {
+            get { return _prefix_WheelCoding; }
+            set { SetProperty(ref _prefix_WheelCoding, value); }
+        }
+
+
+        private bool _backFlowOrDown;
+
+        /// <summary>
+        /// 轮毂回流或下转 true/false
+        /// </summary>
+        public bool BackFlowOrDown
+        {
+            get { return _backFlowOrDown; }
+            set { SetProperty(ref _backFlowOrDown, value); }
+        }
+
         public bool _arrivalSignal;
         /// <summary>
         /// 轮毂到达信号-允许拍照
@@ -62,6 +86,37 @@ namespace WheelRecognitionSystem.Models
                 {
                     // 触发时传递参数
                     ArrivalSignalTriggered?.Invoke(this, EventArgs.Empty);
+                }
+            }
+
+        }
+
+        public int _ngCode;
+        /// <summary>
+        /// NG编码
+        /// </summary>
+        public int NGCode
+        {
+            get { return _ngCode; }
+            set { SetProperty(ref _ngCode, value); }
+        }
+
+        public bool _dataModification;
+        /// <summary>
+        /// 数据修改信号-产品NG触发
+        /// </summary>
+        public bool DataModification
+        {
+            get { return _dataModification; }
+            set
+            {
+                bool oldValue = _dataModification;
+                SetProperty(ref _dataModification, value);
+                // 仅在值从 false 变为 true 时触发
+                if (oldValue != value && value)
+                {
+                    // 触发时传递参数
+                    DataModificationTriggered?.Invoke(this, EventArgs.Empty);
                 }
             }
 
