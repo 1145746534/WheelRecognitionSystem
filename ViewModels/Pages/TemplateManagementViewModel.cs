@@ -377,11 +377,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void PicUpdate(ServletInfoModel model)
         {
-
             if (model.image != null && model.camera != null)
             {
                 SourceTemplateImage.Dispose();
-
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
                 if (Channels?.I == 3)
                     HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);
@@ -526,13 +524,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == name);
             templatedata.LastUsedTime = DateTime.Now;
-            IEnumerable<sys_bd_Templatedatamodel> enumerable = (IEnumerable<sys_bd_Templatedatamodel>)TemplateDatas.Select(x=> x.WheelType = name);
+            IEnumerable<sys_bd_Templatedatamodel> enumerable = (IEnumerable<sys_bd_Templatedatamodel>)TemplateDatas.Select(x => x.WheelType = name);
             foreach (var item in enumerable)
             {
                 item.LastUsedTime = templatedata.LastUsedTime;
                 UpdataTemplateData(item);
             }
 
+        }
+
+
+        public HTuple GetObjectByName(string name)
+        {
+            TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == name);
+
+            return templatedata.Template;
         }
 
         /// <summary>
@@ -932,7 +938,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 DataGridSelectedItem.TemplatePath = aPath;
                 DataGridSelectedItem.TemplatePicturePath = tPath;
                 UpdataTemplateData(DataGridSelectedItem);
-                addModel(nccTemplate, DataGridSelectedItem.WheelType,DateTime.Now);
+                addModel(nccTemplate, DataGridSelectedItem.WheelType, DateTime.Now);
                 //var sDB = new SqlAccess().SystemDataAccess;
                 //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
                 //TemplateDatas[DataGridSelectedIndex].CreationTime = DataGridSelectedItem.CreationTime;
@@ -1165,35 +1171,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
 
             //轮毂识别 传统视觉
-            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            List<RecognitionResultModel> list = new List<RecognitionResultModel>();
+            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, GetCanUseTemplates(), AngleStart, AngleExtent, MinSimilarity, list);
             InnerCircleGary = pResult.InnerCircleMean.ToString();
             recognitionResult.FullFigureGary = pResult.FullFigureGary;
             recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
             DateTime endTime = DateTime.Now;
-            //浇口检测
-            //GateDetectionResultModel gateResult = new GateDetectionResultModel();
-            //if (positioningResult.WheelImage != null)
-            //{
-            //    gateResult = GateDetection(positioningResult.WheelImage, positioningResult.CenterRow, positioningResult.CenterColumn, PositioningGateRadius, GateOutMinThreshold, GateMinArea, GateMinRadius);
-            //    if (gateResult.DetectionResult)
-            //    {
-            //        GateContourColor = "green";
-            //        GateDetectionResult = "OK";
-            //    }
-            //    else
-            //    {
-            //        GateContourColor = "red";
-            //        GateDetectionResult = "NG";
-            //    }
-            //    GateArea = gateResult.GateArea.ToString();
-            //    GateRadiu = gateResult.GateRadiu.ToString();
-            //    GateDetectionVisibility = Visibility.Visible;
-            //}
 
             HObject templateContour = null;
             if (recognitionResult.RecognitionWheelType != "NG")
             {
-                templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+                templateContour = GetAffineTemplateContour(GetObjectByName(recognitionResult.RecognitionWheelType), recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                 RecognitionWheelType = recognitionResult.RecognitionWheelType;
                 RecognitionSimilarity = recognitionResult.Similarity.ToString();
             }
@@ -1205,21 +1194,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //大模型推算
                 HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
-                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                recognitionResult.Similaritys.Clear();
-                recognitionResult.WheelTypes.Clear();
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);                          
+                if (names.Length > 0) //识别结果
+                {
+                    recognitionResult.RecognitionWheelType = names[0].S;
+                    recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
+                    RecognitionWheelType = names[0].S;
+                    RecognitionSimilarity = confidences[0].D.ToString("0.0000");
+                }
+                list = new List<RecognitionResultModel>();
                 for (int i = 0; i < names.Length; i++)
                 {
                     double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                    recognitionResult.WheelTypes.Add(names[i].S);
-                    recognitionResult.Similaritys.Add(similar);
-                    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
-                }
-                if (names.Length > 0)
-                {
-                    recognitionResult.RecognitionWheelType = names[0].S;
-                    RecognitionWheelType = names[0].S;
-                    RecognitionSimilarity = confidences[0].D.ToString("0.0000");
+                    string name = names[i].S;
+                    list.Add(new RecognitionResultModel() { Similarity = similar,RecognitionWheelType = name});
+                    Console.WriteLine($"数据：{name} 结果：{similar}");
                 }
                 hv_DLResult.Dispose();
             }
@@ -1227,15 +1216,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             //匹配相似度结果显示
             List<MatchResultModel> matchResultModels = new List<MatchResultModel>();
-            for (int i = 0; i < recognitionResult.WheelTypes.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
                 MatchResultModel data = new MatchResultModel
                 {
                     Index = i + 1,
-                    WheelType = recognitionResult.WheelTypes[i],
-                    Similarity = recognitionResult.Similaritys[i].ToString(),
-                    FullFigureGary = recognitionResult.FullFigureGary.ToString(),
-                    InnerCircleGary = recognitionResult.InnerCircleGary.ToString()
+                    WheelType = list[i].RecognitionWheelType,
+                    Similarity = list[i].Similarity.ToString(),
+                    FullFigureGary = list[i].FullFigureGary.ToString(),
+                    InnerCircleGary = list[i].InnerCircleGary.ToString()
                 };
                 matchResultModels.Add(data);
             }
