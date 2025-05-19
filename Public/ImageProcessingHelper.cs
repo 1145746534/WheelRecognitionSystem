@@ -1,5 +1,7 @@
 ﻿using HalconDotNet;
 using NPOI.SS.Formula.Functions;
+using NPOI.Util;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using WheelRecognitionSystem.Models;
+using WheelRecognitionSystem.ViewModels.Pages;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -127,7 +130,7 @@ namespace WheelRecognitionSystem.Public
                     columns.Add(column);
                     angles.Add(angle);
 
-                    if (score < 0.55) 
+                    if (score < 0.55)
                         activeIdentifyData.Similaritys.Add(0.0);
                     else
                     {
@@ -137,7 +140,7 @@ namespace WheelRecognitionSystem.Public
                 //获取活跃模板匹配中的相似度最大值
                 activeIdentifyData.Similarity = activeIdentifyData.Similaritys.Max();
             }
-            else 
+            else
                 activeIdentifyData.Similarity = 0.0;
 
             //如果活跃模板匹配相似度最大值大于等于（系统设定识别成功的最小相似度 + 0.05 ），认为匹配成功 
@@ -250,6 +253,157 @@ namespace WheelRecognitionSystem.Public
             }
         }
 
+        public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart,
+                                                                        double angleExtent, double minSimilarity,List<RecognitionResultModel> recognitionResults = null)
+        {
+            recognitionResults = new List<RecognitionResultModel>();
+            var resultIfFailed = new RecognitionResultModel
+            {
+                status = "识别失败",
+                RecognitionWheelType = "NG"
+            };
+
+            // 定义一个通用模板匹配方法
+            Action<bool> performMatching = (useFilter) =>
+            {
+                foreach (var templateData in templateDatas.Where(t => t.Use == useFilter))
+                {
+                    HOperatorSet.FindNccModel(
+                        image, templateData.Template,
+                        angleStart, angleExtent,
+                        0.5, 1, 0.5,
+                        "true", 0,
+                        out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+
+                    if (score != null && score.D > 0.5)
+                    {
+                        recognitionResults.Add(new RecognitionResultModel
+                        {
+                            CenterRow = row,
+                            CenterColumn = column,
+                            Radian = angle,
+                            RecognitionWheelType = templateData.TemplateName,
+                            Similarity = Math.Round(score.D, 3)
+                        });
+                    }
+                }
+            };
+
+            // 先尝试匹配“活跃”模板
+            performMatching(true);
+
+            // 如果成功，尝试找最高相似度且满足阈值的
+            if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out var bestMatch))
+            {
+                bestMatch.status = "识别成功";
+                return bestMatch;
+            }
+
+            // 活跃模板未匹配到，尝试非活跃模板
+            performMatching(false);
+
+            if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out bestMatch))
+            {
+                bestMatch.status = "识别成功";
+                return bestMatch;
+            }
+
+            return resultIfFailed;
+        }
+
+        // 辅助方法：从识别结果中找出最高相似度的对象
+        private static bool TryGetBestMatch(
+            List<RecognitionResultModel> results,
+            double similarityThreshold,
+            out RecognitionResultModel bestMatch)
+        {
+            if (results.Count == 0)
+            {
+                bestMatch = null;
+                return false;
+            }
+
+            bestMatch = results.OrderByDescending(r => r.Similarity).First();
+
+            return bestMatch.Similarity > similarityThreshold;
+        }
+
+        //public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart, double angleExtent, double minSimilarity, List<RecognitionResultModel> list = null)
+        //{
+        //    List<RecognitionResultModel> Recognition = new List<RecognitionResultModel>();
+        //    RecognitionResultModel IdentifyData = new RecognitionResultModel();
+        //    IdentifyData.status = "识别失败";
+        //    IdentifyData.RecognitionWheelType = "NG";
+        //    //活跃模板匹配，并将结果放入对应的匹配结果列表
+        //    foreach (TemplatedataModels templateData in templateDatas)
+        //    {
+        //        if (templateData.Use)
+        //        {
+        //            HOperatorSet.FindNccModel(image, templateData.Template, angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
+        //               out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+        //            //查找记录保存起来 - 需要更新最后匹配时间
+        //            if (score != null && score > 0.5)
+        //            {
+        //                RecognitionResultModel item = new RecognitionResultModel();
+        //                item.CenterRow = row;
+        //                item.CenterColumn = column;
+        //                item.Radian = angle;
+        //                item.RecognitionWheelType = templateData.TemplateName;
+        //                item.Similarity = Math.Round(score.D, 3);
+        //                Recognition.Add(item);
+        //            }
+        //        }
+        //    }
+        //    //活跃模板匹配完成
+        //    if (Recognition.Count > 0)
+        //    {
+        //        double maxSim = Recognition.Max(x => x.Similarity);
+        //        if (maxSim > minSimilarity + 0.05) //找到最大匹配相似度
+        //        {
+        //            IdentifyData = Recognition.Find(a => a.Similarity > maxSim);
+        //            return IdentifyData;
+        //        }
+        //    }
+
+
+        //    //活跃模板中未匹配到所需要的轮形
+        //    foreach (TemplatedataModels templateData in templateDatas)
+        //    {
+        //        if (!templateData.Use)
+        //        {
+
+        //            HOperatorSet.FindNccModel(image, templateData.Template, angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
+        //               out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+        //            //查找记录保存起来 - 需要更新最后匹配时间
+        //            if (score != null && score > 0.5)
+        //            {
+        //                RecognitionResultModel item = new RecognitionResultModel();
+        //                item.CenterRow = row;
+        //                item.CenterColumn = column;
+        //                item.Radian = angle;
+        //                item.RecognitionWheelType = templateData.TemplateName;
+        //                item.Similarity = Math.Round(score.D, 3);
+        //                Recognition.Add(item);
+        //            }
+
+        //        }
+        //    }
+
+        //    if (Recognition.Count > 0)
+        //    {
+        //        double maxSim = Recognition.Max(x => x.Similarity);
+        //        if (maxSim > minSimilarity + 0.05) //找到最大匹配相似度
+        //        {
+        //            IdentifyData = Recognition.Find(a => a.Similarity > maxSim);
+        //            return IdentifyData;
+        //        }
+        //    }
+        //    return IdentifyData;
+
+
+
+        //}
+
 
         public static HTuple WheelDeepLearning(HObject ho_ImageBatch)
         {
@@ -263,7 +417,7 @@ namespace WheelRecognitionSystem.Public
             HTuple hv_BatchIndex = new HTuple(), hv_Batch = new HTuple();
             HTuple hv_DLSampleBatch = new HTuple(), hv_DLResultBatch = new HTuple();
             HTuple hv_SampleIndex = new HTuple(), hv_DLSample = new HTuple();
-            HTuple hv_DLResult = new HTuple() , hv_WindowHandles = new HTuple();
+            HTuple hv_DLResult = new HTuple(), hv_WindowHandles = new HTuple();
             //HOperatorSet.GenEmptyObj(out ho_ImageBatch);
             try
             {
@@ -344,7 +498,7 @@ namespace WheelRecognitionSystem.Public
                 {
                     return null;
                 }
-                    
+
 
                 //
                 //dev_display_dl_data(hv_DLSample, hv_DLResult, hv_DLDataInfo, "classification_result",

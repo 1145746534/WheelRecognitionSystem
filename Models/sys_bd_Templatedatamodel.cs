@@ -88,12 +88,12 @@ namespace WheelRecognitionSystem.Models
         }
 
 
-        private string _lastUsedTime;
+        private DateTime _lastUsedTime;
         /// <summary>
         /// 上次使用时间
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true, ColumnDataType = "datetime")]
-        public string LastUsedTime
+        public DateTime LastUsedTime
         {
             get { return _lastUsedTime; }
             set { SetProperty(ref _lastUsedTime, value); }

@@ -52,7 +52,10 @@ namespace WheelRecognitionSystem.Models
         public DateTime LastUsedTime
         {
             get { return _lastUsedTime; }
-            set { SetProperty(ref _lastUsedTime, value); }
+            set
+            {
+                SetProperty(ref _lastUsedTime, value);
+            }
         }
     }
 }

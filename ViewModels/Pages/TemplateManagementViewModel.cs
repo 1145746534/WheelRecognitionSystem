@@ -30,6 +30,7 @@ using System.Windows.Media.Media3D;
 using System.Drawing;
 using MvCameraControl;
 using MySqlX.XDevAPI.Common;
+using System.Collections;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
@@ -494,7 +495,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         }
 
         /// <summary>
-        /// 获取模板使用状态
+        /// 把活跃的模板标记为可使用状态
         /// </summary>
         /// <returns></returns>
         public List<TemplatedataModels> GetCanUseTemplates()
@@ -504,20 +505,33 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 string type = item.WheelType;
                 TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == type);
                 if (templatedata.LastUsedTime == null) //第一次使用获取默认使用时间
-                    templatedata.LastUsedTime = templatedata.LastUsedTime;
+                    templatedata.LastUsedTime = item.LastUsedTime;
                 TimeSpan timeSpan = DateTime.Now - templatedata.LastUsedTime;
-                if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围
-                {
+                if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围               
                     templatedata.Use = true;
-                }
+                else
+                    templatedata.Use = false;
+
                 //当前使用时间减去上次使用时间
 
             }
-            return null;
+            return Models;
         }
 
-        public void SetInfoLastUsedTime()
+        /// <summary>
+        /// 更新最后使用时间
+        /// </summary>
+        /// <param name="name"></param>
+        public void UpdateLastUsedTime(string name)
         {
+            TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == name);
+            templatedata.LastUsedTime = DateTime.Now;
+            IEnumerable<sys_bd_Templatedatamodel> enumerable = (IEnumerable<sys_bd_Templatedatamodel>)TemplateDatas.Select(x=> x.WheelType = name);
+            foreach (var item in enumerable)
+            {
+                item.LastUsedTime = templatedata.LastUsedTime;
+                UpdataTemplateData(item);
+            }
 
         }
 
@@ -546,6 +560,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
+        /// <summary>
+        /// 添加新增模板到使用区
+        /// </summary>
+        /// <param name="tuple"></param>
+        /// <param name="name"></param>
+        /// <param name="time"></param>
         private void addModel(HTuple tuple, string name, DateTime time)
         {
 
@@ -555,6 +575,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplatedataModels model = new TemplatedataModels();
                 model.Template = tuple;
                 model.TemplateName = name;
+                model.LastUsedTime = time;
                 Models.Add(model);
             }
             else
@@ -911,7 +932,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 DataGridSelectedItem.TemplatePath = aPath;
                 DataGridSelectedItem.TemplatePicturePath = tPath;
                 UpdataTemplateData(DataGridSelectedItem);
-                addModel(nccTemplate, DataGridSelectedItem.WheelType);
+                addModel(nccTemplate, DataGridSelectedItem.WheelType,DateTime.Now);
                 //var sDB = new SqlAccess().SystemDataAccess;
                 //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
                 //TemplateDatas[DataGridSelectedIndex].CreationTime = DataGridSelectedItem.CreationTime;

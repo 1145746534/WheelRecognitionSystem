@@ -31,8 +31,6 @@ namespace WheelRecognitionSystem.Models
             }
         }
 
-        
-
         /// <summary>
         /// 标签颜色
         /// </summary>
@@ -42,7 +40,6 @@ namespace WheelRecognitionSystem.Models
         /// 样式
         /// </summary>
         public string WheelStyle { get; set; }
-
         public List<string> WheelTypes { get; set; } = new List<string>();
         /// <summary>
         /// 相似度列表
@@ -85,6 +82,7 @@ namespace WheelRecognitionSystem.Models
         /// 识别模板
         /// </summary>
         public HTuple TemplateID { get; set; }
+
 
         /// <summary>
         /// 是否在不活跃模板中识别，用于实时移动模板
