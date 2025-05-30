@@ -105,158 +105,157 @@ namespace WheelRecognitionSystem.Public
         /// <param name="angleExtent">角度范围</param>
         /// <param name="minSimilarity">最小相似度</param>
         /// <returns>识别结果</returns>
-        public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, TemplateDatasModel templateDatas, double angleStart, double angleExtent, double minSimilarity)
-        {
-            RecognitionResultModel activeIdentifyData = new RecognitionResultModel();
-            RecognitionResultModel notActiveIdentifyData = new RecognitionResultModel();
+        //public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, TemplateDatasModel templateDatas, double angleStart, double angleExtent, double minSimilarity)
+        //{
+        //    RecognitionResultModel activeIdentifyData = new RecognitionResultModel();
+        //    RecognitionResultModel notActiveIdentifyData = new RecognitionResultModel();
 
-            List<HTuple> rows = new List<HTuple>();
-            List<HTuple> columns = new List<HTuple>();
-            List<HTuple> angles = new List<HTuple>();
+        //    List<HTuple> rows = new List<HTuple>();
+        //    List<HTuple> columns = new List<HTuple>();
+        //    List<HTuple> angles = new List<HTuple>();
 
-            List<HTuple> rowsN = new List<HTuple>();
-            List<HTuple> columnsN = new List<HTuple>();
-            List<HTuple> anglesN = new List<HTuple>();
-            //活跃模板匹配，并将结果放入对应的匹配结果列表
-            if (templateDatas.ActiveTemplates.Count > 0)
-            {
-                for (int i = 0; i < templateDatas.ActiveTemplates.Count; i++)
-                {
-                    HOperatorSet.FindNccModel(image, templateDatas.ActiveTemplates[i], angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
-                        out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+        //    List<HTuple> rowsN = new List<HTuple>();
+        //    List<HTuple> columnsN = new List<HTuple>();
+        //    List<HTuple> anglesN = new List<HTuple>();
+        //    //活跃模板匹配，并将结果放入对应的匹配结果列表
+        //    if (templateDatas.ActiveTemplates.Count > 0)
+        //    {
+        //        for (int i = 0; i < templateDatas.ActiveTemplates.Count; i++)
+        //        {
+        //            HOperatorSet.FindNccModel(image, templateDatas.ActiveTemplates[i], angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
+        //                out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                    activeIdentifyData.WheelTypes.Add(templateDatas.ActiveTemplateNames[i]);
-                    rows.Add(row);
-                    columns.Add(column);
-                    angles.Add(angle);
+        //            activeIdentifyData.WheelTypes.Add(templateDatas.ActiveTemplateNames[i]);
+        //            rows.Add(row);
+        //            columns.Add(column);
+        //            angles.Add(angle);
 
-                    if (score < 0.55)
-                        activeIdentifyData.Similaritys.Add(0.0);
-                    else
-                    {
-                        activeIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
-                    }
-                }
-                //获取活跃模板匹配中的相似度最大值
-                activeIdentifyData.Similarity = activeIdentifyData.Similaritys.Max();
-            }
-            else
-                activeIdentifyData.Similarity = 0.0;
+        //            if (score < 0.55)
+        //                activeIdentifyData.Similaritys.Add(0.0);
+        //            else
+        //            {
+        //                activeIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
+        //            }
+        //        }
+        //        //获取活跃模板匹配中的相似度最大值
+        //        activeIdentifyData.Similarity = activeIdentifyData.Similaritys.Max();
+        //    }
+        //    else
+        //        activeIdentifyData.Similarity = 0.0;
 
-            //如果活跃模板匹配相似度最大值大于等于（系统设定识别成功的最小相似度 + 0.05 ），认为匹配成功 
-            if (activeIdentifyData.Similarity >= minSimilarity + 0.05)
-            {
-                var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
-                activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
-                activeIdentifyData.CenterRow = rows[index];
-                activeIdentifyData.CenterColumn = columns[index];
-                activeIdentifyData.Radian = angles[index];
-                activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
-                activeIdentifyData.IsInNotTemplate = false;
-                return activeIdentifyData;
-            }
-            else
-            {
-                if (templateDatas.NotActiveTemplates.Count > 0)
-                {
-                    for (int i = 0; i < templateDatas.NotActiveTemplates.Count; i++)
-                    {
-                        HOperatorSet.FindNccModel(image, templateDatas.NotActiveTemplates[i], angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
-                            out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+        //    //如果活跃模板匹配相似度最大值大于等于（系统设定识别成功的最小相似度 + 0.05 ），认为匹配成功 
+        //    if (activeIdentifyData.Similarity >= minSimilarity + 0.05)
+        //    {
+        //        var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
+        //        activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
+        //        activeIdentifyData.CenterRow = rows[index];
+        //        activeIdentifyData.CenterColumn = columns[index];
+        //        activeIdentifyData.Radian = angles[index];
+        //        activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
+        //        activeIdentifyData.IsInNotTemplate = false;
+        //        return activeIdentifyData;
+        //    }
+        //    else
+        //    {
+        //        if (templateDatas.NotActiveTemplates.Count > 0)
+        //        {
+        //            for (int i = 0; i < templateDatas.NotActiveTemplates.Count; i++)
+        //            {
+        //                HOperatorSet.FindNccModel(image, templateDatas.NotActiveTemplates[i], angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
+        //                    out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                        notActiveIdentifyData.WheelTypes.Add(templateDatas.NotActiveTemplateNames[i]);
-                        activeIdentifyData.WheelTypes.Add(templateDatas.NotActiveTemplateNames[i]);
-                        rows.Add(row);
-                        columns.Add(column);
-                        angles.Add(angle);
+        //                notActiveIdentifyData.WheelTypes.Add(templateDatas.NotActiveTemplateNames[i]);
+        //                activeIdentifyData.WheelTypes.Add(templateDatas.NotActiveTemplateNames[i]);
+        //                rows.Add(row);
+        //                columns.Add(column);
+        //                angles.Add(angle);
 
-                        rowsN.Add(row);
-                        columnsN.Add(column);
-                        anglesN.Add(angle);
+        //                rowsN.Add(row);
+        //                columnsN.Add(column);
+        //                anglesN.Add(angle);
 
-                        if (score < 0.55)
-                        {
-                            notActiveIdentifyData.Similaritys.Add(0.0);
-                            activeIdentifyData.Similaritys.Add(0.0);
-                        }
-                        else
-                        {
-                            notActiveIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
-                            activeIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
-                        }
-                    }
-                    //获取不活跃模板匹配中的相似度最大值
-                    notActiveIdentifyData.Similarity = notActiveIdentifyData.Similaritys.Max();
-                    //如果活跃模板相似度最大值 大于等于 不活跃模板相似度最大值，且活跃模板相似度最大值 大于等于 设定值，则在活跃模板中识别成功
-                    if (activeIdentifyData.Similarity >= notActiveIdentifyData.Similarity && activeIdentifyData.Similarity >= minSimilarity)
-                    {
-                        var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
-                        activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
-                        activeIdentifyData.CenterRow = rows[index];
-                        activeIdentifyData.CenterColumn = columns[index];
-                        activeIdentifyData.Radian = angles[index];
-                        activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
-                        activeIdentifyData.IsInNotTemplate = false;
-                        return activeIdentifyData;
-                    }
-                    //如果活跃模板相似度最大值 小于 不活跃模板相似度最大值，且不活跃模板相似度最大值 大于等于 设定值，则在不活跃模板中识别成功
-                    else if (activeIdentifyData.Similarity < notActiveIdentifyData.Similarity && notActiveIdentifyData.Similarity >= minSimilarity)
-                    {
-                        var index = notActiveIdentifyData.Similaritys.FindIndex(x => x == notActiveIdentifyData.Similarity);
-                        activeIdentifyData.RecognitionWheelType = notActiveIdentifyData.WheelTypes[index];
-                        activeIdentifyData.Similarity = notActiveIdentifyData.Similarity;
-                        activeIdentifyData.CenterRow = rowsN[index];
-                        activeIdentifyData.CenterColumn = columnsN[index];
-                        activeIdentifyData.Radian = anglesN[index];
-                        activeIdentifyData.TemplateID = templateDatas.NotActiveTemplates[index];
-                        activeIdentifyData.IsInNotTemplate = true;
-                        return activeIdentifyData;
-                    }
-                    //识别不成功
-                    else
-                    {
-                        activeIdentifyData.RecognitionWheelType = "NG";
-                        activeIdentifyData.Similarity = 0;
-                        activeIdentifyData.CenterRow = 0;
-                        activeIdentifyData.CenterColumn = 0;
-                        activeIdentifyData.Radian = 0;
-                        activeIdentifyData.TemplateID = null;
-                        activeIdentifyData.IsInNotTemplate = false;
-                        return activeIdentifyData;
-                    }
-                }
-                else
-                {
-                    if (activeIdentifyData.Similarity >= minSimilarity)
-                    {
-                        var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
-                        activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
-                        activeIdentifyData.CenterRow = rows[index];
-                        activeIdentifyData.CenterColumn = columns[index];
-                        activeIdentifyData.Radian = angles[index];
-                        activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
-                        activeIdentifyData.IsInNotTemplate = false;
-                        return activeIdentifyData;
-                    }
-                    else
-                    {
-                        activeIdentifyData.RecognitionWheelType = "NG";
-                        activeIdentifyData.Similarity = 0;
-                        activeIdentifyData.CenterRow = 0;
-                        activeIdentifyData.CenterColumn = 0;
-                        activeIdentifyData.Radian = 0;
-                        activeIdentifyData.TemplateID = null;
-                        activeIdentifyData.IsInNotTemplate = false;
-                        return activeIdentifyData;
-                    }
-                }
-            }
-        }
+        //                if (score < 0.55)
+        //                {
+        //                    notActiveIdentifyData.Similaritys.Add(0.0);
+        //                    activeIdentifyData.Similaritys.Add(0.0);
+        //                }
+        //                else
+        //                {
+        //                    notActiveIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
+        //                    activeIdentifyData.Similaritys.Add(Math.Round(score.D, 3));
+        //                }
+        //            }
+        //            //获取不活跃模板匹配中的相似度最大值
+        //            notActiveIdentifyData.Similarity = notActiveIdentifyData.Similaritys.Max();
+        //            //如果活跃模板相似度最大值 大于等于 不活跃模板相似度最大值，且活跃模板相似度最大值 大于等于 设定值，则在活跃模板中识别成功
+        //            if (activeIdentifyData.Similarity >= notActiveIdentifyData.Similarity && activeIdentifyData.Similarity >= minSimilarity)
+        //            {
+        //                var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
+        //                activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
+        //                activeIdentifyData.CenterRow = rows[index];
+        //                activeIdentifyData.CenterColumn = columns[index];
+        //                activeIdentifyData.Radian = angles[index];
+        //                activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
+        //                activeIdentifyData.IsInNotTemplate = false;
+        //                return activeIdentifyData;
+        //            }
+        //            //如果活跃模板相似度最大值 小于 不活跃模板相似度最大值，且不活跃模板相似度最大值 大于等于 设定值，则在不活跃模板中识别成功
+        //            else if (activeIdentifyData.Similarity < notActiveIdentifyData.Similarity && notActiveIdentifyData.Similarity >= minSimilarity)
+        //            {
+        //                var index = notActiveIdentifyData.Similaritys.FindIndex(x => x == notActiveIdentifyData.Similarity);
+        //                activeIdentifyData.RecognitionWheelType = notActiveIdentifyData.WheelTypes[index];
+        //                activeIdentifyData.Similarity = notActiveIdentifyData.Similarity;
+        //                activeIdentifyData.CenterRow = rowsN[index];
+        //                activeIdentifyData.CenterColumn = columnsN[index];
+        //                activeIdentifyData.Radian = anglesN[index];
+        //                activeIdentifyData.TemplateID = templateDatas.NotActiveTemplates[index];
+        //                activeIdentifyData.IsInNotTemplate = true;
+        //                return activeIdentifyData;
+        //            }
+        //            //识别不成功
+        //            else
+        //            {
+        //                activeIdentifyData.RecognitionWheelType = "NG";
+        //                activeIdentifyData.Similarity = 0;
+        //                activeIdentifyData.CenterRow = 0;
+        //                activeIdentifyData.CenterColumn = 0;
+        //                activeIdentifyData.Radian = 0;
+        //                activeIdentifyData.TemplateID = null;
+        //                activeIdentifyData.IsInNotTemplate = false;
+        //                return activeIdentifyData;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            if (activeIdentifyData.Similarity >= minSimilarity)
+        //            {
+        //                var index = activeIdentifyData.Similaritys.FindIndex(x => x == activeIdentifyData.Similarity);
+        //                activeIdentifyData.RecognitionWheelType = activeIdentifyData.WheelTypes[index];
+        //                activeIdentifyData.CenterRow = rows[index];
+        //                activeIdentifyData.CenterColumn = columns[index];
+        //                activeIdentifyData.Radian = angles[index];
+        //                activeIdentifyData.TemplateID = templateDatas.ActiveTemplates[index];
+        //                activeIdentifyData.IsInNotTemplate = false;
+        //                return activeIdentifyData;
+        //            }
+        //            else
+        //            {
+        //                activeIdentifyData.RecognitionWheelType = "NG";
+        //                activeIdentifyData.Similarity = 0;
+        //                activeIdentifyData.CenterRow = 0;
+        //                activeIdentifyData.CenterColumn = 0;
+        //                activeIdentifyData.Radian = 0;
+        //                activeIdentifyData.TemplateID = null;
+        //                activeIdentifyData.IsInNotTemplate = false;
+        //                return activeIdentifyData;
+        //            }
+        //        }
+        //    }
+        //}
 
         public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart,
-                                                                        double angleExtent, double minSimilarity,List<RecognitionResultModel> recognitionResults = null)
+                                                                        double angleExtent, double minSimilarity,List<RecognitionResultModel> recognitionResults)
         {
-            recognitionResults = new List<RecognitionResultModel>();
             var resultIfFailed = new RecognitionResultModel
             {
                 status = "识别失败",
@@ -275,7 +274,7 @@ namespace WheelRecognitionSystem.Public
                         "true", 0,
                         out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                    if (score != null && score.D > 0.5)
+                    if (score != null && score.Length > 0 && score.D > 0.5)
                     {
                         recognitionResults.Add(new RecognitionResultModel
                         {

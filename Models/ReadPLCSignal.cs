@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace WheelRecognitionSystem.Models
 {
     /// <summary>
-    /// 读取PLC信号
+    /// 读取PLC信号 - 相机拍照部分
     /// </summary>
     public class ReadPLCSignal : BindableBase
     {
@@ -47,16 +47,6 @@ namespace WheelRecognitionSystem.Models
         {
             get { return _wheelCoding; }
             set { SetProperty(ref _wheelCoding, value); }
-        }
-
-        private string _prefix_WheelCoding;
-        /// <summary>
-        /// 前缀_轮型编码
-        /// </summary>
-        public string Prefix_WheelCoding
-        {
-            get { return _prefix_WheelCoding; }
-            set { SetProperty(ref _prefix_WheelCoding, value); }
         }
 
 
@@ -101,41 +91,11 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _ngCode, value); }
         }
 
-        public bool _dataModification;
-        /// <summary>
-        /// 数据修改信号-产品NG触发
-        /// </summary>
-        public bool DataModification
-        {
-            get { return _dataModification; }
-            set
-            {
-                bool oldValue = _dataModification;
-                SetProperty(ref _dataModification, value);
-                // 仅在值从 false 变为 true 时触发
-                if (oldValue != value && value)
-                {
-                    // 触发时传递参数
-                    DataModificationTriggered?.Invoke(this, EventArgs.Empty);
-                }
-            }
-
-        }
-
 
 
         public int newArrival = 0;
 
 
-        private int _wheelDefect;
-        /// <summary>
-        /// 缺陷编码
-        /// </summary>
-        public int WheelDefect
-        {
-            get { return _wheelDefect; }
-            set { SetProperty(ref _wheelDefect, value); }
-        }
 
         private float _wheelTemperature;
         /// <summary>

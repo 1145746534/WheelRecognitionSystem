@@ -156,8 +156,8 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 WheelHeight = float.Parse(WheelHeight),
                 WheelStyle = WheelStyle,
                 CreationTime = DateTime.Now.ToString("yy-MM-dd"),
-                LastUsedTime = DateTime.Now.ToString("yy-MM-dd HH:mm:ss")
-            };
+                LastUsedTime = DateTime.Now
+            }; 
 
             TemplateDatas.Add(data);
             //数据根据轮型还有轮毂样式排序

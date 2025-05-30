@@ -21,6 +21,8 @@ using System.Windows.Threading;
 using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
+using static WheelRecognitionSystem.Public.SystemDatas;
+
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -134,6 +136,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             get { return _recWheelType; }
             set { SetProperty(ref _recWheelType, value); }
         }
+
         private string _recWheelStyle;
 
         public string RecWheelStyle
@@ -238,6 +241,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void HubChanges()
         {
+            //图片移出去
+            string source = UnrDataGridSelectedItem.ImagePath;
+            string fileName = Path.GetFileName(source);
+            string target = Path.Combine(DeepImagesPath, RecWheelType, fileName);
+            FileHelper.MoveFile(source, target, true);
             SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
             var result = pDB.Updateable<Tbl_productiondatamodel>()
                 .SetColumns(it => new Tbl_productiondatamodel()
@@ -252,6 +260,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             UnrIndex = "";
             UnrWheelType = "";
             CurrentImage = null;
+           
         }
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)

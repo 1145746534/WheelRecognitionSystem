@@ -8,6 +8,8 @@ using System.Threading;
 using System.Windows;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
+using WheelRecognitionSystem.ViewModels.Dialogs;
+using WheelRecognitionSystem.ViewModels.Pages;
 using WheelRecognitionSystem.Views;
 using WheelRecognitionSystem.Views.Dialogs;
 using WheelRecognitionSystem.Views.Pages;
@@ -41,22 +43,27 @@ namespace WheelRecognitionSystem
             ConfigEdit.ReadAppSettings("ActiveTemplateFolder", out string activeTemplateFolder);
             ActiveTemplatesPath = RootDirectory + @"\" + activeTemplateFolder;
             //不活跃模板保存路径
-            ConfigEdit.ReadAppSettings("NotActiveTemplateFolder", out string notActiveTemplateFolder);
-            NotActiveTemplatesPath = RootDirectory + @"\" + notActiveTemplateFolder;
+            // ConfigEdit.ReadAppSettings("NotActiveTemplateFolder", out string notActiveTemplateFolder);
+            //NotActiveTemplatesPath = RootDirectory + @"\" + notActiveTemplateFolder;
             //历史图片保存路径
             ConfigEdit.ReadAppSettings("HistoricalImageFolder", out string historicalImageFolder);
             HistoricalImagesPath = RootDirectory + @"\" + historicalImageFolder;
             //手动图片保存路径
             ConfigEdit.ReadAppSettings("HandImageFolder", out string handImageFolder);
-            HandImagesPath = RootDirectory + @"\" + handImageFolder;
-
+            HandImagesPath = RootDirectory + @"\" + handImageFolder; 
+            //深度学习图片保存路径
+            ConfigEdit.ReadAppSettings("DeepImageFolder", out string deepImageFolder);
+            DeepImagesPath = RootDirectory + @"\" + deepImageFolder;
             //存储Log文件路径
             string logDirectory = AppDomain.CurrentDomain.BaseDirectory + "Logs";
             //创建系统所需文件夹
             if (!Directory.Exists(RootDirectory)) Directory.CreateDirectory(RootDirectory);
             if (!Directory.Exists(TemplateImagesPath)) Directory.CreateDirectory(TemplateImagesPath);
             if (!Directory.Exists(ActiveTemplatesPath)) Directory.CreateDirectory(ActiveTemplatesPath);
-            if (!Directory.Exists(NotActiveTemplatesPath)) Directory.CreateDirectory(NotActiveTemplatesPath);
+            //if (!Directory.Exists(NotActiveTemplatesPath)) 
+            //    Directory.CreateDirectory(NotActiveTemplatesPath);
+            if (!Directory.Exists(DeepImagesPath)) 
+                Directory.CreateDirectory(DeepImagesPath);
             if (!Directory.Exists(HistoricalImagesPath)) Directory.CreateDirectory(HistoricalImagesPath);
             if (!Directory.Exists(logDirectory)) Directory.CreateDirectory(logDirectory);
             //创建当月Log文件
@@ -77,6 +84,8 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterForNavigation<DateSupplementView>();
             containerRegistry.RegisterForNavigation<SystemSettingsView>();
             containerRegistry.RegisterForNavigation<TemplateManagementView>();
+
+
             //注册轮型设置弹窗内容
             containerRegistry.RegisterDialog<WheelTypeSettingDialog>("WheelTypeSetting");
             containerRegistry.RegisterDialog<ParameterSettingDialog>("ParameterSetting");
@@ -86,6 +95,10 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterDialog<TemplateDataEditDialog>("TemplateDataEdit");
             //注册弹窗窗口，这句代码会将框架内的默认弹窗窗口替换掉
             containerRegistry.RegisterDialogWindow<DialogParent>();
+
+            //注册viewModel 跨视图模型使用
+            containerRegistry.RegisterSingleton<TemplateManagementViewModel>();
+
         }
     }
 }

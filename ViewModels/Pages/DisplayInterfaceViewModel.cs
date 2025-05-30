@@ -34,6 +34,8 @@ using System.IO;
 using System.ComponentModel;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows;
+using Prism.Ioc;
+using WheelRecognitionSystem.ViewModels.Dialogs;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -332,9 +334,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         #endregion
 
-        private CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-        private Task _task;
+        private readonly Task _task;
 
         /// <summary>
         /// 相机列表
@@ -344,11 +346,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 弹窗服务
         /// </summary>
         readonly IDialogService _dialogService;
+        private readonly IContainerProvider _containerProvider;
 
 
-        public DisplayInterfaceViewModel(IDialogService dialogService)
+        public DisplayInterfaceViewModel(IDialogService dialogService, IContainerProvider containerProvider)
         {
             _dialogService = dialogService;
+            _containerProvider = containerProvider;
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
             BtnTakePhotoCommand = new DelegateCommand<string>(BtnTakePhoto);
             BtnSaveCommand = new DelegateCommand<string>(BtnSave);
@@ -513,7 +517,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 recognitionResult.FullFigureGary = pResult.FullFigureGary;
                 recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
-                imageRecogn = pResult.WheelImage;                        
+                imageRecogn = pResult.WheelImage;
             }
             else
             {
@@ -523,44 +527,39 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
 
             //轮毂识别 传统视觉
-            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-
-
-
+            //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            List<RecognitionResultModel> list = new List<RecognitionResultModel>();
+            var someService = _containerProvider.Resolve<TemplateManagementViewModel>();
+            List<TemplatedataModels> models = someService.GetCanUseTemplates();
+            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
             HObject templateContour = new HObject();
             if (recognitionResult.RecognitionWheelType != "NG")
             {
-                templateContour = GetAffineTemplateContour(recognitionResult.TemplateID, recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+
+                templateContour = GetAffineTemplateContour(someService.GetHTupleByName(recognitionResult.RecognitionWheelType),
+                    recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                 //根据高度确定为哪个轮型
 
             }
-            if (recognitionResult.RecognitionWheelType == "NG")
+            if (recognitionResult.RecognitionWheelType == "NG" && pResult.WheelImage == null)
             {
-                recognitionResult.status = "轮形未识别";
-                //NG的轮型需要保存图片-后续人工补录
-                if (pResult.WheelImage == null)
+                //大模型推算
+                HTuple hv_DLResult = WheelDeepLearning(image);
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);               
+                if (names.Length > 0)
                 {
-                    //大模型推算
-                    HTuple hv_DLResult = WheelDeepLearning(image);
-                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
-                    HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
+                    recognitionResult.RecognitionWheelType = names[0].S;
+                    recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
+                    recognitionResult.status = "识别成功";
 
-                    for (int i = 0; i < names.Length; i++)
-                    {
-                        double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                        Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
-                    }
-                    if (names.Length > 0)
-                    {
-                        recognitionResult.RecognitionWheelType = names[0].S;
-                        recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
-                        recognitionResult.status = "识别成功";
-
-                    }
-                    hv_DLResult.Dispose();
                 }
-                
-
+                //for (int i = 0; i < names.Length; i++)
+                //{
+                //    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
+                //    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
+                //}
+                hv_DLResult.Dispose();
             }
             interact.resultModel = recognitionResult;
 
@@ -575,7 +574,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 index = interact.Index
 
             };
-
             return autoRecognitionResult;
             //图像结果显示
             //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);

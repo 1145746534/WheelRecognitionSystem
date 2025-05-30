@@ -542,15 +542,6 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[5];
 
-        /// <summary>
-        /// 轮毂到位信号
-        /// </summary>
-        private bool ArrivalSignal;
-
-        /// <summary>
-        /// 结果通知数组
-        /// </summary>
-        private bool[] ResultNotifications = new bool[5];
 
 
         /// <summary>
@@ -624,8 +615,8 @@ namespace WheelRecognitionSystem.ViewModels
         {
             Task.Run(() =>
             {
-                LoadTemplates();
-                TemplatesLoading = false;
+                //LoadTemplates();
+                //TemplatesLoading = false;
             });
             LoadSystemDatas();
             ExternalConnectionThread();
@@ -990,10 +981,216 @@ namespace WheelRecognitionSystem.ViewModels
             for (int i = 0; i < readPLCSignals.Count(); i++)
             {
                 readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
-                readPLCSignals[i].DataModificationTriggered += OnDataModificationTriggered;
                 Thread.Sleep(100);
 
             }
+        }
+
+        /// <summary>
+        /// 外部连接线程
+        /// </summary>
+        private void ExternalConnectionThread()
+        {
+            ExternalConnectionThreadControl = true;
+            Task.Run(() =>
+            {
+                while (ExternalConnectionThreadControl)
+                {
+                    if (PlcCilent != null && !PlcCilent.Connected)
+                    {
+                        //连接PLC
+                        int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
+                        if (result == 0 && PlcCilent.Connected)
+                        {
+                            if (PlcStatus != "1")
+                                PlcStatus = "1";
+                            HeartbeatThread();
+                            PlcDataInteractionThread();
+                        }
+                        else
+                        {
+                            if (PlcDataInteractionControl)
+                                PlcDataInteractionControl = false;
+                            if (HeartbeatThreadControl)
+                                HeartbeatThreadControl = false;
+                            PlcCilent.Disconnect();
+                            if (PlcStatus != "0") PlcStatus = "0";
+                        }
+                    }
+
+                    //if (CameraHandle == null || CameraHandle.Length == 0)
+                    //{
+                    //    try
+                    //    {
+                    //        //连接相机
+                    //        HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive", -1, "default", -1, "false", "default", CameraIdentifier, 0, -1, out CameraHandle);
+                    //        HOperatorSet.GrabImageStart(CameraHandle, -1);
+                    //        HOperatorSet.SetFramegrabberParam(CameraHandle, "TriggerMode", "Off");
+                    //        if (CameraStatus != "1") CameraStatus = "1";
+                    //    }
+                    //    catch
+                    //    {
+                    //        if (CameraStatus != "0")
+                    //        {
+                    //            CameraStatus = "0";
+                    //        }
+                    //    }
+                    //}
+
+                    if (PlcStatus == "1" && CameraStatus == "1")
+                        ExternalConnectionThreadControl = false;
+                }
+            });
+        }
+
+        /// <summary>
+        /// PLC数据交互线程
+        /// </summary>
+        private void PlcDataInteractionThread()
+        {
+            readPLCSignals[0].Name = "1检1";
+            readPLCSignals[0].Index = 0;
+            readPLCSignals[1].Name = "1检2A_B";
+            readPLCSignals[1].Index = 1;
+            readPLCSignals[2].Name = "1检3";
+            readPLCSignals[2].Index = 2;
+            readPLCSignals[3].Name = "1检3返修";
+            readPLCSignals[3].Index = 3;
+            readPLCSignals[4].Name = "2检1";
+            readPLCSignals[4].Index = 4;
+            PlcDataInteractionControl = true;
+            Task.Run(async () =>
+            {
+                while (PlcDataInteractionControl)
+                {
+                    if (PlcCilent != null && PlcCilent.Connected)
+                    {
+                        //读PLC给视觉的数据
+                        //1.相机拍照信号 分为五个相机触发信号  1检1 1检2A和2B共用一个相机  1检3 一检3返修  2检1
+                        //                               0         1290
+                        ReadBuffer = new byte[ReadLenght - ReadStartAddress];
+                        int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
+                        if (bytes_read == 0) // 成功读取
+                        {
+                            //轮毂温度 3条线
+                            readPLCSignals[0].WheelTemperature = S7.GetRealAt(ReadBuffer, 124);
+                            float temperature = S7.GetRealAt(ReadBuffer, 128);
+                            readPLCSignals[1].WheelTemperature = temperature;
+                            readPLCSignals[2].WheelTemperature = temperature;
+                            readPLCSignals[3].WheelTemperature = S7.GetRealAt(ReadBuffer, 132);
+
+                            //1.相机拍照部分
+                            //轮毂到位允许拍照信号
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                //轮型编码 =  分秒 + 轮型  用于看板显示
+                                readPLCSignals[i].WheelCoding = GetBytesToString(ReadBuffer, 2 + i * 16).Trim();
+                                //轮毂回流/下转 
+                                readPLCSignals[i].BackFlowOrDown = S7.GetBitAt(ReadBuffer, 192, i);
+                                //轮毂高度
+                                readPLCSignals[i].WheelHeight = S7.GetRealAt(ReadBuffer, 136 + i * 4);
+
+                                bool b = S7.GetBitAt(ReadBuffer, 108, i);
+                                readPLCSignals[i].ArrivalSignal = b;
+                                if (b)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
+                                    EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
+                                    new Thread((obj) =>
+                                    {
+                                        int threadI = (int)obj;  // 将 object 类型转为 int
+                                        Thread.Sleep(500);
+                                        S7.SetBitAt(ref WriteBuffer, 143, threadI, false); //复位读取成功
+                                        EventMessage.MessageDisplay($"复位{143}.{threadI}读取拍照成功", true, true);
+
+                                    }).Start(i);
+                                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                }
+                            }
+
+                            for (int i = 0; i < readPLCSignals.Length; i++)
+                            {
+                                //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
+                                string prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
+                                //缺陷
+                                int wheelDefect = BitConverter.ToInt16(new byte[] { ReadBuffer[99 + i * 2], ReadBuffer[98 + i * 2] }, 0);
+                                KeyValuePair<string, int> wheel = new KeyValuePair<string, int>(prefix_WheelCoding, wheelDefect);
+                                //数据修正信号
+                                bool b = S7.GetBitAt(ReadBuffer, 193, i);
+                                if (b)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
+                                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                    OnDataModificationTriggered(wheel);
+                                    EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
+                                    new Thread((obj) =>
+                                    {
+                                        int threadI = (int)obj;  // 将 object 类型转为 int
+                                        Thread.Sleep(500);
+                                        S7.SetBitAt(ref WriteBuffer, 144, threadI, false); //复位读取成功
+                                        EventMessage.MessageDisplay($"复位{144}.{threadI}回复读取修正信号成功", true, true);
+                                    }).Start(i);
+                                }
+
+                            }
+
+
+
+                            //读取登录信号
+                            for (int i = 0; i < 5; i++)
+                            {
+                                S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
+                                S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
+                                //Console.WriteLine($"完成信号{i}：{S7.GetBitAt(WriteBuffer, 141, i)}");
+                                bool loginTrigger = S7.GetBitAt(ReadBuffer, 191, i);
+                                string name = GetBytesToString(ReadBuffer, 194 + i * 12).Replace("\0", "");
+                                string password = GetBytesToString(ReadBuffer, 254 + i * 12).Replace("\0", "");
+                                if (loginTrigger)
+                                {
+                                    bool isLogin = LoginCheck(name, password);
+                                    if (isLogin)
+                                        S7.SetBitAt(ref WriteBuffer, 142, i, true);
+
+                                    S7.SetBitAt(ref WriteBuffer, 141, i, true);
+                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")} loginTrigger:{i} : True");
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            //读取失败
+
+                            Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
+                        }
+
+                        ////发送PLC的数据
+                        //string prefix = DateTime.Now.ToString("ddss");
+                        //string text = prefix + "-" + "08124C05__".Trim('_');
+                        //int maxLength = 16;          // PLC 中定义的最大长度
+                        //                             // 转换字符串为 PLC 格式字节数组
+                        //byte[] buffer = StringToS7Bytes(text, maxLength);
+                        //CopyBytes(buffer, WriteBuffer, 10 + (1 - 1) * 16);
+                        //写给PLC的视觉系统数据
+                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+
+                        //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                        //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
+                    }
+                    else
+                    {
+                        PlcCilent.Disconnect();
+                        if (!ExternalConnectionThreadControl)
+                        {
+                            ExternalConnectionThreadControl = true;
+                            ExternalConnectionThread();
+                        }
+                    }
+
+
+                    await Task.Delay(10);
+                }
+            });
         }
 
         /// <summary>
@@ -1001,17 +1198,16 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnDataModificationTriggered(object sender, EventArgs e)
+        private void OnDataModificationTriggered(KeyValuePair<string, int> keyValue)
         {
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
 
-                ReadPLCSignal plcSignal = sender as ReadPLCSignal;
-                Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 数据修正信号：{plcSignal.Index}");
-                int n = plcSignal.Index + 1; //线体 下标加1
-
-                char[] parts = plcSignal.Prefix_WheelCoding.ToCharArray();
+                //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 数据修正信号：{plcSignal.Index}");
+                string prefix_WheelCoding = keyValue.Key;
+                int wheelDefect = keyValue.Value;
+                char[] parts = prefix_WheelCoding.ToCharArray();
                 if (parts.Count() != 12)
                 {
                     throw new Exception($"Prefix_WheelCoding数据长度错误：{parts.Count()}");
@@ -1032,7 +1228,7 @@ namespace WheelRecognitionSystem.ViewModels
                         .SetColumns(it => new Tbl_productiondatamodel()
                         {
                             ResultBool = false,
-                            Remark = plcSignal.WheelDefect.ToString()
+                            Remark = wheelDefect.ToString()
                         })
                         .Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
@@ -1430,142 +1626,142 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 加载模板
         /// </summary>
-        private void LoadTemplates()
-        {
-            //清空模板
-            for (int i = 0; i < TemplateDataCollection.ActiveTemplates.Count; i++)
-            {
-                HOperatorSet.ClearNccModel(TemplateDataCollection.ActiveTemplates[i]);
-            }
-            for (int i = 0; i < TemplateDataCollection.NotActiveTemplates.Count; i++)
-            {
-                HOperatorSet.ClearNccModel(TemplateDataCollection.NotActiveTemplates[i]);
-            }
-            TemplateDataCollection.ActiveTemplates.Clear();
-            TemplateDataCollection.NotActiveTemplates.Clear();
-            TemplateDataCollection.ActiveTemplateNames.Clear();
-            TemplateDataCollection.NotActiveTemplateNames.Clear();
+        //private void LoadTemplates()
+        //{
+        //    //清空模板
+        //    for (int i = 0; i < TemplateDataCollection.ActiveTemplates.Count; i++)
+        //    {
+        //        HOperatorSet.ClearNccModel(TemplateDataCollection.ActiveTemplates[i]);
+        //    }
+        //    for (int i = 0; i < TemplateDataCollection.NotActiveTemplates.Count; i++)
+        //    {
+        //        HOperatorSet.ClearNccModel(TemplateDataCollection.NotActiveTemplates[i]);
+        //    }
+        //    TemplateDataCollection.ActiveTemplates.Clear();
+        //    TemplateDataCollection.NotActiveTemplates.Clear();
+        //    TemplateDataCollection.ActiveTemplateNames.Clear();
+        //    TemplateDataCollection.NotActiveTemplateNames.Clear();
 
-            //获取指定路径下所有文件
-            string[] activeFiles = Directory.GetFiles(ActiveTemplatesPath);
-            string[] notActiveFiles = Directory.GetFiles(NotActiveTemplatesPath);
-            try
-            {
-                if (activeFiles.Length > 0)
-                {
-                    for (int a = 0; a < activeFiles.Length; a++)
-                    {
-                        int index = activeFiles[a].LastIndexOf(@"\") + 1;
-                        string str = activeFiles[a].Substring(index, activeFiles[a].Length - index);//截取路径后的字符串
+        //    //获取指定路径下所有文件
+        //    string[] activeFiles = Directory.GetFiles(ActiveTemplatesPath);
+        //    string[] notActiveFiles = Directory.GetFiles(NotActiveTemplatesPath);
+        //    try
+        //    {
+        //        if (activeFiles.Length > 0)
+        //        {
+        //            for (int a = 0; a < activeFiles.Length; a++)
+        //            {
+        //                int index = activeFiles[a].LastIndexOf(@"\") + 1;
+        //                string str = activeFiles[a].Substring(index, activeFiles[a].Length - index);//截取路径后的字符串
 
-                        string wheelType = str.Trim('.', 'n', 'c', 'm');//修剪掉其中的.ncm
-                        TemplateDataCollection.ActiveTemplateNames.Add(wheelType);
+        //                string wheelType = str.Trim('.', 'n', 'c', 'm');//修剪掉其中的.ncm
+        //                TemplateDataCollection.ActiveTemplateNames.Add(wheelType);
 
-                        string strPath = activeFiles[a].Replace(@"\", "/");//字符串替换
-                        HOperatorSet.ReadNccModel(strPath, out HTuple modelID);//读NCC模板
-                        TemplateDataCollection.ActiveTemplates.Add(modelID);
-                    }
-                }
-                if (notActiveFiles.Length > 0)
-                {
-                    for (int a = 0; a < notActiveFiles.Length; a++)
-                    {
-                        int index = notActiveFiles[a].LastIndexOf(@"\") + 1;
-                        string str = notActiveFiles[a].Substring(index, notActiveFiles[a].Length - index);
-                        string wheelType = str.Trim('.', 'n', 'c', 'm');
-                        TemplateDataCollection.NotActiveTemplateNames.Add(wheelType);
+        //                string strPath = activeFiles[a].Replace(@"\", "/");//字符串替换
+        //                HOperatorSet.ReadNccModel(strPath, out HTuple modelID);//读NCC模板
+        //                TemplateDataCollection.ActiveTemplates.Add(modelID);
+        //            }
+        //        }
+        //        if (notActiveFiles.Length > 0)
+        //        {
+        //            for (int a = 0; a < notActiveFiles.Length; a++)
+        //            {
+        //                int index = notActiveFiles[a].LastIndexOf(@"\") + 1;
+        //                string str = notActiveFiles[a].Substring(index, notActiveFiles[a].Length - index);
+        //                string wheelType = str.Trim('.', 'n', 'c', 'm');
+        //                TemplateDataCollection.NotActiveTemplateNames.Add(wheelType);
 
-                        string strPath = notActiveFiles[a].Replace(@"\", "/");
-                        HOperatorSet.ReadNccModel(strPath, out HTuple modelID);
-                        TemplateDataCollection.NotActiveTemplates.Add(modelID);
-                    }
-                }
-                EventMessage.MessageDisplay($"模板加载完成，活跃模板{TemplateDataCollection.ActiveTemplates.Count}个，不活跃模板{TemplateDataCollection.NotActiveTemplates.Count}个。", true, false);
-            }
-            catch (Exception ex)
-            {
-                EventMessage.MessageDisplay("加载模板错误：" + ex.Message, true, true);
-            }
-        }
+        //                string strPath = notActiveFiles[a].Replace(@"\", "/");
+        //                HOperatorSet.ReadNccModel(strPath, out HTuple modelID);
+        //                TemplateDataCollection.NotActiveTemplates.Add(modelID);
+        //            }
+        //        }
+        //        EventMessage.MessageDisplay($"模板加载完成，活跃模板{TemplateDataCollection.ActiveTemplates.Count}个，不活跃模板{TemplateDataCollection.NotActiveTemplates.Count}个。", true, false);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        EventMessage.MessageDisplay("加载模板错误：" + ex.Message, true, true);
+        //    }
+        //}
         /// <summary>
         /// 更新匹配用模板数据
         /// </summary>
-        private void UpdateTemplateDatas()
-        {
-            if (DelTemplateNames.Count > 0)
-            {
-                //处理删除的模板
-                for (int i = 0; i < DelTemplateNames.Count; i++)
-                {
-                    int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == DelTemplateNames[i]);
-                    int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == DelTemplateNames[i]);
-                    if (activeIndex >= 0)
-                    {
-                        TemplateDataCollection.ActiveTemplateNames.RemoveAt(activeIndex);
-                        TemplateDataCollection.ActiveTemplates[activeIndex].Dispose();
-                        TemplateDataCollection.ActiveTemplates.RemoveAt(activeIndex);
-                    }
-                    if (notActiveIndex >= 0)
-                    {
-                        TemplateDataCollection.NotActiveTemplateNames.RemoveAt(notActiveIndex);
-                        TemplateDataCollection.NotActiveTemplates[notActiveIndex].Dispose();
-                        TemplateDataCollection.NotActiveTemplates.RemoveAt(notActiveIndex);
-                    }
-                }
-                //清空删除数据
-                DelTemplateNames.Clear();
-            }
-            if (AddOrReviseTemplateDatas.ActiveTemplateNames.Count > 0)
-            {
-                //处理增加或修改的活跃模板
-                for (int i = 0; i < AddOrReviseTemplateDatas.ActiveTemplateNames.Count; i++)
-                {
-                    int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == AddOrReviseTemplateDatas.ActiveTemplateNames[i]);
-                    if (activeIndex < 0)
-                    {
-                        TemplateDataCollection.ActiveTemplateNames.Add(AddOrReviseTemplateDatas.ActiveTemplateNames[i]);
-                        TemplateDataCollection.ActiveTemplates.Add(AddOrReviseTemplateDatas.ActiveTemplates[i]);
-                    }
-                    else
-                    {
-                        TemplateDataCollection.ActiveTemplates[activeIndex].Dispose();
-                        TemplateDataCollection.ActiveTemplates[activeIndex] = AddOrReviseTemplateDatas.ActiveTemplates[i];
-                    }
-                }
-                //清空增加或修改的活跃模板数据
-                for (int i = 0; i < AddOrReviseTemplateDatas.ActiveTemplates.Count; i++)
-                {
-                    AddOrReviseTemplateDatas.ActiveTemplates.RemoveAt(i);
-                }
-                AddOrReviseTemplateDatas.ActiveTemplates.Clear();
-                AddOrReviseTemplateDatas.ActiveTemplateNames.Clear();
-            }
-            if (AddOrReviseTemplateDatas.NotActiveTemplateNames.Count > 0)
-            {
-                //处理增加或修改的不活跃模板
-                for (int i = 0; i < AddOrReviseTemplateDatas.NotActiveTemplateNames.Count; i++)
-                {
-                    int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == AddOrReviseTemplateDatas.NotActiveTemplateNames[i]);
-                    if (notActiveIndex < 0)
-                    {
-                        TemplateDataCollection.NotActiveTemplateNames.Add(AddOrReviseTemplateDatas.NotActiveTemplateNames[i]);
-                        TemplateDataCollection.NotActiveTemplates.Add(AddOrReviseTemplateDatas.NotActiveTemplates[i]);
-                    }
-                    else
-                    {
-                        TemplateDataCollection.NotActiveTemplates[notActiveIndex].Dispose();
-                        TemplateDataCollection.NotActiveTemplates[notActiveIndex] = AddOrReviseTemplateDatas.NotActiveTemplates[i];
-                    }
-                }
-                //清空增加或修改的不活跃模板数据
-                for (int i = 0; i < AddOrReviseTemplateDatas.NotActiveTemplateNames.Count; i++)
-                {
-                    AddOrReviseTemplateDatas.NotActiveTemplates.RemoveAt(i);
-                }
-                AddOrReviseTemplateDatas.NotActiveTemplates.Clear();
-                AddOrReviseTemplateDatas.NotActiveTemplateNames.Clear();
-            }
-        }
+        //private void UpdateTemplateDatas()
+        //{
+        //    if (DelTemplateNames.Count > 0)
+        //    {
+        //        //处理删除的模板
+        //        for (int i = 0; i < DelTemplateNames.Count; i++)
+        //        {
+        //            int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == DelTemplateNames[i]);
+        //            int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == DelTemplateNames[i]);
+        //            if (activeIndex >= 0)
+        //            {
+        //                TemplateDataCollection.ActiveTemplateNames.RemoveAt(activeIndex);
+        //                TemplateDataCollection.ActiveTemplates[activeIndex].Dispose();
+        //                TemplateDataCollection.ActiveTemplates.RemoveAt(activeIndex);
+        //            }
+        //            if (notActiveIndex >= 0)
+        //            {
+        //                TemplateDataCollection.NotActiveTemplateNames.RemoveAt(notActiveIndex);
+        //                TemplateDataCollection.NotActiveTemplates[notActiveIndex].Dispose();
+        //                TemplateDataCollection.NotActiveTemplates.RemoveAt(notActiveIndex);
+        //            }
+        //        }
+        //        //清空删除数据
+        //        DelTemplateNames.Clear();
+        //    }
+        //    if (AddOrReviseTemplateDatas.ActiveTemplateNames.Count > 0)
+        //    {
+        //        //处理增加或修改的活跃模板
+        //        for (int i = 0; i < AddOrReviseTemplateDatas.ActiveTemplateNames.Count; i++)
+        //        {
+        //            int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == AddOrReviseTemplateDatas.ActiveTemplateNames[i]);
+        //            if (activeIndex < 0)
+        //            {
+        //                TemplateDataCollection.ActiveTemplateNames.Add(AddOrReviseTemplateDatas.ActiveTemplateNames[i]);
+        //                TemplateDataCollection.ActiveTemplates.Add(AddOrReviseTemplateDatas.ActiveTemplates[i]);
+        //            }
+        //            else
+        //            {
+        //                TemplateDataCollection.ActiveTemplates[activeIndex].Dispose();
+        //                TemplateDataCollection.ActiveTemplates[activeIndex] = AddOrReviseTemplateDatas.ActiveTemplates[i];
+        //            }
+        //        }
+        //        //清空增加或修改的活跃模板数据
+        //        for (int i = 0; i < AddOrReviseTemplateDatas.ActiveTemplates.Count; i++)
+        //        {
+        //            AddOrReviseTemplateDatas.ActiveTemplates.RemoveAt(i);
+        //        }
+        //        AddOrReviseTemplateDatas.ActiveTemplates.Clear();
+        //        AddOrReviseTemplateDatas.ActiveTemplateNames.Clear();
+        //    }
+        //    if (AddOrReviseTemplateDatas.NotActiveTemplateNames.Count > 0)
+        //    {
+        //        //处理增加或修改的不活跃模板
+        //        for (int i = 0; i < AddOrReviseTemplateDatas.NotActiveTemplateNames.Count; i++)
+        //        {
+        //            int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == AddOrReviseTemplateDatas.NotActiveTemplateNames[i]);
+        //            if (notActiveIndex < 0)
+        //            {
+        //                TemplateDataCollection.NotActiveTemplateNames.Add(AddOrReviseTemplateDatas.NotActiveTemplateNames[i]);
+        //                TemplateDataCollection.NotActiveTemplates.Add(AddOrReviseTemplateDatas.NotActiveTemplates[i]);
+        //            }
+        //            else
+        //            {
+        //                TemplateDataCollection.NotActiveTemplates[notActiveIndex].Dispose();
+        //                TemplateDataCollection.NotActiveTemplates[notActiveIndex] = AddOrReviseTemplateDatas.NotActiveTemplates[i];
+        //            }
+        //        }
+        //        //清空增加或修改的不活跃模板数据
+        //        for (int i = 0; i < AddOrReviseTemplateDatas.NotActiveTemplateNames.Count; i++)
+        //        {
+        //            AddOrReviseTemplateDatas.NotActiveTemplates.RemoveAt(i);
+        //        }
+        //        AddOrReviseTemplateDatas.NotActiveTemplates.Clear();
+        //        AddOrReviseTemplateDatas.NotActiveTemplateNames.Clear();
+        //    }
+        //}
 
         /// <summary>
         /// 系统运行模式切换
@@ -1665,229 +1861,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-        /// <summary>
-        /// 外部连接线程
-        /// </summary>
-        private void ExternalConnectionThread()
-        {
-            ExternalConnectionThreadControl = true;
-            Task.Run(() =>
-            {
-                while (ExternalConnectionThreadControl)
-                {
-                    if (PlcCilent != null && !PlcCilent.Connected)
-                    {
-                        //连接PLC
-                        int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
-                        if (result == 0 && PlcCilent.Connected)
-                        {
-                            if (PlcStatus != "1")
-                                PlcStatus = "1";
-                            HeartbeatThread();
-                            PlcDataInteractionThread();
-                        }
-                        else
-                        {
-                            if (PlcDataInteractionControl)
-                                PlcDataInteractionControl = false;
-                            if (HeartbeatThreadControl)
-                                HeartbeatThreadControl = false;
-                            PlcCilent.Disconnect();
-                            if (PlcStatus != "0") PlcStatus = "0";
-                        }
-                    }
 
-                    //if (CameraHandle == null || CameraHandle.Length == 0)
-                    //{
-                    //    try
-                    //    {
-                    //        //连接相机
-                    //        HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive", -1, "default", -1, "false", "default", CameraIdentifier, 0, -1, out CameraHandle);
-                    //        HOperatorSet.GrabImageStart(CameraHandle, -1);
-                    //        HOperatorSet.SetFramegrabberParam(CameraHandle, "TriggerMode", "Off");
-                    //        if (CameraStatus != "1") CameraStatus = "1";
-                    //    }
-                    //    catch
-                    //    {
-                    //        if (CameraStatus != "0")
-                    //        {
-                    //            CameraStatus = "0";
-                    //        }
-                    //    }
-                    //}
-
-                    if (PlcStatus == "1" && CameraStatus == "1")
-                        ExternalConnectionThreadControl = false;
-                }
-            });
-        }
-
-        /// <summary>
-        /// PLC数据交互线程
-        /// </summary>
-        private void PlcDataInteractionThread()
-        {
-            readPLCSignals[0].Name = "1检1";
-            readPLCSignals[0].Index = 0;
-            readPLCSignals[1].Name = "1检2A";
-            readPLCSignals[1].Index = 1;
-            readPLCSignals[2].Name = "1检2B";
-            readPLCSignals[2].Index = 2;
-            readPLCSignals[3].Name = "1检3";
-            readPLCSignals[3].Index = 3;
-            readPLCSignals[4].Name = "2检1";
-            readPLCSignals[4].Index = 4;
-            PlcDataInteractionControl = true;
-            Task.Run(async () =>
-            {
-                while (PlcDataInteractionControl)
-                {
-                    if (PlcCilent != null && PlcCilent.Connected)
-                    {
-                        //读PLC给视觉的数据
-                        //                               0         1290
-                        ReadBuffer = new byte[ReadLenght - ReadStartAddress];
-                        int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
-                        if (bytes_read == 0) // 成功读取
-                        {
-                            //轮毂到位允许拍照信号
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                bool b = S7.GetBitAt(ReadBuffer, 108, i);
-                                readPLCSignals[i].ArrivalSignal = b;
-                                if (b)
-                                {
-                                    S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
-                                    //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取成功。143.{i}");
-                                    EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}",true,true);
-                                    new Thread((obj) =>
-                                    {
-                                        int threadI = (int)obj;  // 将 object 类型转为 int
-                                        Thread.Sleep(500);
-                                        S7.SetBitAt(ref WriteBuffer, 143, threadI, false); //复位读取成功
-                                        //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{143}.{threadI}读取拍照成功");
-                                        EventMessage.MessageDisplay($"复位{143}.{threadI}读取拍照成功", true,true);
-
-                                    }).Start(i);
-                                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                }
-                            }
-
-                            //轮型编码 =  分秒 + 轮型  用于看板显示
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                readPLCSignals[i].WheelCoding = GetBytesToString(ReadBuffer, 2 + i * 16).Trim();
-                            }
-                            //缺陷
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                readPLCSignals[i].WheelDefect = BitConverter.ToInt16(new byte[] { ReadBuffer[99 + i * 2], ReadBuffer[98 + i * 2] }, 0);
-                            }
-
-                            //轮毂回流/下转 
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                readPLCSignals[i].BackFlowOrDown = S7.GetBitAt(ReadBuffer, 192, i);
-                            }
-
-                            //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                readPLCSignals[i].Prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
-                            }
-
-                            //数据修正信号
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                bool b = S7.GetBitAt(ReadBuffer, 193, i);
-                                readPLCSignals[i].DataModification = b;
-                                if (b)
-                                {
-                                    S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
-                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取修正信号成功。144.{i}");
-                                    new Thread((obj) =>
-                                    {
-                                        int threadI = (int)obj;  // 将 object 类型转为 int
-                                        Thread.Sleep(500);
-                                        S7.SetBitAt(ref WriteBuffer, 144, threadI, false); //复位读取成功
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{144}.{threadI}回复读取修正信号成功");
-                                    }).Start(i);
-                                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                }
-                            }
-
-                            //轮毂温度 3条线
-                            readPLCSignals[0].WheelTemperature = S7.GetRealAt(ReadBuffer, 124);
-                            float temperature = S7.GetRealAt(ReadBuffer, 128);
-                            readPLCSignals[1].WheelTemperature = temperature;
-                            readPLCSignals[2].WheelTemperature = temperature;
-                            readPLCSignals[3].WheelTemperature = S7.GetRealAt(ReadBuffer, 132);
-
-
-                            //轮毂高度
-                            for (int i = 0; i < readPLCSignals.Length; i++)
-                            {
-                                readPLCSignals[i].WheelHeight = S7.GetRealAt(ReadBuffer, 136 + i * 4);
-                            }
-
-
-
-                            //读取登录信号
-                            for (int i = 0; i < 5; i++)
-                            {
-                                S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
-                                S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
-                                //Console.WriteLine($"完成信号{i}：{S7.GetBitAt(WriteBuffer, 141, i)}");
-                                bool loginTrigger = S7.GetBitAt(ReadBuffer, 191, i);
-                                string name = GetBytesToString(ReadBuffer, 194 + i * 12).Replace("\0", "");
-                                string password = GetBytesToString(ReadBuffer, 254 + i * 12).Replace("\0", "");
-                                if (loginTrigger)
-                                {
-                                    bool isLogin = LoginCheck(name, password);
-                                    if (isLogin)
-                                        S7.SetBitAt(ref WriteBuffer, 142, i, true);
-
-                                    S7.SetBitAt(ref WriteBuffer, 141, i, true);
-                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")} loginTrigger:{i} : True");
-                                }
-
-                            }
-                        }
-                        else
-                        {
-                            //读取失败
-
-                            Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
-                        }
-
-                        ////发送PLC的数据
-                        //string prefix = DateTime.Now.ToString("ddss");
-                        //string text = prefix + "-" + "08124C05__".Trim('_');
-                        //int maxLength = 16;          // PLC 中定义的最大长度
-                        //                             // 转换字符串为 PLC 格式字节数组
-                        //byte[] buffer = StringToS7Bytes(text, maxLength);
-                        //CopyBytes(buffer, WriteBuffer, 10 + (1 - 1) * 16);
-                        //写给PLC的视觉系统数据
-                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-
-                        //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                        //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
-                    }
-                    else
-                    {
-                        PlcCilent.Disconnect();
-                        if (!ExternalConnectionThreadControl)
-                        {
-                            ExternalConnectionThreadControl = true;
-                            ExternalConnectionThread();
-                        }
-                    }
-
-
-                    await Task.Delay(10);
-                }
-            });
-        }
 
         /// <summary>
         /// 登录校验
@@ -1925,133 +1899,133 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 执行数据更新
         /// </summary>
-        private void PerformDataUpdates()
-        {
-            Task.Run(async () =>
-            {
-                UpdatedDay = DateTime.Now.Day;
-                SqlAccess.SystemDatasWrite("UpdatedDay", UpdatedDay.ToString());
-                try
-                {
-                    #region======模板动态调整======
-                    var sDB = new SqlAccess().SystemDataAccess;
-                    //第1步：读取活跃轮型数据库中的所有轮型，并清空活跃轮型数据库
-                    List<string> activeWheels = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().Select(x => x.WheelType).ToList();
-                    sDB.DbMaintenance.TruncateTable<Sys_bd_activewheeltypedatamodel>();
-                    TodayWheels.Clear();
-                    List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
-                    if (datas.Count > 0)
-                    {
-                        //第2步：获取模板数据库中所有数据，并将所有轮型的未用天数+1
-                        foreach (var data in datas)
-                        {
-                            data.UnusedDays += 1;
-                        }
-                        //第3步：将模板数据中的轮型与活跃数据中的轮型比较，相等则将对应不活跃天数清零
-                        foreach (var wheelType in activeWheels)
-                        {
-                            int index = datas.FindIndex(x => x.WheelType == wheelType);
-                            if (index != -1) 
-                                datas[index].UnusedDays = 0;
-                        }
-                        //第4步：根据设定的不活跃天数调整模板
-                        foreach (var data in datas)
-                        {
-                            if (data.UnusedDays > TemplateAdjustDays)
-                            {
-                                string activePath = ActiveTemplatesPath + @"\" + data.WheelType + ".ncm";//活跃模板路径
-                                string notActivePath = NotActiveTemplatesPath + @"\" + data.WheelType + ".ncm";//不活跃模板路径
-                                if (File.Exists(activePath))
-                                {
-                                    File.Move(activePath, notActivePath);
-                                    int index = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == data.WheelType);
-                                    if (index != -1)
-                                    {
-                                        TemplateDataCollection.NotActiveTemplateNames.Add(TemplateDataCollection.ActiveTemplateNames[index]);
-                                        TemplateDataCollection.NotActiveTemplates.Add(TemplateDataCollection.ActiveTemplates[index]);
-                                        TemplateDataCollection.ActiveTemplateNames.RemoveAt(index);
-                                        TemplateDataCollection.ActiveTemplates.RemoveAt(index);
-                                    }
-                                    EventMessage.MessageDisplay("模板动态调整，移动的模板是：" + data.WheelType, true, true);
-                                }
-                            }
-                        }
-                        //第5步：更新模板数据库，并重新读取所有模板到内存中
-                        sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
-                        sDB.Insertable(datas).ExecuteCommand();
-                        AutoTemplateDataLoadControl = true;
-                        EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Publish("");
-                    }
-                    #endregion
-                }
-                catch (Exception ex)
-                {
-                    EventMessage.MessageDisplay("模板动态调整异常：" + ex.Message, true, true);
-                }
-                try
-                {
-                    #region======删除图像数据======
-                    //获取删除开始的时间
-                    DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
-                    //从开始时间往前删30天
-                    for (int i = 1; i <= 30; i++)
-                    {
-                        DateTime currentTime = startDateTime.AddDays(-i);
-                        string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
-                        if (Directory.Exists(path))
-                        {
-                            Directory.Delete(path, true);
-                            EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
-                        }
-                    }
-                    //删除当月以前的月文件夹
-                    if (DateTime.Now.Day >= SaveImageDays)
-                    {
-                        //从开始时间往前删12个月
-                        for (int i = 1; i < 12; i++)
-                        {
-                            DateTime currentMonth = DateTime.Now.AddMonths(-i);
-                            string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
-                            if (Directory.Exists(path))
-                            {
-                                Directory.Delete(path, true);
-                                await Task.Delay(2000);
-                                EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
-                            }
-                        }
-                    }
-                    #endregion
-                }
-                catch (Exception ex)
-                {
-                    EventMessage.MessageDisplay("自动删除图像异常：" + ex.Message, false, true);
-                }
-                try
-                {
-                    #region======删除识别数据======
-                    DateTime delTime = DateTime.Now.AddDays(-SaveDataMonths * 30);
-                    var pDB = new SqlAccess().SystemDataAccess;
-                    int minIndex = pDB.Queryable<Tbl_productiondatamodel>().Min(x => x.ID);
-                    var startData = pDB.Queryable<Tbl_productiondatamodel>().First(x => x.ID == minIndex);
-                    //如果设定的删除时间大于表内最早保存数据的时间，说明有数据达到删除条件，执行删除
-                    if (startData != null && startData.RecognitionTime < delTime)
-                    {
-                        var ds = pDB.Queryable<Tbl_productiondatamodel>().Where(x => SqlFunc.Between(x.RecognitionTime, startData.RecognitionTime, delTime)).ToList();
-                        foreach (var d in ds)
-                        {
-                            pDB.Deleteable<Tbl_productiondatamodel>().Where(x => x.ID == d.ID).ExecuteCommand();
-                        }
-                        EventMessage.MessageDisplay($"已自动删除{SaveDataMonths}个月之前的识别数据", true, true);
-                    }
-                    #endregion
-                }
-                catch (Exception ex)
-                {
-                    EventMessage.MessageDisplay("自动删除识别数据异常：" + ex.Message, false, true);
-                }
-                DataBeingUpdated = false;
-            });
-        }
+        //private void PerformDataUpdates()
+        //{
+        //    Task.Run(async () =>
+        //    {
+        //        UpdatedDay = DateTime.Now.Day;
+        //        SqlAccess.SystemDatasWrite("UpdatedDay", UpdatedDay.ToString());
+        //        try
+        //        {
+        //            #region======模板动态调整======
+        //            var sDB = new SqlAccess().SystemDataAccess;
+        //            //第1步：读取活跃轮型数据库中的所有轮型，并清空活跃轮型数据库
+        //            List<string> activeWheels = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().Select(x => x.WheelType).ToList();
+        //            sDB.DbMaintenance.TruncateTable<Sys_bd_activewheeltypedatamodel>();
+        //            TodayWheels.Clear();
+        //            List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
+        //            if (datas.Count  > 0)
+        //            {
+        //                //第2步：获取模板数据库中所有数据，并将所有轮型的未用天数+1
+        //                foreach (var data in datas)
+        //                {
+        //                    data.UnusedDays += 1;
+        //                }
+        //                //第3步：将模板数据中的轮型与活跃数据中的轮型比较，相等则将对应不活跃天数清零
+        //                foreach (var wheelType in activeWheels)
+        //                {
+        //                    int index = datas.FindIndex(x => x.WheelType == wheelType);
+        //                    if (index != -1) 
+        //                        datas[index].UnusedDays = 0;
+        //                }
+        //                //第4步：根据设定的不活跃天数调整模板
+        //                foreach (var data in datas)
+        //                {
+        //                    if (data.UnusedDays > TemplateAdjustDays)
+        //                    {
+        //                        string activePath = ActiveTemplatesPath + @"\" + data.WheelType + ".ncm";//活跃模板路径
+        //                        string notActivePath = NotActiveTemplatesPath + @"\" + data.WheelType + ".ncm";//不活跃模板路径
+        //                        if (File.Exists(activePath))
+        //                        {
+        //                            File.Move(activePath, notActivePath);
+        //                            int index = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == data.WheelType);
+        //                            if (index != -1)
+        //                            {
+        //                                TemplateDataCollection.NotActiveTemplateNames.Add(TemplateDataCollection.ActiveTemplateNames[index]);
+        //                                TemplateDataCollection.NotActiveTemplates.Add(TemplateDataCollection.ActiveTemplates[index]);
+        //                                TemplateDataCollection.ActiveTemplateNames.RemoveAt(index);
+        //                                TemplateDataCollection.ActiveTemplates.RemoveAt(index);
+        //                            }
+        //                            EventMessage.MessageDisplay("模板动态调整，移动的模板是：" + data.WheelType, true, true);
+        //                        }
+        //                    }
+        //                }
+        //                //第5步：更新模板数据库，并重新读取所有模板到内存中
+        //                sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
+        //                sDB.Insertable(datas).ExecuteCommand();
+        //                AutoTemplateDataLoadControl = true;
+        //                EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Publish("");
+        //            }
+        //            #endregion
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            EventMessage.MessageDisplay("模板动态调整异常：" + ex.Message, true, true);
+        //        }
+        //        try
+        //        {
+        //            #region======删除图像数据======
+        //            //获取删除开始的时间
+        //            DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
+        //            //从开始时间往前删30天
+        //            for (int i = 1; i <= 30; i++)
+        //            {
+        //                DateTime currentTime = startDateTime.AddDays(-i);
+        //                string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
+        //                if (Directory.Exists(path))
+        //                {
+        //                    Directory.Delete(path, true);
+        //                    EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
+        //                }
+        //            }
+        //            //删除当月以前的月文件夹
+        //            if (DateTime.Now.Day >= SaveImageDays)
+        //            {
+        //                //从开始时间往前删12个月
+        //                for (int i = 1; i < 12; i++)
+        //                {
+        //                    DateTime currentMonth = DateTime.Now.AddMonths(-i);
+        //                    string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
+        //                    if (Directory.Exists(path))
+        //                    {
+        //                        Directory.Delete(path, true);
+        //                        await Task.Delay(2000);
+        //                        EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
+        //                    }
+        //                }
+        //            }
+        //            #endregion
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            EventMessage.MessageDisplay("自动删除图像异常：" + ex.Message, false, true);
+        //        }
+        //        try
+        //        {
+        //            #region======删除识别数据======
+        //            DateTime delTime = DateTime.Now.AddDays(-SaveDataMonths * 30);
+        //            var pDB = new SqlAccess().SystemDataAccess;
+        //            int minIndex = pDB.Queryable<Tbl_productiondatamodel>().Min(x => x.ID);
+        //            var startData = pDB.Queryable<Tbl_productiondatamodel>().First(x => x.ID == minIndex);
+        //            //如果设定的删除时间大于表内最早保存数据的时间，说明有数据达到删除条件，执行删除
+        //            if (startData != null && startData.RecognitionTime < delTime)
+        //            {
+        //                var ds = pDB.Queryable<Tbl_productiondatamodel>().Where(x => SqlFunc.Between(x.RecognitionTime, startData.RecognitionTime, delTime)).ToList();
+        //                foreach (var d in ds)
+        //                {
+        //                    pDB.Deleteable<Tbl_productiondatamodel>().Where(x => x.ID == d.ID).ExecuteCommand();
+        //                }
+        //                EventMessage.MessageDisplay($"已自动删除{SaveDataMonths}个月之前的识别数据", true, true);
+        //            }
+        //            #endregion
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            EventMessage.MessageDisplay("自动删除识别数据异常：" + ex.Message, false, true);
+        //        }
+        //        DataBeingUpdated = false;
+        //    });
+        //}
 
 
         /// <summary>
