@@ -18,10 +18,15 @@
         </Border.Background>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="550"/>
+                <ColumnDefinition Width="6*"/>
+                <ColumnDefinition Width="4*"/>
             </Grid.ColumnDefinitions>
-            <h:HSmartWindowControlWPF HKeepAspectRatio="True" HLineWidth="{Binding LineWidth}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="197*"/>
+                <RowDefinition Height="251*"/>
+                <RowDefinition Height="192*"/>
+            </Grid.RowDefinitions>
+            <h:HSmartWindowControlWPF HKeepAspectRatio="True" HLineWidth="{Binding LineWidth}" Grid.RowSpan="2">
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplateImage}"/>
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayTemplate}"/>
                 <h:HIconicDisplayObjectWPF IconicObject="{Binding DisplayWheelContour}" HColor="magenta"/>
@@ -37,9 +42,9 @@
                 </i:Interaction.Triggers>
             </h:HSmartWindowControlWPF>
             <TextBox Text="{Binding ImageGrayval}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
-                     HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
-            <TextBox Text="{Binding ImageDisName}" Visibility="{Binding ImageDisVisibility}" Style="{StaticResource NewTextBoxStyle}" Height="30" Foreground="Wheat"
-                        HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="10" IsReadOnly="True"/>
+                     HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="16" Margin="0,10,10,0" IsReadOnly="True"/>
+            <TextBox Text="{Binding ImageDisName}" Visibility="{Binding ImageDisVisibility}" Style="{StaticResource NewTextBoxStyle}" Height="25" Foreground="Wheat"
+                        HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="0,10,0,0" IsReadOnly="True"/>
             <Border Width="160" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Visibility="{Binding RecognitionResultDisplay}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -60,7 +65,7 @@
                     <TextBlock Text="{Binding RecognitionConsumptionTime}" Grid.Row="2" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
                     <TextBlock Text="识别方式:" Grid.Row="3" FontSize="16" Foreground="Wheat" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding RecognitionWay}" Grid.Row="3" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
-                    </Grid>
+                </Grid>
             </Border>
             <Border Width="160" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="3,100,0,0" Visibility="{Binding GrayDisplay}" >
                 <Grid>
@@ -75,7 +80,7 @@
                     <TextBlock Text="{Binding InnerCircleGary}" Grid.Row="4" Grid.Column="1" FontSize="16" Foreground="Wheat" VerticalAlignment="Center"/>
 
                 </Grid>
-                
+
             </Border>
             <Border Width="160" Height="70" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,120,0,0" Visibility="{Binding GateDetectionVisibility}">
                 <Grid>
@@ -97,11 +102,11 @@
 
                 </Grid>
             </Border>
-            <GridSplitter HorizontalAlignment="Right" Width="2" Background="Transparent" Cursor="SizeWE"/>
-            <Grid Grid.Column="1">
+            <GridSplitter HorizontalAlignment="Left" Width="2" Background="Transparent" Cursor="SizeWE" Margin="766,0,0,0" Grid.RowSpan="2"/>
+            <Grid Grid.Column="1" Grid.RowSpan="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition Height="220"/>
+                    <RowDefinition />
+                    <RowDefinition Height="180"/>
                 </Grid.RowDefinitions>
                 <GroupBox  Header="模板数据" Margin="2" Style="{StaticResource NewGroupBoxStyle}">
                     <DataGrid x:Name="TemplateDataGrid"  Margin="2,25,2,0" ItemsSource="{Binding TemplateDatas, Mode=TwoWay}" Background="Transparent" BorderThickness="0"  
@@ -138,31 +143,105 @@
                             <RowDefinition/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Button Grid.Row="0" Grid.Column="0" Content="添加模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="0" Grid.Column="0" Content="添加模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="添加模板"/>
-                        <Button Grid.Row="0" Grid.Column="1" Content="读取图片" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="0" Grid.Column="1" Content="读取图片" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="读取图片"/>
-                        <Button Grid.Row="0" Grid.Column="2" Content="显示模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="0" Grid.Column="2" Content="显示模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="显示模板"/>
-                        <Button Grid.Row="1" Grid.Column="1" Content="定位轮毂" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="1" Grid.Column="1" Content="定位轮毂" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="定位轮毂"/>
-                        <Button Grid.Row="1" Grid.Column="2" Content="删除模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="1" Grid.Column="2" Content="删除模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="删除模板"/>
-                        <Button Grid.Row="2" Grid.Column="0" Content="参数设置" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="2" Grid.Column="0" Content="参数设置" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="参数设置"/>
-                        <Button Grid.Row="2" Grid.Column="1" Content="预览模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="2" Grid.Column="1" Content="预览模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="预览模板"/>
-                        <Button Grid.Row="2" Grid.Column="2" Content="匹配结果" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="2" Grid.Column="2" Content="匹配结果" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="匹配结果"/>
-                        <Button Grid.Row="3" Grid.Column="0" Content="识别测试" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="3" Grid.Column="0" Content="识别测试" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="识别测试"/>
-                        <Button Grid.Row="3" Grid.Column="1" Content="保存模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="3" Grid.Column="1" Content="保存模板" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="保存模板"/>
-                        <Button Grid.Row="3" Grid.Column="2" Content="模板检查" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="20" 
+                        <Button Grid.Row="3" Grid.Column="2" Content="模板检查" Style="{StaticResource NormalButtonStyle}" Margin="3" FontSize="18" 
                                 Command="{Binding TemplateBtnCommand}" CommandParameter="模板检查"/>
                     </Grid>
                 </GroupBox>
             </Grid>
+            <GroupBox  Grid.Column="0" Grid.Row="2"  Style="{StaticResource NewGroupBoxStyle}" Header="待补录轮毂" >
+                <Grid Margin="2,28,2,2">
+                    <TextBlock Text="(双击查看未补录轮毂信息)" FontSize="9"  Foreground="#AAA" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,-18,0,0"/>
+                    <DataGrid ItemsSource="{Binding UnrecognizedDatas}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
+                        FontSize="14" FontWeight="Bold" Foreground="#333" CanUserAddRows="False" AutoGenerateColumns="False" 
+                        SelectedItem="{Binding UnrDataGridSelectedItem, Mode=TwoWay}" SelectedIndex="{Binding UnrDataGridSelectedIndex, Mode=TwoWay}" 
+                        Grid.ColumnSpan="2">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂高度" Binding="{Binding WheelHeight}" Width="0.4*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="识别时间" Binding="{Binding RecognitionTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                        </DataGrid.Columns>
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseLeftButtonDown">
+                                <p:InvokeCommandAction Command="{Binding UnrMouseLeftButtonDownCommand}"
+                                CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </DataGrid>
+                </Grid>
+            </GroupBox>
+            <GroupBox Grid.Column="1"  Grid.Row="2" Header="补录信息区" Style="{StaticResource NewGroupBoxStyle}">
+                <Grid Margin="1,28,1,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.8*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="0.8*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="0.8*"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel  Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="5,0,0,2">
+                        <TextBlock Text="ID号" FontSize="14" VerticalAlignment="Bottom" />
+                    </StackPanel>
+                    <TextBox Grid.Row="1" Text="{Binding UnrIndex}" Style="{StaticResource NewTextBoxStyle}" FontSize="12" Height="22" Width="120" 
+                        HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,4,0,0" />
+                    <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+
+                    <StackPanel  Grid.Row="2" Orientation="Horizontal"  Margin="5,0,0,2">
+                        <TextBlock Text="轮毂型号" FontSize="14" VerticalAlignment="Bottom" />
+                        <TextBlock Text="临时轮毂型号->正确轮毂型号(可从左边轮毂列表中选择)" FontSize="10" VerticalAlignment="Bottom"  Foreground="#AAA" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <Border Grid.Row="2" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+
+                    <StackPanel  Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Margin="5,4,0,0">
+                        <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding UnrWheelType}" Style="{StaticResource NewTextBoxStyle}" FontSize="12" Height="22" Width="220"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" />
+                        <TextBlock Text="->" FontSize="12"  Foreground="#AAA" Margin="5,5,5,0"/>
+                        <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding RecWheelType , UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource NewTextBoxStyle}" FontSize="12" Height="22" Width="220"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" />
+                    </StackPanel>
+                    <StackPanel  Orientation="Horizontal" Grid.Row="4" Grid.Column="0" Margin="5,0,0,2">
+                        <TextBlock Text="轮毂样式" FontSize="14" VerticalAlignment="Bottom" />
+                        <TextBlock Text="(可从左边轮毂列表中选择)" FontSize="10" VerticalAlignment="Bottom"  Foreground="#AAA" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <Border Grid.Row="4" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+                    <StackPanel  Orientation="Horizontal" Grid.Row="5" Grid.Column="0" Margin="5,4,0,0">
+                        
+                        <ComboBox Grid.Row="5" Grid.Column="0" Style="{StaticResource ValueValidationComboBoxStyle}" FontSize="12" Height="22" Width="120" 
+                            Text="{Binding RecWheelStyle}"  Name="cmb" IsEditable="False"   HorizontalContentAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Left"></ComboBox>
+
+                        <Button Content="确认修改"  Width="100" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding HubChangesCommand}" Margin="80,2,0,0"/>
+                        <Button Content="一键添加模板"  Width="120" Height="24" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{StaticResource NormalButtonStyle}"
+                            Command="{Binding OneClickAddCommand}" Margin="30,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
         </Grid>
     </Border>
 </UserControl>

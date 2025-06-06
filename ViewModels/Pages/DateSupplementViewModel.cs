@@ -148,6 +148,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public ICommand HubChangesCommand { get; set; }
 
 
+
+
         #endregion
 
         #region  图像显示
@@ -172,6 +174,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             UnrMouseLeftButtonDownCommand = new DelegateCommand<object>(UnrMouseLeftButtonDown);
             TemMouseLeftButtonDownCommand = new DelegateCommand<object>(TemMouseLeftButtonDown);
             HubChangesCommand = new DelegateCommand(HubChanges);
+           
             _regionManager = regionManager;
             UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>();
             TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
@@ -181,6 +184,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
             _dispatcherTimer.Start();//启动定时器
         }
+
+        
 
 
         /// <summary>
@@ -262,6 +267,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             CurrentImage = null;
            
         }
+
+        
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {

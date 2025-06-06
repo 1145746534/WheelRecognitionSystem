@@ -46,7 +46,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         public string Id
         {
             get { return _id; }
-            set {SetProperty(ref _id, value); }
+            set { SetProperty(ref _id, value); }
         }
 
         private string _wheelType;
@@ -56,7 +56,18 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         public string WheelType
         {
             get { return _wheelType; }
-            set { SetProperty(ref _wheelType, value); }
+            set
+            {
+                // 过滤非法字符并转换为大写
+                var filteredValue = new string(value?
+                    .Where(c => char.IsUpper(c) || char.IsLower(c) || char.IsDigit(c) || c == '_')
+                    .ToArray());
+                filteredValue = filteredValue.ToUpper();
+                if (SetProperty(ref _wheelType, filteredValue))
+                {
+                    // 属性更改逻辑
+                }
+            }
         }
 
         private string _wheelHeight;
@@ -106,7 +117,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         /// </summary>
         private void Ok()
         {
-            if(WheelType == null)
+            if (WheelType == null)
             {
                 RequestClose?.Invoke(new DialogResult());
                 return;
@@ -116,9 +127,9 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 EventMessage.SystemMessageDisplay("轮型长度小于8个字符，请重新输入！", MessageType.Error);
                 return;
             }
-            //只允许数字、小写字母和下划线
-            Regex regex = new Regex("[^0-9a-z_]");
-            if(regex.IsMatch(WheelType))
+            //只允许数字、大写字母和下划线
+            Regex regex = new Regex("[^0-9A-Z_]");
+            if (regex.IsMatch(WheelType))
             {
                 EventMessage.SystemMessageDisplay("轮型输入错误，请重新输入！", MessageType.Error);
                 return;
@@ -128,26 +139,25 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 EventMessage.SystemMessageDisplay("轮型高度未输入，请重新输入！", MessageType.Error);
                 return;
             }
-            if (!float.TryParse(WheelHeight,out float height))
+            if (!float.TryParse(WheelHeight, out float height))
             {
                 EventMessage.SystemMessageDisplay("轮型高度错误，请重新输入！", MessageType.Error);
                 return;
             }
-            if (WheelType == null)
+            if (WheelStyle == null)
             {
                 EventMessage.SystemMessageDisplay("轮型样式选择，请重新选择！", MessageType.Error);
                 return;
             }
-            
-            //SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-            //List<sys_bd_Templatedatamodel> datas = sDB.Queryable<sys_bd_Templatedatamodel>().ToList();
-            //int result = datas.FindIndex(x => x.WheelType == WheelType.Trim(' '));
-             var filteredData = TemplateDatas.Where(item => item.WheelType == "1254GM").ToList();
-            if (filteredData!=null && filteredData.Count>0)
+
+            var filteredData = TemplateDatas.Where(item => item.WheelType == WheelType).ToList();
+            if (filteredData != null && filteredData.Count > 0)
             {
                 EventMessage.SystemMessageDisplay("轮型重复，请重新输入！", MessageType.Error);
                 return;
             }
+
+
             sys_bd_Templatedatamodel data = new sys_bd_Templatedatamodel
             {
                 Index = int.Parse(Id),
@@ -157,11 +167,11 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 WheelStyle = WheelStyle,
                 CreationTime = DateTime.Now.ToString("yy-MM-dd"),
                 LastUsedTime = DateTime.Now
-            }; 
+            };
 
             TemplateDatas.Add(data);
             //数据根据轮型还有轮毂样式排序
-            var newDatas = TemplateDatas.OrderBy(x => x.WheelType ).ThenBy(x=>x.WheelStyle).ToList();
+            var newDatas = TemplateDatas.OrderBy(x => x.WheelType).ThenBy(x => x.WheelStyle).ToList();
             //整理Index
             for (int i = 0; i < newDatas.Count; i++)
             {
@@ -172,19 +182,11 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             {
                 TemplateDatas.Add(item);
             }
-            //TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newDatas);
-
-            //修改数据库
-            //sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
-            //sDB.Insertable(newDatas).ExecuteCommand();
-            //获取排序后的新增数据
-            //sys_bd_Templatedatamodel d = newDatas.Find(x => x.WheelType == WheelType
-             //&& x.WheelHeight.ToString() == WheelHeight && x.WheelStyle == WheelStyle);
+           
             //定义弹窗结果
             IDialogResult dialogResult = new DialogResult();
             //将新增数据添加到弹窗结果的Parameters
             dialogResult.Parameters.Add("set", "add_OK");
-            //sDB.Close();
             //关闭弹窗并返回弹窗结果
             RequestClose?.Invoke(dialogResult);
         }
@@ -201,7 +203,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         /// </summary>
         public void OnDialogClosed()
         {
-            
+
         }
         /// <summary>
         /// 弹窗打开时
@@ -212,7 +214,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             if (parameters.ContainsKey("templateDatas"))
             {
                 TemplateDatas = parameters.GetValue<ObservableCollection<sys_bd_Templatedatamodel>>("templateDatas");
-                Id = (TemplateDatas.Count+ 1).ToString();
+                Id = (TemplateDatas.Count + 1).ToString();
             }
             //var sDB = new SqlAccess().SystemDataAccess;
             //var data = sDB.Queryable<sys_bd_Templatedatamodel>().Max(it => it.Index);

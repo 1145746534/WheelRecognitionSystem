@@ -31,6 +31,8 @@ using System.Drawing;
 using MvCameraControl;
 using MySqlX.XDevAPI.Common;
 using System.Collections;
+using System.Windows.Threading;
+using Prism.Regions;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
@@ -341,12 +343,121 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public ICommand HWindowMouseMoveCommand { get; set; }
         #endregion
 
-        public TemplateManagementViewModel(IDialogService dialogService)
+        #region  待补录数据属性
+
+        private ObservableCollection<Tbl_productiondatamodel> _unrecognizedDatas;
+        /// <summary>
+        /// 未识别数据
+        /// </summary>
+        public ObservableCollection<Tbl_productiondatamodel> UnrecognizedDatas
+        {
+            get { return _unrecognizedDatas; }
+            set { SetProperty(ref _unrecognizedDatas, value); }
+        }
+        private int _unrDataGridSelectedIndex;
+        /// <summary>
+        /// 待补录数据窗口选中的行索引
+        /// </summary>
+        public int UnrDataGridSelectedIndex
+        {
+            get { return _unrDataGridSelectedIndex; }
+            set { SetProperty(ref _unrDataGridSelectedIndex, value); }
+        }
+
+        private Tbl_productiondatamodel _unrDataGridSelectedItem;
+        /// <summary>
+        /// 待补录数据窗口选中的行
+        /// </summary>
+        public Tbl_productiondatamodel UnrDataGridSelectedItem
+        {
+            get { return _unrDataGridSelectedItem; }
+            set
+            {
+                SetProperty(ref _unrDataGridSelectedItem, value);
+            }
+        }
+        public ICommand UnrMouseLeftButtonDownCommand { get; set; }
+
+        public DispatcherTimer _dispatcherTimer;
+
+
+        private string _unrIndex;
+
+        public string UnrIndex
+        {
+            get { return _unrIndex; }
+            set { SetProperty(ref _unrIndex, value); }
+        }
+
+        private string _unrWheelType;
+
+        public string UnrWheelType
+        {
+            get { return _unrWheelType; }
+            set { SetProperty(ref _unrWheelType, value); }
+        }
+
+        private string _recWheelType;
+
+        /// <summary>
+        /// 补录模板名称
+        /// </summary>
+        public string RecWheelType
+        {
+            get { return _recWheelType; }
+            set
+            {
+
+                // 过滤非法字符并转换为大写
+                var filteredValue = new string(value?
+                    .Where(c => char.IsUpper(c) || char.IsLower(c) || char.IsDigit(c))
+                    .ToArray());
+                filteredValue = filteredValue.ToUpper();
+                if (SetProperty(ref _recWheelType, filteredValue))
+                {
+                    // 属性更改逻辑
+                }
+
+            }
+        }
+
+        private string _recWheelStyle;
+
+        public string RecWheelStyle
+        {
+            get { return _recWheelStyle; }
+            set { SetProperty(ref _recWheelStyle, value); }
+        }
+
+        private bool _handInput;
+        /// <summary>
+        /// 手动输入轮毂型号
+        /// </summary>
+        public bool HandInput
+        {
+            get { return _handInput; }
+            set { SetProperty(ref _handInput, value); }
+        }
+
+        public ICommand HubChangesCommand { get; set; }
+
+        public ICommand OneClickAddCommand { get; set; }
+
+        private IRegionManager _regionManager;
+
+        #endregion
+
+        public TemplateManagementViewModel(IDialogService dialogService, IRegionManager regionManager)
         {
             _dialogService = dialogService;
+            _regionManager = regionManager;
+            UnrMouseLeftButtonDownCommand = new DelegateCommand<object>(UnrMouseLeftButtonDown);
             TemplateBtnCommand = new DelegateCommand<string>(TemplateButtonCommand);
             MouseLeftButtonDownCommand = new DelegateCommand<object>(MouseLeftButtonDown);
             HWindowMouseMoveCommand = new DelegateCommand<object>(HWindowMouseMove);
+            HubChangesCommand = new DelegateCommand(HubChanges);
+            OneClickAddCommand = new DelegateCommand(OneClickAdd);
+            UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>();
             DisplayTemplateImage = new HObject();
             DisplayTemplate = new HObject();
             DisplayWheelContour = new HObject();
@@ -359,17 +470,172 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             GrayDisplay = Visibility.Collapsed;
             ImageDisVisibility = Visibility.Collapsed;
             //订阅事件
-            EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Subscribe(TemplateDataUpdata);
+            //EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Subscribe(TemplateDataUpdata);
             EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Subscribe(PicUpdate);
+            _dispatcherTimer = new DispatcherTimer();
+            _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
+            _dispatcherTimer.Start();//启动定时器
 
         }
 
+        #region 数据补录
 
-
-        private void TemplateDataUpdata(string obj)
+        /// <summary>
+        /// 单击未识别数据表格
+        /// </summary>
+        /// <param name="obj"></param>
+        private void UnrMouseLeftButtonDown(object obj)
         {
-            //LoadedTemplateDatas();
+            DataGrid dataGrid = (DataGrid)obj;
+            if (dataGrid != null && dataGrid.Items.Count > 0 && dataGrid.CurrentItem != null)
+            {
+                //获取选中的行索引
+                int rowIndex = dataGrid.Items.IndexOf(dataGrid.CurrentItem);
+                //获取选中的列索引
+                int columnIndex = dataGrid.CurrentCell.Column.DisplayIndex;
+
+                UnrDataGridSelectedItem = UnrecognizedDatas[UnrDataGridSelectedIndex];
+                UnrIndex = UnrDataGridSelectedItem.ID.ToString();
+                UnrWheelType = UnrDataGridSelectedItem.WheelType;
+                string path = UnrDataGridSelectedItem.ImagePath;
+                //CurrentImage?.Dispose();
+                if (File.Exists(path))
+                {
+
+                    HObject image = new HObject();
+                    HOperatorSet.ReadImage(out image, path);
+                    SourceTemplateImage.Dispose();
+                    HOperatorSet.CountChannels(image, out HTuple Channels);
+                    if (Channels?.I == 3)
+                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
+                    else
+                        SourceTemplateImage = image;
+
+
+                    TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
+                    ImageDisVisibility = Visibility.Visible;
+                    ImageDisName = "待补录轮毂";
+
+                }
+
+                //var sDB = new SqlAccess().SystemDataAccess;
+                //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
+            }
         }
+
+        /// <summary>
+        /// 确认修改
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void HubChanges()
+        {
+            //图片移出去
+            string source = UnrDataGridSelectedItem.ImagePath;
+            string fileName = Path.GetFileName(source);
+            string target = Path.Combine(DeepImagesPath, RecWheelType, fileName);
+            FileHelper.MoveFile(source, target, true);
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+            var result = pDB.Updateable<Tbl_productiondatamodel>()
+                .SetColumns(it => new Tbl_productiondatamodel()
+                {
+                    Model = RecWheelType,
+                    WheelType = RecWheelType,
+                    WheelStyle = RecWheelStyle
+                }).Where(it => it.ID == Convert.ToInt32(UnrIndex)).ExecuteCommand();
+            DataInquireProduct();
+            RecWheelType = "";
+            RecWheelStyle = "";
+            UnrIndex = "";
+            UnrWheelType = "";
+            HandInput = true;
+
+        }
+
+        /// <summary>
+        /// 一键添加模板
+        /// </summary>
+        private void OneClickAdd()
+        {
+            string wheelType = RecWheelType;
+            for (int i = 0; i < 20; i++)
+            {
+                if (i != 0)
+                    wheelType = wheelType + "_";
+                //查无此模板名称 则添加
+                var filteredData = TemplateDatas.Where(item => item.WheelType == wheelType).ToList();
+                if (filteredData == null || filteredData.Count == 0)
+                {
+                    break;
+                }
+            }
+
+            sys_bd_Templatedatamodel data = new sys_bd_Templatedatamodel
+            {
+                Index = TemplateDatas.Count + 1,
+                WheelType = wheelType,
+                UnusedDays = 0,
+                WheelHeight = UnrDataGridSelectedItem.WheelHeight,
+                WheelStyle = RecWheelStyle,
+                CreationTime = DateTime.Now.ToString("yy-MM-dd"),
+                LastUsedTime = DateTime.Now
+            };
+
+            TemplateDatas.Add(data);
+
+            OrganizeTemplateDatas();
+
+            //光标定位到添加的模板名称
+            int selectIndex = TemplateDatas.FirstOrDefault(item => item.WheelType == wheelType).Index -1 ;
+            DataGridSelectedItem = TemplateDatas[selectIndex];
+            DataGridSelectedIndex = selectIndex;
+            
+            EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Publish(DataGridSelectedItem);
+
+            //定位轮毂
+            PositionHub();
+            //制作模板
+            PreviewTemplate();
+            //保存模板
+
+
+        }
+
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            IRegion region = _regionManager.Regions["ViewRegion"];
+
+            if (region.ActiveViews.Count() > 0)
+            {
+                // activeView 就是当前焦点页面（视图）
+                string activeViewName = region.ActiveViews.First().ToString();
+                if (activeViewName.Contains("TemplateManagementView"))
+                {
+                    DataInquireProduct();
+                    //DataInquireTemplate();
+                }
+            }
+        }
+        /// <summary>
+        /// 数据查询未识别的产品
+        /// </summary>
+        private void DataInquireProduct()
+        {
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+            var exp = Expressionable.Create<Tbl_productiondatamodel>()
+                .And(it => it.Model == "error").Or(it => it.Model == null).ToExpression();
+            List<Tbl_productiondatamodel> productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(exp).ToList();
+            //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
+            //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();
+            if (productionList.Count != UnrecognizedDatas.Count)
+            {
+                UnrecognizedDatas?.Clear();
+                UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// 设置转过来图片更新
         /// </summary>
@@ -393,6 +659,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
+        #region  模板窗口灰度显示
         /// <summary>
         /// 模板窗口鼠标移动
         /// </summary>
@@ -435,7 +702,43 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
-        #region 加载 增加 删除 插入 修改 模板参数 显示
+        /// <summary>
+        /// 模板窗口显示
+        /// </summary>
+        /// <param name="templateImage">模板图像</param>
+        /// <param name="templateContour">模板轮廓</param>
+        /// <param name="inGateContour">浇口轮廓</param>
+        private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
+        {
+            DisplayTemplateImage.Dispose();
+            DisplayTemplate.Dispose();
+            DisplayWheelContour.Dispose();
+            DisplayTemplateContour.Dispose();
+            DisplayInGateContour.Dispose();
+            if (sourceImage != null)
+                DisplayTemplateImage = sourceImage.Clone();
+            if (templateImage != null)
+                DisplayTemplate = templateImage.Clone();
+            if (wheelContour != null)
+            {
+                LineWidth = 4.0;
+                DisplayWheelContour = wheelContour.Clone();
+            }
+            if (templateContour != null)
+            {
+                LineWidth = 3.0;
+                DisplayTemplateContour = templateContour.Clone();
+            }
+            if (gateContour != null)
+            {
+                LineWidth = 3.0;
+                DisplayInGateContour = gateContour.Clone();
+            }
+        }
+
+        #endregion
+
+        #region 加载 增加 删除 插入 修改 查找 模板参数 显示 整理数据
         /// <summary>
         /// 加载模板数据
         /// </summary>
@@ -450,54 +753,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     string path = Datas[i].TemplatePath;
                     string name = Datas[i].WheelType;
-                    AddFileModel(path, name);
+                    DateTime dateTime = Datas[i].LastUsedTime;
+                    AddFileModel(path, name, dateTime);
                 }
                 Console.WriteLine($"模板加载完成");
             });
-
-
-
-            //var itemsToUpdate = Datas
-            //    .Where(item => item.TemplatePicturePath == null)
-            //    .ToList();
-
-            //foreach (var item in itemsToUpdate)
-            //{
-            //    string strPath = TemplateImagesPath.Replace(@"\", "/") + @"/" + item.WheelType + ".tif";
-
-            //    item.TemplatePicturePath = strPath;
-            //    UpdataTemplateData(item);
-            //}
-            //            var itemsToUpdate = Datas
-            //.Where(item => item.LastUsedTime == null)
-            //.ToList();
-
-            //            foreach (var item in itemsToUpdate)
-            //            {
-            //                item.LastUsedTime = item.CreationTime;
-            //            }
-            //获取指定路径下所有文件
-            //string[] activeFiles = Directory.GetFiles(ActiveTemplatesPath);
-            //foreach (string file in activeFiles)
-            //{
-            //    int index = file.LastIndexOf(@"\") + 1;
-            //    string str = file.Substring(index, file.Length - index);//截取路径后的字符串
-
-            //    string wheelType = str.Trim('.', 'n', 'c', 'm');//修剪掉其中的.ncm
-            //                                                    // 查询并修改
-            //    var items = Datas
-            //        .Where(item => item.WheelType == wheelType)
-            //        .ToList();
-            //    foreach (var item in items)
-            //    {
-            //        item.TemplatePath = file;
-            //        UpdataTemplateData(item);
-            //    }
-
-            //}
-
-            //string[] notActiveFiles = Directory.GetFiles(NotActiveTemplatesPath);           
-
         }
 
         /// <summary>
@@ -512,8 +772,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == type);
                 if (templatedata != null)
                 {
-                    if (templatedata.LastUsedTime == null) //第一次使用获取默认使用时间
-                        templatedata.LastUsedTime = item.LastUsedTime;
+
                     TimeSpan timeSpan = DateTime.Now - templatedata.LastUsedTime;
                     item.UnusedDays = timeSpan.Days;
                     if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围               
@@ -565,7 +824,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         /// <param name="path"></param>
         /// <param name="name"></param>
-        private void AddFileModel(string path, string name)
+        private void AddFileModel(string path, string name, DateTime dateTime)
         {
             try
             {
@@ -579,6 +838,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     TemplatedataModels model = new TemplatedataModels();
                     model.Template = modelID;
                     model.TemplateName = name;
+                    model.LastUsedTime = dateTime;
                     Models.Add(model);
 
                 }
@@ -656,6 +916,26 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             db.Updateable(newModel).ExecuteCommand();
             db.Close();
         }
+
+        /// <summary>
+        /// 查找指定 WheelType 的第一条记录
+        /// </summary>
+        /// <param name="targetType">要查找的 WheelType</param>
+        /// <returns>找到的 Templatedata，未找到时返回null</returns>
+        public sys_bd_Templatedatamodel GetTemplatedataForType(string targetType)
+        {
+            sys_bd_Templatedatamodel foundItem = new SqlAccess().SystemDataAccess
+                .Queryable<sys_bd_Templatedatamodel>()
+                .Where(w => w.WheelType == targetType).First();
+            // 检查是否找到
+            if (foundItem != null)
+            {
+                return foundItem;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// 显示
         /// </summary>
@@ -669,32 +949,28 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(Datas);
             }));
         }
-        #endregion
-
-
 
         /// <summary>
-        /// 打开修改模板参数界面
+        /// 整理TemplateDatas数据
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MenuItem_Click(object sender, RoutedEventArgs e)
+        private void OrganizeTemplateDatas()
         {
-            var parameters = new DialogParameters
-            {
-                { "para", DataGridSelectedItem }
-            };
-            _dialogService.ShowDialog("TemplateDataEdit", parameters, result =>
-            {
-                // 处理结果
-                if (result.Parameters.Count != 0 && result.Parameters.ContainsKey("Result"))
-                {
+            //内部数据重新整理
 
-                    DataGridSelectedItem = result.Parameters.GetValue<sys_bd_Templatedatamodel>("Result");
-                    UpdataTemplateData(DataGridSelectedItem);
-                }
-            });
+            //数据根据轮型还有轮毂样式排序
+            var datas = TemplateDatas.OrderBy(x => x.WheelType).ThenBy(x => x.WheelStyle).ToList();
+            for (int i = 0; i < datas.Count; i++)
+            {
+                datas[i].Index = i + 1;
+            }
+            //更新窗口显示
+            TemplateDatas.Clear();
+            TemplateDatas.AddRange(datas);
+            //修改数据库
+            InsertTemplateDatas(datas);
         }
+
+        #endregion
 
         #region   操作模板
         /// <summary>
@@ -714,7 +990,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             else if (obj == "匹配结果") MatchResult();
             else if (obj == "识别测试") RecognitionTest();
             else if (obj == "保存模板") SaveTemplate();
-            else if (obj == "模板检查") TemplateExamine();
+            //else if (obj == "模板检查") TemplateExamine();
             else return;
         }
 
@@ -783,7 +1059,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     }
                     else
                         SourceTemplateImage = image;
-
+                    ImageDisVisibility = Visibility.Visible;
+                    ImageDisName = "手动读取图片";
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
                 }
                 catch (Exception ex)
@@ -914,7 +1191,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
                 //不活跃模板保存路径
                 //string nPath = NotActiveTemplatesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".ncm";
-               
+
                 //查找当前轮型名的索引
                 //int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
                 //int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
@@ -1022,25 +1299,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (File.Exists(DataGridSelectedItem.TemplatePath))
                     File.Delete(DataGridSelectedItem.TemplatePath);
 
-                //查找当前删除轮型的索引
-                int dIndex = DelTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
-                if (dIndex < 1)
-                    DelTemplateNames.Add(DataGridSelectedItem.WheelType);
-
-
                 int deleteIndex = DataGridSelectedItem.Index - 1; //被删除项
                 string wheelType = DataGridSelectedItem.WheelType;
+
                 DeleteModel(DataGridSelectedItem.TemplatePath, wheelType);
                 TemplateDatas.RemoveAt(deleteIndex);
-                //内部数据重新整理
-                var datas = TemplateDatas.ToList();
-                for (int i = 0; i < datas.Count; i++)
-                {
-                    datas[i].Index = i + 1;
-                }
-                //更新窗口显示
-                TemplateDatas.Clear();
-                TemplateDatas.AddRange(datas);
+
+                OrganizeTemplateDatas();
+
+
                 //光标显示
                 if (TemplateDatas.Count - 1 >= deleteIndex)
                 {
@@ -1059,8 +1326,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     DataGridSelectedItem = null;
                     DataGridSelectedIndex = -1;
                 }
-                //修改数据库
-                InsertTemplateDatas(datas);
+                
 
                 //var sDB = new SqlAccess().SystemDataAccess;
                 //sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
@@ -1136,6 +1402,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("请先选择轮型!", MessageType.Warning);
                 return;
             }
+            ImageDisVisibility = Visibility.Hidden;
+            //ImageDisName = "模板";
             string strPath = TemplateImagesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".tif";
             strPath = DataGridSelectedItem.TemplatePicturePath;
             if (File.Exists(strPath))
@@ -1182,7 +1450,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
                 return;
             }
-            RecognitionWay = "传统视觉";
+            RecognitionWay = " 传统视觉";
 
             DateTime startTime = DateTime.Now;
             //定位轮毂
@@ -1218,12 +1486,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     UpdateLastUsedTime(model.RecognitionWheelType);
                 }
+
             }
             else
             {
                 RecognitionWheelType = "NG";
                 RecognitionSimilarity = "0";
-                RecognitionWay = "大模型";
+                RecognitionWay = " 大模型";
                 //大模型推算
                 HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
@@ -1254,7 +1523,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             for (int i = 0; i < list.Count; i++)
             {
                 //最后识别时间更新
-
                 MatchResultModel data = new MatchResultModel
                 {
                     Index = i + 1,
@@ -1265,9 +1533,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 };
                 matchResultModels.Add(data);
             }
-
             EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Publish(matchResultModels);
 
+            if (recognitionResult.RecognitionWheelType != "NG" && ImageDisName == "待补录轮毂")
+            {
+                string type = recognitionResult.RecognitionWheelType;
+
+                sys_bd_Templatedatamodel data = GetTemplatedataForType(type);
+                RecWheelType = data.WheelType.Replace("_", "");
+                RecWheelStyle = data.WheelStyle;
+                HandInput = true;
+            }
 
             TimeSpan consumeTime = endTime.Subtract(startTime);
             RecognitionConsumptionTime = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms"; ;
@@ -1370,41 +1646,33 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
+        /// <summary>
+        /// 打开修改模板参数界面
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var parameters = new DialogParameters
+            {
+                { "para", DataGridSelectedItem }
+            };
+            _dialogService.ShowDialog("TemplateDataEdit", parameters, result =>
+            {
+                // 处理结果
+                if (result.Parameters.Count != 0 && result.Parameters.ContainsKey("Result"))
+                {
+
+                    DataGridSelectedItem = result.Parameters.GetValue<sys_bd_Templatedatamodel>("Result");
+                    UpdataTemplateData(DataGridSelectedItem);
+                }
+            });
+        }
+
+
         #endregion
 
-        /// <summary>
-        /// 模板窗口显示
-        /// </summary>
-        /// <param name="templateImage">模板图像</param>
-        /// <param name="templateContour">模板轮廓</param>
-        /// <param name="inGateContour">浇口轮廓</param>
-        private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
-        {
-            DisplayTemplateImage.Dispose();
-            DisplayTemplate.Dispose();
-            DisplayWheelContour.Dispose();
-            DisplayTemplateContour.Dispose();
-            DisplayInGateContour.Dispose();
-            if (sourceImage != null)
-                DisplayTemplateImage = sourceImage.Clone();
-            if (templateImage != null)
-                DisplayTemplate = templateImage.Clone();
-            if (wheelContour != null)
-            {
-                LineWidth = 4.0;
-                DisplayWheelContour = wheelContour.Clone();
-            }
-            if (templateContour != null)
-            {
-                LineWidth = 3.0;
-                DisplayTemplateContour = templateContour.Clone();
-            }
-            if (gateContour != null)
-            {
-                LineWidth = 3.0;
-                DisplayInGateContour = gateContour.Clone();
-            }
-        }
+        
     }
 }
 

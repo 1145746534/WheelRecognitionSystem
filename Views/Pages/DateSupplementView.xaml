@@ -83,7 +83,7 @@
                 </Grid>
             </GroupBox>
             <GridSplitter Grid.Row="0" Grid.Column="1" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center" 
-    ShowsPreview="False"></GridSplitter>
+                    ShowsPreview="False"></GridSplitter>
             <GroupBox Grid.Column="2"  Header="补录信息区" Style="{StaticResource NewGroupBoxStyle}">
                 <Grid Margin="1,28,1,1">
                     <Grid.RowDefinitions>

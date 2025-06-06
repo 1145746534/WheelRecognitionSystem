@@ -34,6 +34,13 @@ namespace WheelRecognitionSystem.Views.Pages
             InitializeComponent();
             //订阅模板数据编辑的消息
             EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Subscribe(Edit);
+            Loaded += TemplateManagementView_Loaded;
+
+        }
+
+        private void TemplateManagementView_Loaded(object sender, RoutedEventArgs e)
+        {
+            cmb.ItemsSource = new List<string>() { "精车", "涂装" };
         }
 
         //将模板数据窗口的显示滚动到model项

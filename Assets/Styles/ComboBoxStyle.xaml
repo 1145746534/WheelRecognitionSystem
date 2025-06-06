@@ -41,7 +41,7 @@
                             <ControlTemplate  TargetType="{x:Type ComboBoxItem}">
                                 <Grid Height="{TemplateBinding Height}" Width="{TemplateBinding Width}">
                                     <Border x:Name="_borderbg" Background="Transparent"/>
-                                    <TextBlock Margin="3 0 3 0" VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="_txt" Foreground="#333" Text="{Binding Content,RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    <TextBlock Margin="3 0 3 0" VerticalAlignment="Center" HorizontalAlignment="Left" x:Name="_txt" Foreground="#333" Text="{Binding Content,RelativeSource={RelativeSource TemplatedParent}}"/>
                                     <Border x:Name="_border" Background="White" Opacity="0"/>
                                 </Grid>
                                 <ControlTemplate.Triggers>
@@ -103,5 +103,5 @@
         </Setter>
     </Style>
 
-   
+
 </ResourceDictionary>
