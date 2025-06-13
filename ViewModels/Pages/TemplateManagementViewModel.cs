@@ -597,7 +597,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //制作模板
             PreviewTemplate();
             //保存模板
-
+            SaveTemplate();
 
         }
 
@@ -685,6 +685,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void MouseLeftButtonDown(object obj)
         {
+            RecognitionResultDisplay = Visibility.Collapsed;
+            GrayDisplay = Visibility.Collapsed;
+            ImageDisVisibility = Visibility.Collapsed;
             DataGrid dataGrid = (DataGrid)obj;
             if (dataGrid != null && dataGrid.Items.Count > 0 && dataGrid.CurrentItem != null)
             {
