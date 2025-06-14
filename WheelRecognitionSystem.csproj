@@ -223,6 +223,7 @@
     </Compile>
     <Compile Include="DataAccess\ExcelDataAccess.cs" />
     <Compile Include="DataAccess\SqlAccess.cs" />
+    <Compile Include="Models\ExportDataModel.cs" />
     <Compile Include="Models\IModels\IMyCamera.cs" />
     <Compile Include="Models\MyCameraHK_SDK.cs" />
     <Compile Include="Models\tbl_defect_code.cs" />

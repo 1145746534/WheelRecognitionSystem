@@ -1152,7 +1152,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         S7.SetBitAt(ref WriteBuffer, 142, i, true);
 
                                     S7.SetBitAt(ref WriteBuffer, 141, i, true);
-                                    Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")} loginTrigger:{i} : True");
+                                    Console.WriteLine($"{DateTime.Now.ToString("yyyyMMdd HH:mm:ss:fff")}-loginIndex:{i},ID:{name},pass:{password},Result: {isLogin}");
                                 }
 
                             }
@@ -1301,7 +1301,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
-            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：地址：0.{model.Index - 1}", true, true);
+            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
             new Thread((obj) =>
             {
                 int threadI = (int)obj;  // 将 object 类型转为 int

@@ -1538,7 +1538,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Publish(matchResultModels);
 
-            if (recognitionResult.RecognitionWheelType != "NG" && ImageDisName == "待补录轮毂")
+            if (recognitionResult.RecognitionWheelType != "NG" && ImageDisName == "待补录轮毂"
+                && RecognitionWay != " 大模型")
             {
                 string type = recognitionResult.RecognitionWheelType;
 
