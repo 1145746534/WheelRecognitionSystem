@@ -78,6 +78,11 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true, Length = 20)]
         public string Station { get; set; }
+        /// <summary>
+        /// 下一站（回流/下转/不合格）
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true, Length = 20)]
+        public string NextStation{ get; set; }
 
         /// <summary>
         /// 检查结果

@@ -49,17 +49,7 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _wheelCoding, value); }
         }
 
-
-        private bool _backFlowOrDown;
-
-        /// <summary>
-        /// 轮毂回流或下转 true/false
-        /// </summary>
-        public bool BackFlowOrDown
-        {
-            get { return _backFlowOrDown; }
-            set { SetProperty(ref _backFlowOrDown, value); }
-        }
+        
 
         public bool _arrivalSignal;
         /// <summary>

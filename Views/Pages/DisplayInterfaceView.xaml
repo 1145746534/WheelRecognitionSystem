@@ -85,6 +85,7 @@
                             <TextBlock Text="轮毂到位" Background="{Binding Inplace1, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
+                    <TextBlock Margin="6,4,0,4" Text="{Binding FullGray1}" Foreground="CornflowerBlue"></TextBlock>
                 </StackPanel>
             </Border>
             <h:HSmartWindowControlWPF Grid.Row="1"  HKeepAspectRatio="True" HLineWidth="2">
@@ -154,6 +155,7 @@
                             <TextBlock Text="轮毂到位" Background="{Binding Inplace2, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
+                    <TextBlock Margin="6,4,0,4" Text="{Binding FullGray2}" Foreground="CornflowerBlue"></TextBlock>
                 </StackPanel>
             </Border>
             <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
@@ -223,6 +225,7 @@
                             <TextBlock Text="轮毂到位" Background="{Binding Inplace3, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
+                    <TextBlock Margin="6,4,0,4" Text="{Binding FullGray3}" Foreground="CornflowerBlue"></TextBlock>
                 </StackPanel>
             </Border>
             <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
@@ -292,6 +295,7 @@
                             <TextBlock Text="轮毂到位" Background="{Binding Inplace4, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
+                    <TextBlock Margin="6,4,0,4" Text="{Binding FullGray4}" Foreground="CornflowerBlue"></TextBlock>
                 </StackPanel>
             </Border>
             <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">
@@ -361,6 +365,7 @@
                             <TextBlock Text="轮毂到位" Background="{Binding Inplace5, Converter={StaticResource BtuBackgroundConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
                     </Button>
+                    <TextBlock Margin="6,4,0,4" Text="{Binding FullGray5}" Foreground="CornflowerBlue"></TextBlock>
                 </StackPanel>
             </Border>
             <h:HSmartWindowControlWPF Grid.Row="1" HKeepAspectRatio="True" HLineWidth="2">

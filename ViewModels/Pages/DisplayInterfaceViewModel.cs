@@ -169,6 +169,56 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             set { SetProperty(ref _inplace5, value); }
         }
 
+        private string _fullGray1;
+        /// <summary>
+        /// 图像1平均灰度值
+        /// </summary>
+        public string FullGray1
+        {
+            get { return _fullGray1; }
+            set { SetProperty(ref _fullGray1, value); }
+        }
+
+        private string _fullGray2;
+        /// <summary>
+        /// 图像2平均灰度值
+        /// </summary>
+        public string FullGray2
+        {
+            get { return _fullGray2; }
+            set { SetProperty(ref _fullGray2, value); }
+        }
+
+        private string _fullGray3;
+        /// <summary>
+        /// 图像3平均灰度值
+        /// </summary>
+        public string FullGray3
+        {
+            get { return _fullGray3; }
+            set { SetProperty(ref _fullGray3, value); }
+        }
+
+        private string _fullGray4;
+        /// <summary>
+        /// 图像4平均灰度值
+        /// </summary>
+        public string FullGray4
+        {
+            get { return _fullGray4; }
+            set { SetProperty(ref _fullGray4, value); }
+        }
+
+        private string _fullGray5;
+        /// <summary>
+        /// 图像5平均灰度值
+        /// </summary>
+        public string FullGray5
+        {
+            get { return _fullGray5; }
+            set { SetProperty(ref _fullGray5, value); }
+        }
+
         private HObject _currentImage1;
         /// <summary>
         /// 当前图像1
@@ -546,7 +596,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //大模型推算
                 HTuple hv_DLResult = WheelDeepLearning(image);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
-                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);               
+                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0)
                 {
                     recognitionResult.RecognitionWheelType = names[0].S;
@@ -752,10 +802,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             if (camera != null)
             {
-                //连接相机
-                if (!string.IsNullOrEmpty(newLinkID) && camera.info.LinkID != newLinkID)
+                try
                 {
-                    try
+                    //连接相机
+                    if (!string.IsNullOrEmpty(newLinkID) && camera.info.LinkID != newLinkID)
                     {
                         camera.info.LinkID = newLinkID;
                         camera.Disconnect();
@@ -763,37 +813,37 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         LoadCameraConnStatus();
                         if (isSuc)
                             EventMessage.MessageDisplay("相机连接成功！", true, false);
-                        //设置曝光时间
-                        if (newExposure != 0 && camera.info.Exposure != newExposure)
-                        {
-                            try
-                            {
-                                camera.info.Exposure = newExposure;
-                                camera.SetExposureTime((float)newExposure);
-                                EventMessage.MessageDisplay("曝光设置成功！", true, false);
-                            }
-                            catch (Exception ex) { }
-                        }
+                    }
+
+                    //设置曝光时间
+                    if (camera.IsConnected && newExposure != 0 && camera.info.Exposure != newExposure)
+                    {
+
+                        camera.info.Exposure = newExposure;
+                        camera.SetExposureTime((float)newExposure);
+                        EventMessage.MessageDisplay("曝光设置成功！", true, false);
 
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    finally
-                    {
-                        cameras[index] = camera;
-                        //数据库更新
-                        SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-                        var result = sDB.Updateable<Sys_bd_camerainformation>()
-                        .SetColumns(it => new Sys_bd_camerainformation()
-                        {
-                            Exposure = newExposure,
-                            LinkID = newLinkID
-                        }).Where(it => it.Name == camera.info.Name).ExecuteCommand();
-                        EventMessage.MessageDisplay("参数保存成功！", true, false);
-                    }
+
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("连接相机:" + ex.Message);
+                }
+                finally
+                {
+                    cameras[index] = camera;
+                    //数据库更新
+                    SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
+                    var result = sDB.Updateable<Sys_bd_camerainformation>()
+                    .SetColumns(it => new Sys_bd_camerainformation()
+                    {
+                        Exposure = newExposure,
+                        LinkID = newLinkID
+                    }).Where(it => it.Name == camera.info.Name).ExecuteCommand();
+                    EventMessage.MessageDisplay("参数保存成功！", true, false);
+                }
+
 
 
             }
@@ -863,6 +913,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void ResultDisplay(AutoRecognitionResultDisplayModel model)
         {
+            //计算图像灰度值
+
             if (model.index == 1)
             {
                 CurrentImage1?.Dispose();

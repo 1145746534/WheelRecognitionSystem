@@ -62,15 +62,15 @@ namespace WheelRecognitionSystem.Public
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
-                resultModel.FullFigureGary = (float)(Mean1.D);
-                resultModel.CenterRow = row;
-                resultModel.CenterColumn = column;
-                resultModel.Radius = radius;
+                             
+                resultModel.FullFigureGary = (float)(Mean1.D);                
                 resultModel.WheelImage = null;
                 resultModel.WheelContour = null;
 
                 if (row.Length != 0) //存在轮毂
                 {
+                   
+
                     //确认半径范围
                     if (isConfirmRadius && radius < minRadius)
                     {
@@ -78,6 +78,32 @@ namespace WheelRecognitionSystem.Public
                     }
                     else
                     {
+                        //获取内圆 通过找圆心的方式
+                        HOperatorSet.GetImageSize(image, out HTuple width, out HTuple height);
+                        HOperatorSet.CreateMetrologyModel(out HTuple MetrologyCircleHandle);
+                        HOperatorSet.SetMetrologyModelImageSize(MetrologyCircleHandle, width, height);
+                        HOperatorSet.AddMetrologyObjectCircleMeasure(MetrologyCircleHandle, row, column, radius+10, 160, 3, 1, 30, new HTuple(), new HTuple(), out HTuple CircleIndex);
+                        HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "num_instances", 1);
+                        HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "min_score", 0.1);
+                        HOperatorSet.ApplyMetrologyModel(image, MetrologyCircleHandle);
+
+                        HOperatorSet.GetMetrologyObjectResult(MetrologyCircleHandle, CircleIndex, "all", "result_type", "all_param", out HTuple hv_Parameter);
+                        HOperatorSet.GetMetrologyObjectMeasures(out HObject ho_Contours, MetrologyCircleHandle, CircleIndex, "all", out HTuple hv_Row, out HTuple hv_Column); //工具环
+                        HOperatorSet.GetMetrologyObjectResultContour(out HObject ho_Contour, MetrologyCircleHandle, CircleIndex, "all", 1.5); //环
+                        if (hv_Parameter.Length > 0)
+                        {
+                            row = hv_Parameter.TupleSelect(0);
+                            column = hv_Parameter.TupleSelect(1);
+                            radius = hv_Parameter.TupleSelect(2);
+                        }                                                                                                                     //
+
+                        HOperatorSet.ClearMetrologyModel(MetrologyCircleHandle);
+
+
+                        resultModel.CenterRow = row;
+                        resultModel.CenterColumn = column;
+                        resultModel.Radius = radius;
+
                         HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
                         HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
                         HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
