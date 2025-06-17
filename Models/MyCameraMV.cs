@@ -95,10 +95,11 @@ namespace WheelRecognitionSystem.Models
             try
             {
                 HOperatorSet.SetFramegrabberParam(acqHandle, "ExposureTime", value);
+                Console.WriteLine($"设置曝光时间:{acqHandle}.{value}");
             }
             catch (Exception ex)
             {
-                throw ex;
+                Console.WriteLine( $"设置曝光时间:{ex.ToString()}" );
             }
         }
 
