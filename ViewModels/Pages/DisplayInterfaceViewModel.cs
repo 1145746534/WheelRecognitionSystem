@@ -36,6 +36,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows;
 using Prism.Ioc;
 using WheelRecognitionSystem.ViewModels.Dialogs;
+using static NPOI.HSSF.Util.HSSFColor;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -579,7 +580,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //轮毂识别 传统视觉
             //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             List<RecognitionResultModel> list = new List<RecognitionResultModel>();
-            var someService = _containerProvider.Resolve<TemplateManagementViewModel>();
+            TemplateManagementViewModel someService = _containerProvider.Resolve<TemplateManagementViewModel>();
             List<TemplatedataModels> models = someService.GetCanUseTemplates();
             recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
             HObject templateContour = new HObject();
@@ -594,7 +595,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (recognitionResult.RecognitionWheelType == "NG" && pResult.WheelImage == null)
             {
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(image);
+                //HTuple hv_DLResult = WheelDeepLearning(image);
+                HTuple hv_DLResult = WheelDeepLearning(CurrentImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0)
@@ -913,8 +915,25 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void ResultDisplay(AutoRecognitionResultDisplayModel model)
         {
+            string value = string.Empty;
             //计算图像灰度值
-
+            if (model.CurrentImage != null)
+            {
+                HObject imageM = new HObject();
+                imageM = model.CurrentImage.Clone();
+                HOperatorSet.CountChannels(imageM, out HTuple Channels);
+                if (Channels.I == 3)
+                {
+                    HOperatorSet.Decompose3(imageM, out HObject red, out HObject green, out HObject blue);
+                    imageM = red;
+                }
+                HOperatorSet.Intensity(imageM, imageM, out HTuple Mean1, out HTuple Deviation);
+                if (SystemDatas.CroppingOrNot)
+                {
+                    value = "均:"+(int)Mean1.D;
+                }
+                imageM.Dispose();
+            }
             if (model.index == 1)
             {
                 CurrentImage1?.Dispose();
@@ -926,6 +945,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelContour1 = model.WheelContour;
                 if (model.TemplateContour != null)
                     TemplateContour1 = model.TemplateContour;
+                FullGray1 = value;
             }
             else if (model.index == 2)
             {
@@ -938,6 +958,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelContour2 = model.WheelContour;
                 if (model.TemplateContour != null)
                     TemplateContour2 = model.TemplateContour;
+                FullGray2 = value;
+
             }
             else if (model.index == 3)
             {
@@ -950,6 +972,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelContour3 = model.WheelContour;
                 if (model.TemplateContour != null)
                     TemplateContour3 = model.TemplateContour;
+                FullGray3 = value;
+
             }
             else if (model.index == 4)
             {
@@ -962,6 +986,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelContour4 = model.WheelContour;
                 if (model.TemplateContour != null)
                     TemplateContour4 = model.TemplateContour;
+                FullGray4 = value;
+
             }
             else if (model.index == 5)
             {
@@ -974,6 +1000,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelContour5 = model.WheelContour;
                 if (model.TemplateContour != null)
                     TemplateContour5 = model.TemplateContour;
+                FullGray5 = value;
+
             }
 
         }

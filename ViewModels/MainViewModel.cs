@@ -1299,6 +1299,11 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
+        /// <summary>
+        /// 轮毂到位
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnArrivalSignalTriggered(object sender, EventArgs e)
         {
             try
