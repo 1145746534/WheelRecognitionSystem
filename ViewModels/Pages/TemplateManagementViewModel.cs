@@ -314,6 +314,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private HObject SourceTemplateImage = new HObject();
         /// <summary>
+        /// 原始RGB图片
+        /// </summary>
+        private HObject SourceImageRGB = new HObject();
+
+        /// <summary>
         /// 定位轮毂获取到的轮毂图像
         /// </summary>
         private HObject InPoseWheelImage = new HObject();
@@ -502,11 +507,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //CurrentImage?.Dispose();
                 if (File.Exists(path))
                 {
-
+                    SourceImageRGB.Dispose();
+                    SourceTemplateImage.Dispose();
                     HObject image = new HObject();
                     HOperatorSet.ReadImage(out image, path);
-
-                    SourceTemplateImage = image;
+                    SourceImageRGB = image.Clone();
+                    HOperatorSet.CountChannels(image, out HTuple Channels);
+                    if (Channels?.I == 3)
+                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
+                    else
+                        SourceTemplateImage = image.Clone();
+                    image.Dispose();
 
 
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -642,6 +653,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (model.image != null && model.camera != null)
             {
                 SourceTemplateImage.Dispose();
+                SourceImageRGB.Dispose(); 
+                SourceImageRGB = model.image;
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
                 if (Channels?.I == 3)
                     HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);
@@ -1045,16 +1058,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     var File_Name = openFileDialog.FileName;
                     SourceTemplateImage.Dispose();
+                    SourceImageRGB.Dispose();
                     HOperatorSet.ReadImage(out HObject image, File_Name);
+                    SourceImageRGB = image.Clone();
                     //彩色图需转成灰度图
                     HOperatorSet.CountChannels(image, out HTuple Channels);
                     if (Channels.I == 3)
                     {
-                        HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
-                        SourceTemplateImage = image1;
+                        HOperatorSet.Decompose3(image, out HObject SourceTemplateImage, out HObject image2, out HObject image3);
                     }
                     else
                         SourceTemplateImage = image;
+                    image.Dispose();
                     ImageDisVisibility = Visibility.Visible;
                     ImageDisName = "手动读取图片";
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -1111,14 +1126,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                //SourceTemplateImage.Dispose();
-                HObject image = new HObject();
-                HOperatorSet.CountChannels(SourceTemplateImage, out HTuple Channels);
-                if (Channels?.I == 3)
-                    HOperatorSet.Decompose3(SourceTemplateImage, out image, out HObject image2, out HObject image3);
-                else
-                    image = SourceTemplateImage;
-                PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius, false);
+                
+                PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
                 if (pResult.WheelImage == null)
                 {
                     EventMessage.SystemMessageDisplay("定位轮毂失败，请调整轮毂阈值参数后再试!", MessageType.Warning);
@@ -1453,17 +1462,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
                 return;
             }
-            HObject image = new HObject();
-            HOperatorSet.CountChannels(SourceTemplateImage, out HTuple Channels);
-            if (Channels?.I == 3)
-                HOperatorSet.Decompose3(SourceTemplateImage, out image, out HObject image2, out HObject image3);
-            else
-                image = SourceTemplateImage;
+            
             RecognitionWay = " 传统视觉";
 
             DateTime startTime = DateTime.Now;
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
+            PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             HObject imageRecogn = new HObject();
@@ -1471,7 +1475,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (pResult.WheelImage != null)
                 imageRecogn = pResult.WheelImage;
             else
-                imageRecogn = image;
+                imageRecogn = SourceTemplateImage;
 
             //没有定位到轮毂            
             //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
@@ -1503,7 +1507,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 RecognitionSimilarity = "0";
                 RecognitionWay = " 大模型";
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
+                HTuple hv_DLResult = WheelDeepLearning(SourceImageRGB);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0) //识别结果
