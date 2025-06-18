@@ -279,7 +279,6 @@
     <Compile Include="Public\ConfigEdit.cs" />
     <Compile Include="Public\Converter\BackgroundConverter.cs" />
     <Compile Include="Public\Converter\BtuBackgroundConverter.cs" />
-    <Compile Include="Public\DataValidationBase.cs" />
     <Compile Include="Public\EventMessage.cs" />
     <Compile Include="Public\ExcelHelper.cs" />
     <Compile Include="Public\ExternalConnections.cs" />
