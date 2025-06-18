@@ -514,7 +514,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     SourceImageRGB = image.Clone();
                     HOperatorSet.CountChannels(image, out HTuple Channels);
                     if (Channels?.I == 3)
+                    {
                         HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
+
+                    }
                     else
                         SourceTemplateImage = image.Clone();
                     image.Dispose();
@@ -1065,7 +1068,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     HOperatorSet.CountChannels(image, out HTuple Channels);
                     if (Channels.I == 3)
                     {
-                        HOperatorSet.Decompose3(image, out HObject SourceTemplateImage, out HObject image2, out HObject image3);
+                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
+                        //SourceTemplateImage = image1;
                     }
                     else
                         SourceTemplateImage = image;
