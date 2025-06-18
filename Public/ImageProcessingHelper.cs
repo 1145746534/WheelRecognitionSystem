@@ -461,8 +461,8 @@ namespace WheelRecognitionSystem.Public
                 }
 
 
-                hv_ImageDir.Dispose();
-                hv_ImageDir = "D:/ZS/终检/DLT/picture/JG12345";
+                //hv_ImageDir.Dispose();
+                //hv_ImageDir = "D:/ZS/终检/DLT/picture/JG12345";
                 //
                 //大模型路径跟预参路径
                 hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
@@ -555,7 +555,7 @@ namespace WheelRecognitionSystem.Public
 
                 hv_DLDeviceHandles.Dispose();
                 hv_DLDevice.Dispose();
-                hv_ImageDir.Dispose();
+                //hv_ImageDir.Dispose();
                 hv_PreprocessParamFileName.Dispose();
                 hv_RetrainedModelFileName.Dispose();
                 hv_BatchSizeInference.Dispose();
@@ -580,7 +580,7 @@ namespace WheelRecognitionSystem.Public
             }
             hv_DLDeviceHandles.Dispose();
             hv_DLDevice.Dispose();
-            hv_ImageDir.Dispose();
+            //hv_ImageDir.Dispose();
             hv_PreprocessParamFileName.Dispose();
             hv_RetrainedModelFileName.Dispose();
             hv_BatchSizeInference.Dispose();

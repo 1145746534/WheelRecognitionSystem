@@ -505,12 +505,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
                     HObject image = new HObject();
                     HOperatorSet.ReadImage(out image, path);
-                    SourceTemplateImage.Dispose();
-                    HOperatorSet.CountChannels(image, out HTuple Channels);
-                    if (Channels?.I == 3)
-                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
-                    else
-                        SourceTemplateImage = image;
+
+                    SourceTemplateImage = image;
 
 
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -582,14 +578,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             };
 
             TemplateDatas.Add(data);
-
             OrganizeTemplateDatas();
 
             //光标定位到添加的模板名称
-            int selectIndex = TemplateDatas.FirstOrDefault(item => item.WheelType == wheelType).Index -1 ;
+            int selectIndex = TemplateDatas.FirstOrDefault(item => item.WheelType == wheelType).Index - 1;
             DataGridSelectedItem = TemplateDatas[selectIndex];
             DataGridSelectedIndex = selectIndex;
-            
+
             EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Publish(DataGridSelectedItem);
 
             //定位轮毂
@@ -597,6 +592,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //制作模板
             PreviewTemplate();
             //保存模板
+            SaveTemplate();
 
 
         }
@@ -1115,7 +1111,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
+                //SourceTemplateImage.Dispose();
+                HObject image = new HObject();
+                HOperatorSet.CountChannels(SourceTemplateImage, out HTuple Channels);
+                if (Channels?.I == 3)
+                    HOperatorSet.Decompose3(SourceTemplateImage, out image, out HObject image2, out HObject image3);
+                else
+                    image = SourceTemplateImage;
+                PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius, false);
                 if (pResult.WheelImage == null)
                 {
                     EventMessage.SystemMessageDisplay("定位轮毂失败，请调整轮毂阈值参数后再试!", MessageType.Warning);
@@ -1326,7 +1329,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     DataGridSelectedItem = null;
                     DataGridSelectedIndex = -1;
                 }
-                
+
 
                 //var sDB = new SqlAccess().SystemDataAccess;
                 //sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
@@ -1450,11 +1453,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
                 return;
             }
+            HObject image = new HObject();
+            HOperatorSet.CountChannels(SourceTemplateImage, out HTuple Channels);
+            if (Channels?.I == 3)
+                HOperatorSet.Decompose3(SourceTemplateImage, out image, out HObject image2, out HObject image3);
+            else
+                image = SourceTemplateImage;
             RecognitionWay = " 传统视觉";
 
             DateTime startTime = DateTime.Now;
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius);
+            PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             HObject imageRecogn = new HObject();
@@ -1462,7 +1471,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (pResult.WheelImage != null)
                 imageRecogn = pResult.WheelImage;
             else
-                imageRecogn = SourceTemplateImage;
+                imageRecogn = image;
 
             //没有定位到轮毂            
             //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
@@ -1673,7 +1682,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         #endregion
 
-        
+
     }
 }
 
