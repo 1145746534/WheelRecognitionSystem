@@ -505,9 +505,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     //清空显示                    
                     ResultDisplay(new AutoRecognitionResultDisplayModel()
                     {
-                        CurrentImage = new HObject(),
-                        WheelContour = new HObject(),
-                        TemplateContour = new HObject(),
+                        CurrentImage = null,
+                        WheelContour = null,
+                        TemplateContour = null,
                         index = interact.Index
                     });
 
@@ -868,9 +868,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     //清空显示                    
                     ResultDisplay(new AutoRecognitionResultDisplayModel()
                     {
-                        CurrentImage = new HObject(),
-                        WheelContour = new HObject(),
-                        TemplateContour = new HObject(),
+                        CurrentImage = null,
+                        WheelContour = null,
+                        TemplateContour = null,
                         index = _index + 1
                     });
                     image = camera.Grabimage();
@@ -917,7 +917,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             string value = string.Empty;
             //计算图像灰度值
-            if (model.CurrentImage != null)
+            if (model.CurrentImage != null && model.CurrentImage.IsInitialized())
             {
                 HObject imageM = new HObject();
                 imageM = model.CurrentImage.Clone();
@@ -928,10 +928,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     imageM = red;
                 }
                 HOperatorSet.Intensity(imageM, imageM, out HTuple Mean1, out HTuple Deviation);
-                if (SystemDatas.CroppingOrNot)
-                {
-                    value = "均:"+(int)Mean1.D;
-                }
+                value = "均:" + (int)Mean1.D;
                 imageM.Dispose();
             }
             if (model.index == 1)
@@ -941,10 +938,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateContour1?.Dispose();
                 if (model.CurrentImage != null)
                     CurrentImage1 = model.CurrentImage;
+
                 if (model.WheelContour != null)
                     WheelContour1 = model.WheelContour;
+
                 if (model.TemplateContour != null)
                     TemplateContour1 = model.TemplateContour;
+
                 FullGray1 = value;
             }
             else if (model.index == 2)
@@ -954,10 +954,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateContour2?.Dispose();
                 if (model.CurrentImage != null)
                     CurrentImage2 = model.CurrentImage;
+
                 if (model.WheelContour != null)
                     WheelContour2 = model.WheelContour;
+
                 if (model.TemplateContour != null)
                     TemplateContour2 = model.TemplateContour;
+
                 FullGray2 = value;
 
             }
@@ -968,10 +971,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateContour3?.Dispose();
                 if (model.CurrentImage != null)
                     CurrentImage3 = model.CurrentImage;
+
                 if (model.WheelContour != null)
                     WheelContour3 = model.WheelContour;
+
                 if (model.TemplateContour != null)
                     TemplateContour3 = model.TemplateContour;
+
                 FullGray3 = value;
 
             }
@@ -982,10 +988,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateContour4?.Dispose();
                 if (model.CurrentImage != null)
                     CurrentImage4 = model.CurrentImage;
+
                 if (model.WheelContour != null)
                     WheelContour4 = model.WheelContour;
+
                 if (model.TemplateContour != null)
                     TemplateContour4 = model.TemplateContour;
+
                 FullGray4 = value;
 
             }
@@ -996,10 +1005,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplateContour5?.Dispose();
                 if (model.CurrentImage != null)
                     CurrentImage5 = model.CurrentImage;
+
                 if (model.WheelContour != null)
                     WheelContour5 = model.WheelContour;
+
                 if (model.TemplateContour != null)
                     TemplateContour5 = model.TemplateContour;
+
                 FullGray5 = value;
 
             }

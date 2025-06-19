@@ -40,11 +40,6 @@ namespace WheelRecognitionSystem.Models
         /// 样式
         /// </summary>
         public string WheelStyle { get; set; }
-        public List<string> WheelTypes { get; set; } = new List<string>();
-        /// <summary>
-        /// 相似度列表
-        /// </summary>
-        public List<double> Similaritys { get; set; } = new List<double>();
         /// <summary>
         /// 识别的轮型
         /// </summary>

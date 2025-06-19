@@ -68,6 +68,13 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true, Length = 150)]
         public string ImagePath { get; set; }
+
+        /// <summary>
+        /// 传输编码
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true, Length = 20)]
+        public string TransmissionCoding { get; set; }
+
         /// <summary>
         /// 轮毂型号
         /// </summary>

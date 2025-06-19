@@ -33,6 +33,7 @@ using MySqlX.XDevAPI;
 using Mysqlx.Session;
 using Org.BouncyCastle.Asn1.X509;
 using Mysqlx;
+using System.Windows.Media.Media3D;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -550,6 +551,11 @@ namespace WheelRecognitionSystem.ViewModels
         private DispatcherTimer MessageShowTimer;
 
         /// <summary>
+        /// 图片删除定时器
+        /// </summary>
+        private DispatcherTimer pictrueDeleteTimer;
+
+        /// <summary>
         /// 数据更新的日期
         /// </summary>
         private int UpdatedDay { get; set; }
@@ -648,7 +654,15 @@ namespace WheelRecognitionSystem.ViewModels
 
             RecognitionStatus1 = "";
             IsIdentifying = false;
+
+            //启动定时器
+            pictrueDeleteTimer = new DispatcherTimer();
+            pictrueDeleteTimer.Tick += new EventHandler(pictrueDeleteTimer_Tick);//添加事件(到达时间间隔后会自动调用)
+            pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
+            pictrueDeleteTimer.Start();//启动定时器
         }
+
+       
 
         /// <summary>
         /// 主线程
@@ -1116,11 +1130,12 @@ namespace WheelRecognitionSystem.ViewModels
                                     //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
                                     string prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
                                     bool FlowOrDown = S7.GetBitAt(ReadBuffer, 192, 0); //1回流 0下转
+                                    string showStatus = FlowOrDown ?"回流":"下转";
                                     if (back)
                                     {
                                         int indexPos = 144;
                                         int indexBit = i + 5;
-                                        if (i>=8)
+                                        if (i >= 8)
                                         {
                                             indexPos = indexPos + 1;
                                             indexBit = indexBit - 8;
@@ -1129,7 +1144,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
                                         PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         //OnDataModificationTriggered(wheel);
-                                        EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}", true, true);
+                                        EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
                                         new Thread((obj) =>
                                         {
                                             int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1142,7 +1157,7 @@ namespace WheelRecognitionSystem.ViewModels
                                             }
                                             Thread.Sleep(500);
                                             S7.SetBitAt(ref WriteBuffer, indexPos1, indexBit1, false); //复位读取成功
-                                            EventMessage.MessageDisplay($"复位{indexPos1}.{indexBit1}回复读取回流状态成功", true, true);
+                                            EventMessage.MessageDisplay($"复位{indexPos1}.{indexBit1}回流状态", true, true);
                                         }).Start(i);
                                     }
                                 }
@@ -1360,10 +1375,8 @@ namespace WheelRecognitionSystem.ViewModels
                 S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
                 Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{0}.{threadI}拍照流程完成");
             }).Start(model.Index - 1);
-            //显示状态信息
-            SetStatus(model.Index, model.resultModel.status);
-            //if (!model.resultModel.ResultBol || wheelType == null)
-            EventMessage.MessageDisplay(model.Index + "号" + model.resultModel.status, true, false);
+            
+            
 
             //发送PLC的数据
             string prefix = DateTime.Now.ToString("mmss");
@@ -1422,6 +1435,10 @@ namespace WheelRecognitionSystem.ViewModels
                     Colour5 = model.resultModel.Colour;
                     break;
             }
+            //显示状态信息
+            SetStatus(model.Index, model.resultModel.status);
+            EventMessage.MessageDisplay($"{model.Index}号{model.resultModel.status} 型号：{wheelType}", true, false);
+
 
             //插入数据库
             SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
@@ -1433,6 +1450,7 @@ namespace WheelRecognitionSystem.ViewModels
             dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
             dataModel.WheelStyle = model.resultModel.WheelStyle;
             dataModel.RecognitionTime = model.endTime;
+            dataModel.TransmissionCoding = text;
             dataModel.Model = wheelType;
             dataModel.Station = "";
             dataModel.ImagePath = model.imagePath;
@@ -2016,35 +2034,35 @@ namespace WheelRecognitionSystem.ViewModels
         //        try
         //        {
         //            #region======删除图像数据======
-        //            //获取删除开始的时间
-        //            DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
-        //            //从开始时间往前删30天
-        //            for (int i = 1; i <= 30; i++)
-        //            {
-        //                DateTime currentTime = startDateTime.AddDays(-i);
-        //                string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
-        //                if (Directory.Exists(path))
-        //                {
-        //                    Directory.Delete(path, true);
-        //                    EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
-        //                }
-        //            }
-        //            //删除当月以前的月文件夹
-        //            if (DateTime.Now.Day >= SaveImageDays)
-        //            {
-        //                //从开始时间往前删12个月
-        //                for (int i = 1; i < 12; i++)
-        //                {
-        //                    DateTime currentMonth = DateTime.Now.AddMonths(-i);
-        //                    string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
-        //                    if (Directory.Exists(path))
+        //        //获取删除开始的时间
+        //        DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
+        //                    //从开始时间往前删30天
+        //                    for (int i = 1; i <= 30; i++)
         //                    {
-        //                        Directory.Delete(path, true);
-        //                        await Task.Delay(2000);
-        //                        EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
-        //                    }
-        //                }
-        //            }
+        //                        DateTime currentTime = startDateTime.AddDays(-i);
+        //        string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
+        //                        if (Directory.Exists(path))
+        //                        {
+        //                            Directory.Delete(path, true);
+        //                            EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
+        //                        }
+        //}
+        ////删除当月以前的月文件夹
+        //if (DateTime.Now.Day >= SaveImageDays)
+        //{
+        //    //从开始时间往前删12个月
+        //    for (int i = 1; i < 12; i++)
+        //    {
+        //        DateTime currentMonth = DateTime.Now.AddMonths(-i);
+        //        string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
+        //        if (Directory.Exists(path))
+        //        {
+        //            Directory.Delete(path, true);
+        //            await Task.Delay(2000);
+        //            EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
+        //        }
+        //    }
+        //}
         //            #endregion
         //        }
         //        catch (Exception ex)
@@ -2077,6 +2095,44 @@ namespace WheelRecognitionSystem.ViewModels
         //        DataBeingUpdated = false;
         //    });
         //}
+
+        /// <summary>
+        /// 定时删除图片
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void pictrueDeleteTimer_Tick(object sender, EventArgs e)
+        {
+            //获取删除开始的时间
+            DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
+            //从开始时间往前删30天
+            for (int i = 1; i <= 30; i++)
+            {
+                DateTime currentTime = startDateTime.AddDays(-i);
+                string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                    EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
+                }
+            }
+            //删除当月以前的月文件夹
+            if (DateTime.Now.Day >= SaveImageDays)
+            {
+                //从开始时间往前删12个月
+                for (int i = 1; i < 12; i++)
+                {
+                    DateTime currentMonth = DateTime.Now.AddMonths(-i);
+                    string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                      
+                        EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
+                    }
+                }
+            }
+        }
 
 
         /// <summary>
