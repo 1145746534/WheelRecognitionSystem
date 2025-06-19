@@ -34,6 +34,8 @@ using Mysqlx.Session;
 using Org.BouncyCastle.Asn1.X509;
 using Mysqlx;
 using System.Windows.Media.Media3D;
+using NPOI.Util;
+using System.ComponentModel.DataAnnotations;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -1095,6 +1097,11 @@ namespace WheelRecognitionSystem.ViewModels
                                 readPLCSignals[2].WheelTemperature = temperature;
                                 readPLCSignals[3].WheelTemperature = S7.GetRealAt(ReadBuffer, 132);
 
+                                //计数
+                                int count = S7.GetIntAt(ReadBuffer, 156);
+
+                                Console.WriteLine($"PLC计算数量：{count}");
+
                                 //1.相机拍照部分
                                 //轮毂到位允许拍照信号
                                 for (int i = 0; i < readPLCSignals.Length; i++)
@@ -1253,6 +1260,8 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
+
+
         /// <summary>
         /// 数据修改 - 产品NG
         /// </summary>
@@ -1273,11 +1282,11 @@ namespace WheelRecognitionSystem.ViewModels
                     throw new Exception($"Prefix_WheelCoding数据长度错误：{parts.Count()}");
                 }
 
-                string oldWheelType = new string(parts, 4, 8);
+                //string oldWheelType = new string(parts, 4, 8);
 
                 // 步骤1：查询符合条件的最新一条记录
-                var latestRecord = db.Queryable<Tbl_productiondatamodel>()
-                    .Where(x => x.Model == oldWheelType)
+                Tbl_productiondatamodel latestRecord = db.Queryable<Tbl_productiondatamodel>()
+                    .Where(x => x.TransmissionCoding == prefix_WheelCoding)
                     .OrderByDescending(x => x.ID)
                     .First();
 
@@ -1298,7 +1307,7 @@ namespace WheelRecognitionSystem.ViewModels
                 }
                 else
                 {
-                    Console.WriteLine($"未找到匹配的记录:{oldWheelType}");
+                    Console.WriteLine($"未找到匹配的记录:{prefix_WheelCoding4}");
                 }
 
 
@@ -1359,7 +1368,7 @@ namespace WheelRecognitionSystem.ViewModels
             EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Publish(model);
         }
         /// <summary>
-        /// 回复PLC&显示处理结果
+        /// 结果处理&回复PLC
         /// </summary>
         /// <param name="model"></param>
         /// <exception cref="NotImplementedException"></exception>
@@ -1462,6 +1471,13 @@ namespace WheelRecognitionSystem.ViewModels
 
         }
 
+        /// <summary>
+        /// 字符串转PLC格式字节数组
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public static byte[] StringToS7Bytes(string str, int maxLength)
         {
             // 验证长度
@@ -1957,6 +1973,12 @@ namespace WheelRecognitionSystem.ViewModels
             return false;
         }
 
+        /// <summary>
+        /// 字节数组转字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="startIndex"></param>
+        /// <returns></returns>
         private string GetBytesToString(byte[] bytes, int startIndex)
         {
             byte maxLength = bytes[startIndex]; //最大长度

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +14,9 @@ namespace WheelRecognitionSystem.Public
 {
     public class ExcelHelper
     {
-        private void ModifyExcelFile(Queue<ExportDataModel> exportDatas, string filePath, string sheetName)
+        private void ModifyExcelFile(Queue<ExportDataModel> exportDatas, string filePath, string sheetName, string targetDir)
         {
+
             Application excelApp = null;
             Workbook workbook = null;
 
@@ -22,13 +24,15 @@ namespace WheelRecognitionSystem.Public
 
             try
             {
+                string path = CopyFileWithDateName(filePath, targetDir);
+
                 // 1. 创建Excel应用实例
                 excelApp = new Application();
                 excelApp.Visible = false; // 后台运行
                 excelApp.DisplayAlerts = false; // 禁止弹出警告
 
                 // 2. 打开工作簿（不破坏格式）
-                workbook = excelApp.Workbooks.Open(filePath);
+                workbook = excelApp.Workbooks.Open(path);
 
                 // 3. 获取指定工作表
                 Worksheet worksheet = workbook.Sheets[sheetName] as Worksheet;
@@ -120,5 +124,30 @@ namespace WheelRecognitionSystem.Public
             }
         }
 
+
+        public string CopyFileWithDateName(string sourceFile, string targetDir)
+        {
+
+            // 1. 校验源文件是否存在
+            if (!File.Exists(sourceFile))
+                throw new FileNotFoundException("源文件不存在: " + sourceFile);
+
+            // 2. 创建目标文件夹（若不存在）
+            Directory.CreateDirectory(targetDir);
+
+            // 3. 生成新文件名（格式：年月日）
+            string dateStr = DateTime.Now.ToString("yyyyMMdd"); // 格式示例：20250618[3,7](@ref)
+            string originalName = Path.GetFileNameWithoutExtension(sourceFile);
+            string extension = Path.GetExtension(sourceFile);
+            string newFileName = $"{dateStr}{extension}"; // 保留原名+日期后缀[3](@ref)
+            string destPath = Path.Combine(targetDir, newFileName);
+
+            // 4. 执行复制（覆盖同名文件）
+            File.Copy(sourceFile, destPath, true); // true 表示覆盖[9,10](@ref)
+            Console.WriteLine($"文件已复制并重命名：{destPath}");
+            return destPath;
+
+
+        }
     }
 }
