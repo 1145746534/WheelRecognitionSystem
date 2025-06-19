@@ -519,6 +519,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     interact.endTime = DateTime.Now;
                     ResultDisplay(resultDisplayModel);
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
+                    //保存图片
                     interact.imagePath = await SaveImageDatasAsync(image, way, resultDisplayModel.WheelType);
                 }
                 catch (Exception ex)
@@ -530,9 +531,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             else
             {
                 interact.resultModel.status = "相机未连接";
-            }
-            //保存图片
-            //CameraHelper.SavePic(image, interact);
+            }           
             //清除到位显示
             Inplace(new KeyValuePair<bool, int>(false, interact.Index));
             //回复消息
