@@ -1100,7 +1100,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 //计数
                                 int count = S7.GetIntAt(ReadBuffer, 156);
 
-                                Console.WriteLine($"PLC计算数量：{count}");
+                                //Console.WriteLine($"PLC计算数量：{count}");
 
                                 //1.相机拍照部分
                                 //轮毂到位允许拍照信号
@@ -1307,7 +1307,7 @@ namespace WheelRecognitionSystem.ViewModels
                 }
                 else
                 {
-                    Console.WriteLine($"未找到匹配的记录:{prefix_WheelCoding4}");
+                    Console.WriteLine($"未找到匹配的记录:{prefix_WheelCoding}");
                 }
 
 
