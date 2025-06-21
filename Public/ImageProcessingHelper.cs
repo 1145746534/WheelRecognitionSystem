@@ -289,33 +289,58 @@ namespace WheelRecognitionSystem.Public
             };
 
             // 定义一个通用模板匹配方法
-            Action<bool> performMatching = (useFilter) =>
+            //Action<bool> performMatching = (useFilter) =>
+            //{
+            //    foreach (var templateData in templateDatas.Where(t => t.Use == useFilter))
+            //    {
+
+            //        HOperatorSet.FindNccModel(
+            //            image, templateData.Template,
+            //            angleStart, angleExtent,
+            //            0.5, 1, 0.5,
+            //            "true", 0,
+            //            out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+
+            //        if (score != null && score.Length > 0 && score.D > 0.5)
+            //        {
+            //            recognitionResults.Add(new RecognitionResultModel
+            //            {
+            //                CenterRow = row,
+            //                CenterColumn = column,
+            //                Radian = angle,
+            //                RecognitionWheelType = templateData.TemplateName,
+            //                Similarity = Math.Round(score.D, 3)
+            //            });
+            //        }
+            //    }
+            //};
+
+            //// 先尝试匹配“活跃”模板
+            //performMatching(true);
+
+            foreach (var templateData in templateDatas.Where(t => t.Use == true))
             {
-                foreach (var templateData in templateDatas.Where(t => t.Use == useFilter))
+
+                HOperatorSet.FindNccModel(
+                    image, templateData.Template,
+                    angleStart, angleExtent,
+                    0.5, 1, 0.5,
+                    "true", 0,
+                    out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+
+                if (score != null && score.Length > 0 && score.D > 0.5)
                 {
-                    HOperatorSet.FindNccModel(
-                        image, templateData.Template,
-                        angleStart, angleExtent,
-                        0.5, 1, 0.5,
-                        "true", 0,
-                        out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
-
-                    if (score != null && score.Length > 0 && score.D > 0.5)
+                    recognitionResults.Add(new RecognitionResultModel
                     {
-                        recognitionResults.Add(new RecognitionResultModel
-                        {
-                            CenterRow = row,
-                            CenterColumn = column,
-                            Radian = angle,
-                            RecognitionWheelType = templateData.TemplateName,
-                            Similarity = Math.Round(score.D, 3)
-                        });
-                    }
+                        CenterRow = row,
+                        CenterColumn = column,
+                        Radian = angle,
+                        RecognitionWheelType = templateData.TemplateName,
+                        Similarity = Math.Round(score.D, 3)
+                    });
                 }
-            };
+            }
 
-            // 先尝试匹配“活跃”模板
-            performMatching(true);
 
             // 如果成功，尝试找最高相似度且满足阈值的
             if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out var bestMatch))
@@ -325,7 +350,30 @@ namespace WheelRecognitionSystem.Public
             }
 
             // 活跃模板未匹配到，尝试非活跃模板
-            performMatching(false);
+            //performMatching(false);
+            foreach (var templateData in templateDatas.Where(t => t.Use == false))
+            {
+
+                HOperatorSet.FindNccModel(
+                    image, templateData.Template,
+                    angleStart, angleExtent,
+                    0.5, 1, 0.5,
+                    "true", 0,
+                    out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
+
+                if (score != null && score.Length > 0 && score.D > 0.5)
+                {
+                    recognitionResults.Add(new RecognitionResultModel
+                    {
+                        CenterRow = row,
+                        CenterColumn = column,
+                        Radian = angle,
+                        RecognitionWheelType = templateData.TemplateName,
+                        Similarity = Math.Round(score.D, 3)
+                    });
+                }
+            }
+
 
             if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out bestMatch))
             {
