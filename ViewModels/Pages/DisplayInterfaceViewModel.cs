@@ -503,13 +503,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 try
                 {
                     //清空显示                    
-                    ResultDisplay(new AutoRecognitionResultDisplayModel()
-                    {
-                        CurrentImage = null,
-                        WheelContour = null,
-                        TemplateContour = null,
-                        index = interact.Index
-                    });
+                    //ResultDisplay(new AutoRecognitionResultDisplayModel()
+                    //{
+                    //    CurrentImage = null,
+                    //    WheelContour = null,
+                    //    TemplateContour = null,
+                    //    index = interact.Index
+                    //});
 
                     MyCameraMV camera = cameras[index];
                     interact.IsGrayscale = camera.info.Grayscale;
@@ -521,17 +521,22 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                     //保存图片
                     interact.imagePath = await SaveImageDatasAsync(image, way, resultDisplayModel.WheelType);
+                    resultDisplayModel.Dispose();
                 }
                 catch (Exception ex)
                 {
                     cameras[index].IsConnected = false;
                     interact.resultModel.status = ex.Message;
                 }
+                finally
+                {
+                    image?.Dispose();
+                }
             }
             else
             {
                 interact.resultModel.status = "相机未连接";
-            }           
+            }
             //清除到位显示
             Inplace(new KeyValuePair<bool, int>(false, interact.Index));
             //回复消息
@@ -619,9 +624,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             autoRecognitionResult = new AutoRecognitionResultDisplayModel
             {
                 WheelType = recognitionResult.RecognitionWheelType,
-                CurrentImage = CurrentImage,
-                WheelContour = pResult.WheelContour,
-                TemplateContour = templateContour,
+                CurrentImage = CurrentImage.Clone(),
+                WheelContour = pResult.WheelContour.Clone(),
+                TemplateContour = templateContour.Clone(),
                 index = interact.Index
 
             };
@@ -729,9 +734,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void BtnTemplate(string obj)
         {
-
-
-
             ServletInfoModel model = new ServletInfoModel();
             model.Path = "TemplateManagementView";
             int index = cameras.ToList().FindIndex((x => x.info.Name == obj));
@@ -865,15 +867,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 try
                 {
                     //清空显示                    
-                    ResultDisplay(new AutoRecognitionResultDisplayModel()
-                    {
-                        CurrentImage = null,
-                        WheelContour = null,
-                        TemplateContour = null,
-                        index = _index + 1
-                    });
+                    //ResultDisplay(new AutoRecognitionResultDisplayModel()
+                    //{
+                    //    CurrentImage = null,
+                    //    WheelContour = null,
+                    //    TemplateContour = null,
+                    //    index = _index + 1
+                    //});
                     image = camera.Grabimage();
-                    ResultDisplay(new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 });
+                    AutoRecognitionResultDisplayModel resultDisplayModel = new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 };
+                    ResultDisplay(resultDisplayModel);
+                    resultDisplayModel.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -936,13 +940,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 WheelContour1?.Dispose();
                 TemplateContour1?.Dispose();
                 if (model.CurrentImage != null)
-                    CurrentImage1 = model.CurrentImage;
+                    CurrentImage1 = model.CurrentImage.Clone();
 
                 if (model.WheelContour != null)
-                    WheelContour1 = model.WheelContour;
+                    WheelContour1 = model.WheelContour.Clone();
 
                 if (model.TemplateContour != null)
-                    TemplateContour1 = model.TemplateContour;
+                    TemplateContour1 = model.TemplateContour.Clone();
 
                 FullGray1 = value;
             }
