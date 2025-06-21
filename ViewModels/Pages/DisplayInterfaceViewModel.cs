@@ -525,8 +525,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 catch (Exception ex)
                 {
-                    cameras[index].IsConnected = false;
-                    interact.resultModel.status = ex.Message;
+                    //cameras[index].IsConnected = false;
+                    interact.resultModel.status = "识别错误"+ex.Message;
                 }
                 finally
                 {
@@ -624,9 +624,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             autoRecognitionResult = new AutoRecognitionResultDisplayModel
             {
                 WheelType = recognitionResult.RecognitionWheelType,
-                CurrentImage = CurrentImage.Clone(),
-                WheelContour = pResult.WheelContour.Clone(),
-                TemplateContour = templateContour.Clone(),
+                CurrentImage = CurrentImage,
+                WheelContour = pResult.WheelContour,
+                TemplateContour = templateContour,
                 index = interact.Index
 
             };
@@ -881,7 +881,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 catch (Exception ex)
                 {
-                    camera.IsConnected = false;
+                    //camera.IsConnected = false;
                 }
             }
         }
@@ -939,13 +939,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 CurrentImage1?.Dispose();
                 WheelContour1?.Dispose();
                 TemplateContour1?.Dispose();
-                if (model.CurrentImage != null)
+                if (model.CurrentImage != null && model.CurrentImage.IsInitialized())
                     CurrentImage1 = model.CurrentImage.Clone();
 
-                if (model.WheelContour != null)
+                if (model.WheelContour != null && model.WheelContour.IsInitialized())
                     WheelContour1 = model.WheelContour.Clone();
 
-                if (model.TemplateContour != null)
+                if (model.TemplateContour != null && model.TemplateContour.IsInitialized())
                     TemplateContour1 = model.TemplateContour.Clone();
 
                 FullGray1 = value;

@@ -212,7 +212,7 @@
                         <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding RecognitionWheelType1}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,15,2" FontWeight="Bold" IsReadOnly="True"  FontSize="18"/>
                         <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Similarity1}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,10,2" IsReadOnly="True" FontSize="18"/>
                         <TextBox Grid.Row="1" Grid.Column="4" Text="{Binding TimeConsumed1}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,5,2" IsReadOnly="True" FontSize="18"/>
-                        <TextBox Grid.Row="1" Grid.Column="5" Text="{Binding Colour1}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
+                        <TextBox Grid.Row="1" Grid.Column="5" Text="{Binding Count1}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
                         <Label Grid.Row="2" Grid.Column="0" Content="{Binding RecognitionStatus2}" FontSize="12" Style="{StaticResource NormalLabelStyle}" Margin="2,2,2,2" Grid.ColumnSpan="2">
                             <Label.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -224,7 +224,7 @@
                         <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding RecognitionWheelType2}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,15,2" FontWeight="Bold" IsReadOnly="True"  FontSize="18"/>
                         <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Similarity2}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,10,2" IsReadOnly="True" FontSize="18"/>
                         <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding TimeConsumed2}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,5,2" IsReadOnly="True" FontSize="18"/>
-                        <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding Colour2}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
+                        <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding Count2}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
                         <Label Grid.Row="3" Grid.Column="0" Content="{Binding RecognitionStatus3}" FontSize="12" Style="{StaticResource NormalLabelStyle}" Margin="2,2,2,2" Grid.ColumnSpan="2">
                             <Label.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -236,7 +236,7 @@
                         <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding RecognitionWheelType3}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,15,2" FontWeight="Bold" IsReadOnly="True"  FontSize="18"/>
                         <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding Similarity3}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,10,2" IsReadOnly="True" FontSize="18"/>
                         <TextBox Grid.Row="3" Grid.Column="4" Text="{Binding TimeConsumed3}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,5,2" IsReadOnly="True" FontSize="18"/>
-                        <TextBox Grid.Row="3" Grid.Column="5" Text="{Binding Colour3}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
+                        <TextBox Grid.Row="3" Grid.Column="5" Text="{Binding Count3}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
                         <Label Grid.Row="4" Grid.Column="0" Content="{Binding RecognitionStatus4}" FontSize="12" Style="{StaticResource NormalLabelStyle}" Margin="2,2,2,2" Grid.ColumnSpan="2">
                             <Label.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -248,7 +248,7 @@
                         <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding RecognitionWheelType4}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,15,2" FontWeight="Bold" IsReadOnly="True"  FontSize="18"/>
                         <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding Similarity4}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,10,2" IsReadOnly="True" FontSize="18"/>
                         <TextBox Grid.Row="4" Grid.Column="4" Text="{Binding TimeConsumed4}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,5,2" IsReadOnly="True" FontSize="18"/>
-                        <TextBox Grid.Row="4" Grid.Column="5" Text="{Binding Colour4}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
+                        <TextBox Grid.Row="4" Grid.Column="5" Text="{Binding Count4}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
                         <Label Grid.Row="5" Grid.Column="0" Content="{Binding RecognitionStatus5}" FontSize="12" Style="{StaticResource NormalLabelStyle}" Margin="2,2,2,2" Grid.ColumnSpan="2">
                             <Label.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -260,7 +260,7 @@
                         <TextBox Grid.Row="5" Grid.Column="2" Text="{Binding RecognitionWheelType5}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,15,2" FontWeight="Bold" IsReadOnly="True"  FontSize="18"/>
                         <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding Similarity5}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,10,2" IsReadOnly="True" FontSize="18"/>
                         <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding TimeConsumed5}" Style="{StaticResource NewTextBoxStyle}" Margin="10,2,5,2" IsReadOnly="True" FontSize="18"/>
-                        <TextBox Grid.Row="5" Grid.Column="5" Text="{Binding Colour5}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
+                        <TextBox Grid.Row="5" Grid.Column="5" Text="{Binding Count5}" Style="{StaticResource NewTextBoxStyle}" Margin="0,2,0,2" IsReadOnly="True" FontSize="18"/>
 
 
                     </Grid>

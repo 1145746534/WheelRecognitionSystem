@@ -73,11 +73,6 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public double Radian { get; set; }
 
-        /// <summary>
-        /// 识别模板
-        /// </summary>
-        public HTuple TemplateID { get; set; }
-
 
         /// <summary>
         /// 是否在不活跃模板中识别，用于实时移动模板

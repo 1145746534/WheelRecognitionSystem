@@ -73,6 +73,10 @@ namespace WheelRecognitionSystem.Views
         private void SystemMessageDisplay(string message)
         {
             string str = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "\r\n";
+            if (SystemMessage.LineCount>200)
+            {
+                SystemMessage.Clear();
+            }
             SystemMessage.AppendText(str);
             SystemMessage.ScrollToEnd();
         }

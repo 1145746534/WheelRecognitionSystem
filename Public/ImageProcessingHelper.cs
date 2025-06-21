@@ -62,14 +62,14 @@ namespace WheelRecognitionSystem.Public
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
-                             
-                resultModel.FullFigureGary = (float)(Mean1.D);                
+
+                resultModel.FullFigureGary = (float)(Mean1.D);
                 resultModel.WheelImage = null;
                 resultModel.WheelContour = null;
 
                 if (row.Length != 0) //存在轮毂
                 {
-                   
+
 
                     //确认半径范围
                     if (isConfirmRadius && radius < minRadius)
@@ -82,7 +82,7 @@ namespace WheelRecognitionSystem.Public
                         HOperatorSet.GetImageSize(image, out HTuple width, out HTuple height);
                         HOperatorSet.CreateMetrologyModel(out HTuple MetrologyCircleHandle);
                         HOperatorSet.SetMetrologyModelImageSize(MetrologyCircleHandle, width, height);
-                        HOperatorSet.AddMetrologyObjectCircleMeasure(MetrologyCircleHandle, row, column, radius+10, 160, 3, 1, 30, new HTuple(), new HTuple(), out HTuple CircleIndex);
+                        HOperatorSet.AddMetrologyObjectCircleMeasure(MetrologyCircleHandle, row, column, radius + 10, 160, 3, 1, 30, new HTuple(), new HTuple(), out HTuple CircleIndex);
                         HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "num_instances", 1);
                         HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "min_score", 0.1);
                         HOperatorSet.ApplyMetrologyModel(image, MetrologyCircleHandle);
@@ -280,7 +280,7 @@ namespace WheelRecognitionSystem.Public
         //}
 
         public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart,
-                                                                        double angleExtent, double minSimilarity,List<RecognitionResultModel> recognitionResults)
+                                                                        double angleExtent, double minSimilarity, List<RecognitionResultModel> recognitionResults)
         {
             var resultIfFailed = new RecognitionResultModel
             {
@@ -626,6 +626,8 @@ namespace WheelRecognitionSystem.Public
 
                 throw HDevExpDefaultException;
             }
+
+
             hv_DLDeviceHandles.Dispose();
             hv_DLDevice.Dispose();
             //hv_ImageDir.Dispose();
@@ -648,6 +650,7 @@ namespace WheelRecognitionSystem.Public
             hv_DLSample.Dispose();
             hv_DLResult.Dispose();
             hv_WindowHandles.Dispose();
+
         }
 
         /// <summary>
