@@ -283,7 +283,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         }
 
 
-        private void DataExportExcel()
+        private async void DataExportExcel()
+        {
+
+            await AsyncExport();
+        }
+
+        public async Task<bool> AsyncExport()
         {
             //1.查询上一个班次的数据
             DateTime now = DateTime.Now;
@@ -315,10 +321,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
             }
             var db = new SqlAccess().SystemDataAccess;
-            var list = db.Queryable<Tbl_productiondatamodel>()
+            List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
                 .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
                 .ToList();
+            var multiLevel = list
+                .GroupBy(item => new
+                {
+                    item.Model,
+                    item.Remark
+                }).ToList();
+            await Task.Delay(1000);
 
+            return true;
         }
 
         /// <summary>
