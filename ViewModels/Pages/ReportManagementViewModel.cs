@@ -113,7 +113,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public ObservableCollection<Tbl_productiondatamodel> IdentificationDatas
         {
             get { return _identificationDatas; }
-            set {SetProperty(ref _identificationDatas, value); }
+            set { SetProperty(ref _identificationDatas, value); }
         }
 
         private ObservableCollection<StatisticsDataModel> _statisticsDatas;
@@ -133,7 +133,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public Visibility IdentificationDataVisibility
         {
             get { return _identificationDataVisibility; }
-            set {SetProperty(ref _identificationDataVisibility, value); }
+            set { SetProperty(ref _identificationDataVisibility, value); }
         }
 
         private Visibility _statisticsDataVisibility;
@@ -286,6 +286,38 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void DataExportExcel()
         {
             //1.查询上一个班次的数据
+            DateTime now = DateTime.Now;
+            DateTime today = now.Date;
+            DateTime today8 = today.AddHours(8);
+            DateTime today20 = today.AddHours(20);
+
+            DateTime lastShiftStart, lastShiftEnd;
+            if (now >= today8 && now < today20)
+            {
+                // 当前是A班
+                lastShiftStart = today.AddDays(-1).AddHours(20); // 昨天20点
+                lastShiftEnd = today8; // 今天8点
+            }
+            else
+            {
+                // 当前是B班
+                if (now >= today20)
+                {
+                    // 今天晚上20:00之后，属于今天的B班，上一个班次是今天的A班
+                    lastShiftStart = today8;
+                    lastShiftEnd = today20;
+                }
+                else
+                {
+                    // 当前时间小于today8，属于今天凌晨（从昨天20:00到今天8:00），上一个班次是昨天的A班
+                    lastShiftStart = today.AddDays(-1).AddHours(8);
+                    lastShiftEnd = today.AddDays(-1).AddHours(20);
+                }
+            }
+            var db = new SqlAccess().SystemDataAccess;
+            var list = db.Queryable<Tbl_productiondatamodel>()
+                .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
+                .ToList();
 
         }
 

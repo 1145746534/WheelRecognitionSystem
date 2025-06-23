@@ -656,7 +656,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (model.image != null && model.camera != null)
             {
                 SourceTemplateImage.Dispose();
-                SourceImageRGB.Dispose(); 
+                SourceImageRGB.Dispose();
                 SourceImageRGB = model.image;
                 HOperatorSet.CountChannels(model.image, out HTuple Channels);
                 if (Channels?.I == 3)
@@ -1068,11 +1068,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     HOperatorSet.CountChannels(image, out HTuple Channels);
                     if (Channels.I == 3)
                     {
-                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
-                        //SourceTemplateImage = image1;
+                        HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
+                        SourceTemplateImage = image1.Clone();
                     }
                     else
-                        SourceTemplateImage = image;
+                        SourceTemplateImage = image.Clone();
                     image.Dispose();
                     ImageDisVisibility = Visibility.Visible;
                     ImageDisName = "手动读取图片";
@@ -1130,7 +1130,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                
+
                 PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
                 if (pResult.WheelImage == null)
                 {
@@ -1466,7 +1466,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
                 return;
             }
-            
+
             RecognitionWay = " 传统视觉";
 
             DateTime startTime = DateTime.Now;
@@ -1514,7 +1514,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 HTuple hv_DLResult = WheelDeepLearning(SourceImageRGB);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                if (names.Length > 0) //识别结果
+                if (names.Length > 0 && confidences[0].D > 0.85) //识别结果
                 {
                     recognitionResult.RecognitionWheelType = names[0].S;
                     recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));

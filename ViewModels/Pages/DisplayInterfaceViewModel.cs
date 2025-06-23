@@ -526,7 +526,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 catch (Exception ex)
                 {
                     //cameras[index].IsConnected = false;
-                    interact.resultModel.status = "识别错误"+ex.Message;
+                    interact.resultModel.status = "识别错误" + ex.Message;
                 }
                 finally
                 {
@@ -603,7 +603,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 HTuple hv_DLResult = WheelDeepLearning(CurrentImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                if (names.Length > 0)
+                if (names.Length > 0 && confidences[0].D > 0.85)
                 {
                     recognitionResult.RecognitionWheelType = names[0].S;
                     recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
