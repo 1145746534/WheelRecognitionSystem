@@ -41,22 +41,41 @@ namespace WheelRecognitionSystem.Public
 
                 while (exportDatas.Count > 0)
                 {
+                    //取出数据
                     ExportDataModel data = exportDatas.Dequeue();
-                    int matchR = data.MatchRow;
-                    int matchC = data.MatchCol;
-                    string matchN = data.MatchName;
+                    //数据插入行
                     int setR = data.SettingRow;
-                    int setC = data.SettingCol;
+                    //数据插入值
                     object setV = data.SettingValue;
-                    // 获取A列单元格值（转换为字符串）
-                    Excel.Range cell1 = (Excel.Range)worksheet.Cells[matchR, matchC];
-                    string value1 = cell1.Text as string ?? cell1.Value2?.ToString();
-                    if (value1 != null && value1.Trim().Equals(matchN, StringComparison.OrdinalIgnoreCase))
+                    //需要要匹配的行
+                    int matchR = data.MatchRow;
+                    //需要在行中匹配的数据
+                    string matchN = data.MatchName;
+                    //获取在对应行中匹配数据的列
+                    for (int i = 1; i <= 242; i++) 
                     {
-                        //  修改B列值
-                        Excel.Range cellB = (Excel.Range)worksheet.Cells[setR, setC];
-                        cellB.Value2 = setV;  // 只修改值，不改变格式
+                        Excel.Range cell0 = (Excel.Range)worksheet.Cells[matchR, i];
+                        string value0 = cell0.Text as string ?? cell0.Value2?.ToString();
+                        if (value0 != null && value0.Trim().Equals(matchN, StringComparison.OrdinalIgnoreCase))
+                        {
+                            //  修改B列值
+                            Excel.Range cellB = (Excel.Range)worksheet.Cells[setR, i];
+                            cellB.Value2 = setV;  // 只修改值，不改变格式
+                            break;
+                        }
                     }
+                    //int matchC = data.MatchCol;
+                    //int setC = data.SettingCol;
+                    //object setV = data.SettingValue;
+                    //// 获取A列单元格值（转换为字符串）
+                    //Excel.Range cell1 = (Excel.Range)worksheet.Cells[matchR, matchC];
+                    //string value1 = cell1.Text as string ?? cell1.Value2?.ToString();
+                    //if (value1 != null && value1.Trim().Equals(matchN, StringComparison.OrdinalIgnoreCase))
+                    //{
+                    //    //  修改B列值
+                    //    Excel.Range cellB = (Excel.Range)worksheet.Cells[setR, setC];
+                    //    cellB.Value2 = setV;  // 只修改值，不改变格式
+                    //}
 
 
                     //ProcessData(data);

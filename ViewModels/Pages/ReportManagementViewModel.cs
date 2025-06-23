@@ -290,16 +290,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DateTime today = now.Date;
             DateTime today8 = today.AddHours(8);
             DateTime today20 = today.AddHours(20);
-
+            string workShift =string.Empty; //上一个班次
             DateTime lastShiftStart, lastShiftEnd;
             if (now >= today8 && now < today20)
             {
                 // 当前是A班
                 lastShiftStart = today.AddDays(-1).AddHours(20); // 昨天20点
                 lastShiftEnd = today8; // 今天8点
+                workShift = "B班";
             }
             else
             {
+                workShift = "A班";
                 // 当前是B班
                 if (now >= today20)
                 {
@@ -314,10 +316,47 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     lastShiftEnd = today.AddDays(-1).AddHours(20);
                 }
             }
+
+            
             var db = new SqlAccess().SystemDataAccess;
-            var list = db.Queryable<Tbl_productiondatamodel>()
+            List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
                 .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
                 .ToList();
+
+            Queue<ExportDataModel> datas = new Queue<ExportDataModel>();
+            for (var i = 0; i < list.Count; i++)
+            {
+                string matchName =string.Empty;
+                int matchR = 760; //固定参数
+                int setR = 765 + i; //起始行765
+                string setValue = string.Empty;
+                //班次
+                matchName = "班次";
+                setValue = workShift;
+                datas.Enqueue(new ExportDataModel
+                {
+                    MatchRow = matchR,
+                    MatchName = matchName,
+                    SettingRow = setR,
+                    SettingValue = setValue
+                });
+                //单元
+                matchName = "单元";
+                setValue = "一检一";
+                datas.Enqueue(new ExportDataModel
+                {
+                    MatchRow = matchR,
+                    MatchName = matchName,
+                    SettingRow = setR,
+                    SettingValue = setValue
+                });
+                //轮型
+                matchName = "轮型";
+                setValue = "";
+
+                //
+
+            }
 
         }
 
