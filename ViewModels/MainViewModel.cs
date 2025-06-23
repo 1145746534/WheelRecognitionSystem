@@ -931,9 +931,10 @@ namespace WheelRecognitionSystem.ViewModels
                                     //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
                                     string prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
                                     bool FlowOrDown = S7.GetBitAt(ReadBuffer, 192, 0); //1回流 0下转
-                                    string showStatus = FlowOrDown ?"回流":"下转";
+                                    string showStatus = FlowOrDown ? "回流" : "下转";
                                     if (back)
                                     {
+                                        KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>(prefix_WheelCoding, showStatus);
                                         int indexPos = 144;
                                         int indexBit = i + 5;
                                         if (i >= 8)
@@ -944,7 +945,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
                                         PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                        //OnDataModificationTriggered(wheel);
+                                        OnDataModifiNextStation(modifiValue);
                                         EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
                                         new Thread((obj) =>
                                         {
@@ -1104,8 +1105,8 @@ namespace WheelRecognitionSystem.ViewModels
                 S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
                 Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{0}.{threadI}拍照流程完成");
             }).Start(model.Index - 1);
-            
-            
+
+
 
             //发送PLC的数据
             string prefix = DateTime.Now.ToString("mmss");
@@ -1186,6 +1187,61 @@ namespace WheelRecognitionSystem.ViewModels
 
         }
 
+        /// <summary>
+        /// 修改产品流向 下转/回流
+        /// </summary>
+        /// <param name="keyValue"></param>
+
+        private void OnDataModifiNextStation(KeyValuePair<string, string> keyValue)
+        {
+            SqlSugarClient db = new SqlAccess().SystemDataAccess;
+            try
+            {
+                string prefix_WheelCoding = keyValue.Key;
+                string station = keyValue.Value;
+                char[] parts = prefix_WheelCoding.ToCharArray();
+                if (parts.Count() != 12)
+                {
+                    throw new Exception($"NextStation-Prefix_WheelCoding数据长度错误：{parts.Count()}");
+                }
+
+                //string oldWheelType = new string(parts, 4, 8);
+
+                // 步骤1：查询符合条件的最新一条记录
+                Tbl_productiondatamodel latestRecord = db.Queryable<Tbl_productiondatamodel>()
+                    .Where(x => x.TransmissionCoding == prefix_WheelCoding)
+                    .OrderByDescending(x => x.ID)
+                    .First();
+
+                if (latestRecord != null)
+                {
+                    // 步骤2：更新 Result 和 Code
+                    var rowsAffected = db.Updateable<Tbl_productiondatamodel>()
+                        .SetColumns(it => new Tbl_productiondatamodel()
+                        {
+                            NextStation = station
+                        }).Where(it => it.ID == latestRecord.ID)
+                        .ExecuteCommand();
+
+                    Console.WriteLine($"NextStation-成功更新了 {rowsAffected} 条记录");
+                }
+                else
+                {
+                    Console.WriteLine($"NextStation-未找到匹配的记录:{prefix_WheelCoding}");
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DoJob:{ex.ToString()}");
+            }
+            finally
+            {
+                db?.Close();
+            }
+        }
 
         /// <summary>
         /// 数据修改 - 产品NG
@@ -1445,7 +1501,7 @@ namespace WheelRecognitionSystem.ViewModels
                     if (Directory.Exists(path))
                     {
                         Directory.Delete(path, true);
-                      
+
                         EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
                     }
                 }
@@ -1498,7 +1554,7 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
         /// <summary>
-        /// 
+        /// 设置显示状态
         /// </summary>
         /// <param name="index"></param>
         /// <param name="status"></param>
@@ -1508,7 +1564,7 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 case 1:
                     RecognitionStatus1 = status;
-                    Count1 = $"{countInt[index - 1]}_{count}" ;
+                    Count1 = $"{countInt[index - 1]}_{count}";
                     break;
                 case 2:
                     RecognitionStatus2 = status;

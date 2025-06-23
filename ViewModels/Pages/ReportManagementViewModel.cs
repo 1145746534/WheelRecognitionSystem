@@ -99,6 +99,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 数据导出命令
         /// </summary>
         public DelegateCommand DataExportCommand { get; set; }
+
+        /// <summary>
+        /// 上一个班次数据导出
+        /// </summary>
+        public DelegateCommand DataExportExcelCommand { get; set; }
         #endregion
 
         private ObservableCollection<Tbl_productiondatamodel> _identificationDatas;
@@ -155,6 +160,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DataInquireCommand = new DelegateCommand(DataInquire);
             DataStatisticsCommand = new DelegateCommand(DataStatistics);
             DataExportCommand = new DelegateCommand(DataExport);
+            DataExportExcelCommand = new DelegateCommand(DataExportExcel);
 
             IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>();
             StatisticsDatas = new ObservableCollection<StatisticsDataModel>();
@@ -274,6 +280,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (result) EventMessage.SystemMessageDisplay(exportResult, MessageType.Success);
                 else EventMessage.SystemMessageDisplay(exportResult, MessageType.Error);
             }
+        }
+
+
+        private void DataExportExcel()
+        {
+            //1.查询上一个班次的数据
+
         }
 
         /// <summary>

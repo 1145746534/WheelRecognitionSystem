@@ -20,8 +20,6 @@ namespace WheelRecognitionSystem.Public
             Application excelApp = null;
             Workbook workbook = null;
 
-
-
             try
             {
                 string path = CopyFileWithDateName(filePath, targetDir);
