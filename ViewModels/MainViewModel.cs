@@ -1284,7 +1284,7 @@ namespace WheelRecognitionSystem.ViewModels
                         .Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
 
-                    Console.WriteLine($"成功更新了 {rowsAffected} 条记录");
+                    Console.WriteLine($"{prefix_WheelCoding} 成功更新了 {rowsAffected} 条记录");
                 }
                 else
                 {

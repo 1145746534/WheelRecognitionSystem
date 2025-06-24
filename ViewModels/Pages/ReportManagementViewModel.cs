@@ -320,17 +320,24 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     lastShiftEnd = today.AddDays(-1).AddHours(20);
                 }
             }
-            var db = new SqlAccess().SystemDataAccess;
-            List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
-                .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
-                .ToList();
-            var multiLevel = list
-                .GroupBy(item => new
-                {
-                    item.Model,
-                    item.Remark
-                }).ToList();
-            await Task.Delay(1000);
+
+           
+            await Task.Run(() => {
+
+                var db = new SqlAccess().SystemDataAccess;
+                List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
+                    .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
+                    .ToList();
+                var multiLevel = list
+                    .GroupBy(item => new
+                    {
+                        item.Model,
+                        item.Remark
+                    }).ToList();
+
+                ExcelHelper excelHelper = new ExcelHelper();
+
+            });
 
             return true;
         }

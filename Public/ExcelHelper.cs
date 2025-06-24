@@ -42,21 +42,29 @@ namespace WheelRecognitionSystem.Public
                 while (exportDatas.Count > 0)
                 {
                     ExportDataModel data = exportDatas.Dequeue();
+                    //匹配项
                     int matchR = data.MatchRow;
-                    int matchC = data.MatchCol;
                     string matchN = data.MatchName;
+                    //插入项
                     int setR = data.SettingRow;
-                    int setC = data.SettingCol;
                     object setV = data.SettingValue;
-                    // 获取A列单元格值（转换为字符串）
-                    Excel.Range cell1 = (Excel.Range)worksheet.Cells[matchR, matchC];
-                    string value1 = cell1.Text as string ?? cell1.Value2?.ToString();
-                    if (value1 != null && value1.Trim().Equals(matchN, StringComparison.OrdinalIgnoreCase))
+                    //循环这个行下所有的列
+                    for (int i = 1; i < 242; i++)
                     {
-                        //  修改B列值
-                        Excel.Range cellB = (Excel.Range)worksheet.Cells[setR, setC];
-                        cellB.Value2 = setV;  // 只修改值，不改变格式
+                        // 单元格值（转换为字符串）
+                        Excel.Range cell1 = (Excel.Range)worksheet.Cells[matchR, i];
+                        string value1 = cell1.Text as string ?? cell1.Value2?.ToString();
+                        if (value1 != null && value1.Trim().Equals(matchN, StringComparison.OrdinalIgnoreCase))
+                        {
+                            //  修改B列值
+                            Excel.Range cellB = (Excel.Range)worksheet.Cells[setR, i];
+                            cellB.Value2 = setV;  // 只修改值，不改变格式
+                            break;
+                        }
+
                     }
+
+                    
 
 
                     //ProcessData(data);
