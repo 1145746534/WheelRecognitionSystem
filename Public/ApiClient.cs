@@ -74,10 +74,10 @@ namespace WheelRecognitionSystem.Public
                 {
                     var response = await apiClient.PostJsonAsync<LoginRequest, ApiResponse>(
                         "https://api.example.com/login",
-                        new LoginRequest { Username = "test", Password = "pass" }
+                        new LoginRequest { deviceNo = "test", guids = "pass" }
                     );
 
-                    Console.WriteLine($"成功: {response.AccessToken}");
+                    Console.WriteLine($"成功: {response.success}");
                 }
                 catch (Exception ex)
                 {
@@ -90,15 +90,18 @@ namespace WheelRecognitionSystem.Public
     // 示例请求模型
     public class LoginRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string deviceNo;
+        public string guids;
     }
 
     // 示例响应模型
     public class ApiResponse
     {
-        public bool Success { get; set; }
-        public string AccessToken { get; set; }
-        public DateTime ExpiresAt { get; set; }
+        public bool code;
+        public string success;
+        public string msg;
+        public string data;
+
+        public DateTime time;
     }
 }
