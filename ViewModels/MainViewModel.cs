@@ -1191,7 +1191,12 @@ namespace WheelRecognitionSystem.ViewModels
         {
             await Task.Run(() =>
             {
-
+                //http://192.168.0.101/vboard/boardGrid
+                //单工位示例参数：
+                //        {
+                //    "deviceNo": "123456",
+                //            "guids": ["guid_01"]
+                //        }
             });
         }
 
