@@ -1180,11 +1180,19 @@ namespace WheelRecognitionSystem.ViewModels
             dataModel.Station = "";
             dataModel.ImagePath = model.imagePath;
             dataModel.ResultBool = model.resultModel.ResultBol;
-            dataModel.Remark = "";
+            dataModel.Remark = "-1";
             pDB.Insertable(dataModel).ExecuteCommand();
 
             pDB.Close();
 
+        }
+
+        private async void PostMes()
+        {
+            await Task.Run(() =>
+            {
+
+            });
         }
 
         /// <summary>
@@ -1223,7 +1231,7 @@ namespace WheelRecognitionSystem.ViewModels
                         }).Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
 
-                    Console.WriteLine($"NextStation-成功更新了 {rowsAffected} 条记录");
+                    Console.WriteLine($"NextStation-成功更新了{rowsAffected}条记录");
                 }
                 else
                 {
@@ -1260,7 +1268,7 @@ namespace WheelRecognitionSystem.ViewModels
                 char[] parts = prefix_WheelCoding.ToCharArray();
                 if (parts.Count() != 12)
                 {
-                    throw new Exception($"Prefix_WheelCoding数据长度错误：{parts.Count()}");
+                    throw new Exception($"Prefix_WheelCoding数据长度{prefix_WheelCoding}错误：{parts.Count()}");
                 }
 
                 //string oldWheelType = new string(parts, 4, 8);
@@ -1284,7 +1292,7 @@ namespace WheelRecognitionSystem.ViewModels
                         .Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
 
-                    Console.WriteLine($"{prefix_WheelCoding} 成功更新了 {rowsAffected} 条记录");
+                    Console.WriteLine($"{DateTime.Now} {prefix_WheelCoding}更新了{rowsAffected}条记录{wheelDefect}");
                 }
                 else
                 {

@@ -560,10 +560,10 @@ namespace WheelRecognitionSystem.Public
                     }
                     HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                     HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                    for (int i = 0; i < names.Length; i++)
-                    {
-                        Console.WriteLine($"数据：{names[i].S} 结果：{confidences[i].D.ToString("0.0000")}");
-                    }
+                    //for (int i = 0; i < names.Length; i++)
+                    //{
+                    //    Console.WriteLine($"数据：{names[i].S} 结果：{confidences[i].D.ToString("0.0000")}");
+                    //}
                     return hv_DLResult;
 
                 }

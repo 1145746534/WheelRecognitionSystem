@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WheelRecognitionSystem.Models
 {
-    internal class ExportDataModel
+    public class ExportDataModel
     {
         /// <summary>
         /// 匹配行

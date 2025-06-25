@@ -14,7 +14,13 @@ namespace WheelRecognitionSystem.Public
 {
     public class ExcelHelper
     {
-        private void ModifyExcelFile(Queue<ExportDataModel> exportDatas, string filePath, string sheetName, string targetDir)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="exportDatas"></param>
+        /// <param name="sourceFile"></param>
+        /// <param name="targetDir"></param>
+        public void ModifyExcelFile(Queue<ExportDataModel> exportDatas, string sourceFile, string targetDir)
         {
 
             Application excelApp = null;
@@ -22,7 +28,8 @@ namespace WheelRecognitionSystem.Public
 
             try
             {
-                string path = CopyFileWithDateName(filePath, targetDir);
+                string sheetName = "模板";
+                string path = CopyFileWithDateName(sourceFile, targetDir);
 
                 // 1. 创建Excel应用实例
                 excelApp = new Application();

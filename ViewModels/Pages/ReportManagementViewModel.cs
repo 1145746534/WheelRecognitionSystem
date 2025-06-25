@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using MySqlX.XDevAPI.Common;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
@@ -211,13 +212,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 List<StatisticsDataModel> statisticsDatas = new List<StatisticsDataModel>();
                 for (int i = 0; i < productionList.Count; i++)
                 {
-                    int index = statisticsDatas.FindIndex(x => x.WheelType == productionList[i].WheelType.Trim('_'));
+                    int index = statisticsDatas.FindIndex(x => x.WheelType == productionList[i].Model);
                     if (index < 0)
                     {
                         StatisticsDataModel statisticsDataModel = new StatisticsDataModel
                         {
                             Index = statisticsDatas.Count + 1,
-                            WheelType = productionList[i].WheelType.Trim('_'),
+                            WheelType = productionList[i].Model,
                             WheelCount = 1
                         };
                         statisticsDatas.Add(statisticsDataModel);
@@ -296,16 +297,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             DateTime today = now.Date;
             DateTime today8 = today.AddHours(8);
             DateTime today20 = today.AddHours(20);
-
+            string workShift = string.Empty;
             DateTime lastShiftStart, lastShiftEnd;
             if (now >= today8 && now < today20)
             {
                 // 当前是A班
                 lastShiftStart = today.AddDays(-1).AddHours(20); // 昨天20点
                 lastShiftEnd = today8; // 今天8点
+                workShift = "晚";
             }
             else
             {
+                workShift = "白";
                 // 当前是B班
                 if (now >= today20)
                 {
@@ -321,25 +324,152 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
             }
 
-           
-            await Task.Run(() => {
+
+            await Task.Run(() =>
+            {
 
                 var db = new SqlAccess().SystemDataAccess;
                 List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
                     .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
                     .ToList();
-                var multiLevel = list
-                    .GroupBy(item => new
-                    {
-                        item.Model,
-                        item.Remark
-                    }).ToList();
 
+                var summaryResults = GroupByModelThenRemarkWithSummary(list);
+                //每一个单元格都需要往队列里面添数据
+                Queue<ExportDataModel> exportDatas = new Queue<ExportDataModel>();
+                int appendIndex = 0;
+                foreach (var modelSummary in summaryResults)
+                {
+                    //班次
+                    int matchRow = 760;
+                    string matchName = "班次";
+                    int setRow = 765 + appendIndex;
+                    object setValue = workShift;
+                    exportDatas.Enqueue(new ExportDataModel()
+                    {
+                        MatchRow = matchRow,
+                        MatchName = matchName,
+                        SettingRow = setRow,
+                        SettingValue = setValue
+                    });
+                    //单元
+
+
+                    //轮形
+                    matchRow = 760;
+                    matchName = "轮型";
+                    setRow = 765 + appendIndex;
+                    setValue = modelSummary.Model;
+                    exportDatas.Enqueue(new ExportDataModel()
+                    {
+                        MatchRow = matchRow,
+                        MatchName = matchName,
+                        SettingRow = setRow,
+                        SettingValue = setValue
+                    });
+
+                    Console.WriteLine($"型号: {modelSummary.Model}");
+                    Console.WriteLine($"  总记录数: {modelSummary.TotalCount}");
+
+
+                    foreach (var remarkGroup in modelSummary.RemarkGroups)
+                    {
+                        double percentage = (double)remarkGroup.Count / modelSummary.TotalCount * 100;
+                        Console.WriteLine($"    - 备注: {remarkGroup.Remark}, 数量: {remarkGroup.Count} ({percentage:F1}%)");
+                        if (string.IsNullOrEmpty(remarkGroup.Remark) || remarkGroup.Remark == "-1") //为空或者-1就是OK的产品
+                        {
+
+                            //OK量
+                            matchRow = 760;
+                            matchName = "成品量";
+                            
+                        }else
+                        {
+                            string result = remarkGroup.Remark.PadLeft(3, '0');
+                            matchRow = 763;
+                            matchName = $"5{result}";
+
+                        }
+                        setRow = 765 + appendIndex;
+                        setValue = remarkGroup.Count;
+
+                        exportDatas.Enqueue(new ExportDataModel()
+                        {
+                            MatchRow = matchRow,
+                            MatchName = matchName,
+                            SettingRow = setRow,
+                            SettingValue = setValue
+                        });
+
+                    }
+
+                    Console.WriteLine("----------------------------------");
+                    appendIndex = appendIndex + 1;
+                }
                 ExcelHelper excelHelper = new ExcelHelper();
+                excelHelper.ModifyExcelFile(exportDatas,"D:\\ZS\\数据导出.xlsx", "D:\\");
+                excelHelper = null;
+                exportDatas = null;
+                db.Dispose();
+                summaryResults = null;
+                //PrintSummaryResults(summaryResults);
+
+                //ExcelHelper excelHelper = new ExcelHelper();
 
             });
 
             return true;
+        }
+
+        /// <summary>
+        /// 双层分组统计（带汇总信息）
+        /// </summary>
+        public List<ModelGroupSummary> GroupByModelThenRemarkWithSummary(
+            List<Tbl_productiondatamodel> dataList)
+        {
+            // 先按Model分组
+            return dataList
+                .GroupBy(item => item.Model ?? "无型号")
+                .Select(modelGroup => new ModelGroupSummary
+                {
+                    Model = modelGroup.Key,
+                    TotalCount = modelGroup.Count(),
+                    RemarkGroups = modelGroup
+                        .GroupBy(item => item.Remark ?? "无备注")
+                        .Select(remarkGroup => new RemarkGroup
+                        {
+                            Remark = remarkGroup.Key,
+                            Count = remarkGroup.Count()
+                        })
+                        .OrderBy(rg => rg.Remark)
+                        .ToList()
+                })
+                .OrderBy(summary => summary.Model)
+                .ToList();
+        }
+
+        private static void PrintSummaryResults(List<ModelGroupSummary> summaries)
+        {
+            //每一个单元格都需要往队列里面添数据
+            Queue<ExportDataModel> exportDatas = new Queue<ExportDataModel>();
+            foreach (var modelSummary in summaries)
+            {
+                int matchRow = 760;
+                string matchName = "班次";
+                int setRow = 765;
+                string setValue = "";
+                Console.WriteLine($"型号: {modelSummary.Model}");
+                Console.WriteLine($"  总记录数: {modelSummary.TotalCount}");
+
+
+                foreach (var remarkGroup in modelSummary.RemarkGroups)
+                {
+                    double percentage = (double)remarkGroup.Count / modelSummary.TotalCount * 100;
+                    Console.WriteLine($"    - 备注: {remarkGroup.Remark}, 数量: {remarkGroup.Count} ({percentage:F1}%)");
+                    
+                }
+
+                Console.WriteLine("----------------------------------");
+            }
         }
 
         /// <summary>
@@ -409,5 +539,33 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             string strDateTime = strDate + hour + ":" + minute + ":00";
             return DateTime.TryParse(strDateTime, out dateTime);
         }
+    }
+    public class ModelGroupResult
+    {
+        public string Model { get; set; }
+        public int Count { get; set; }
+
+        public override string ToString() => $"{Model ?? "无型号"} : {Count} 条记录";
+    }
+    public class ModelGroupSummary
+    {
+        public string Model { get; set; }
+        public int TotalCount { get; set; }        // 该型号总条数
+        public List<RemarkGroup> RemarkGroups { get; set; } // 该型号下的备注分组
+    }
+
+    public class RemarkGroup
+    {
+        public string Remark { get; set; }
+        public int Count { get; set; }
+    }
+    public class ModelRemarkGroupResult
+    {
+        public string Model { get; set; }          // 第一级分组
+        public string Remark { get; set; }         // 第二级分组
+        public int Count { get; set; }             // 统计条数
+
+        public override string ToString() =>
+            $"{Model ?? "无型号"} | {Remark ?? "无备注"} : {Count} 条记录";
     }
 }
