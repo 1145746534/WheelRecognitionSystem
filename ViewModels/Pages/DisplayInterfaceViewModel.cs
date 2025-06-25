@@ -425,49 +425,27 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="obj"></param>
         private void Inplace(KeyValuePair<bool, int> obj)
         {
-            if (obj.Key)
+            string value = obj.Key ? "1" : "0";
+            //显示
+            switch (obj.Value)
             {
-                //显示
-                switch (obj.Value)
-                {
-                    case 1:
-                        Inplace1 = "1";
-                        break;
-                    case 2:
-                        Inplace2 = "1";
-                        break;
-                    case 3:
-                        Inplace3 = "1";
-                        break;
-                    case 4:
-                        Inplace4 = "1";
-                        break;
-                    case 5:
-                        Inplace5 = "1";
-                        break;
-                }
+                case 1:
+                    Inplace1 = value;
+                    break;
+                case 2:
+                    Inplace2 = value;
+                    break;
+                case 3:
+                    Inplace3 = value;
+                    break;
+                case 4:
+                    Inplace4 = value;
+                    break;
+                case 5:
+                    Inplace5 = value;
+                    break;
             }
-            else
-            {
-                switch (obj.Value)
-                {
-                    case 1:
-                        Inplace1 = "0";
-                        break;
-                    case 2:
-                        Inplace2 = "0";
-                        break;
-                    case 3:
-                        Inplace3 = "0";
-                        break;
-                    case 4:
-                        Inplace4 = "0";
-                        break;
-                    case 5:
-                        Inplace5 = "0";
-                        break;
-                }
-            }
+
         }
 
 
@@ -497,31 +475,23 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             interact.resultModel = new RecognitionResultModel();
             int index = interact.Index - 1;
-            HObject image = null;
             if (cameras[index] != null && cameras[index].IsConnected)
             {
+                AutoRecognitionResultDisplayModel resultDisplayModel = null;
+                HObject _image = null;
                 try
                 {
-                    //清空显示                    
-                    //ResultDisplay(new AutoRecognitionResultDisplayModel()
-                    //{
-                    //    CurrentImage = null,
-                    //    WheelContour = null,
-                    //    TemplateContour = null,
-                    //    index = interact.Index
-                    //});
 
                     MyCameraMV camera = cameras[index];
                     interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
-                    image = camera.Grabimage();
-                    AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(interact, image);
+                    _image = camera.Grabimage();
+                    resultDisplayModel = Tackle(interact, _image);
                     interact.endTime = DateTime.Now;
                     ResultDisplay(resultDisplayModel);
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                     //保存图片
-                    interact.imagePath = await SaveImageDatasAsync(image, way, resultDisplayModel.WheelType);
-                    resultDisplayModel.Dispose();
+                    interact.imagePath = await SaveImageDatasAsync(_image, way, resultDisplayModel.WheelType);
                 }
                 catch (Exception ex)
                 {
@@ -530,7 +500,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 finally
                 {
-                    image?.Dispose();
+                    _image?.Dispose();
+                    resultDisplayModel?.Dispose();
+
                 }
             }
             else
@@ -550,20 +522,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="CurrentImage"></param>
         public AutoRecognitionResultDisplayModel Tackle(InteractS7PLCModel interact, HObject CurrentImage)
         {
-            HObject image = new HObject();
+            //灰度图
+            HObject _image = new HObject();
             //彩色图需转成灰度图
             HOperatorSet.CountChannels(CurrentImage, out HTuple Channels);
             if (Channels.I == 3)
             {
                 HOperatorSet.Decompose3(CurrentImage, out HObject image1, out HObject image2, out HObject image3);
-                image = image1;
+                _image = image1;
             }
             else
-                image = CurrentImage;
+                _image = CurrentImage;
 
 
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(image, WheelMinThreshold, 255, WheelMinRadius);
+            PositioningWheelResultModel pResult = PositioningWheel(_image, WheelMinThreshold, 255, WheelMinRadius);
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
             HObject imageRecogn = new HObject();
@@ -576,7 +549,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else
             {
-                imageRecogn = image;
+                imageRecogn = _image;
             }
             //没有定位到轮毂            
             //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
@@ -630,6 +603,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 index = interact.Index
 
             };
+            _image?.Dispose();
             return autoRecognitionResult;
             //图像结果显示
             //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
@@ -918,6 +892,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <exception cref="NotImplementedException"></exception>
         private void ResultDisplay(AutoRecognitionResultDisplayModel model)
         {
+            if (model == null)
+                return;
+
             string value = string.Empty;
             //计算图像灰度值
             if (model.CurrentImage != null && model.CurrentImage.IsInitialized())

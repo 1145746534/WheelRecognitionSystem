@@ -35,9 +35,9 @@ namespace WheelRecognitionSystem.Models
 
         public void Dispose()
         {
-            CurrentImage?.Dispose();
-            WheelContour?.Dispose();
-            TemplateContour?.Dispose();
+            CurrentImage=null;
+            WheelContour=null;
+            TemplateContour=null;
         }
         ///// <summary>
         /////  浇口轮廓

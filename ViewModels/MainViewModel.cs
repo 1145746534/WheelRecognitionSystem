@@ -625,11 +625,11 @@ namespace WheelRecognitionSystem.ViewModels
 
         public MainViewModel(IRegionManager regionManager)
         {
-            Task.Run(() =>
-            {
-                //LoadTemplates();
-                //TemplatesLoading = false;
-            });
+            //Task.Run(() =>
+            //{
+            //    //LoadTemplates();
+            //    //TemplatesLoading = false;
+            //});
             LoadSystemDatas();
             ExternalConnectionThread();
             //MainThread();
@@ -749,9 +749,10 @@ namespace WheelRecognitionSystem.ViewModels
                 WheelMinRadius = int.Parse(systemDatas.First(x => x.Name == "WheelMinRadius").Value);
                 #endregion
                 //加载活跃轮型数据
-                TodayWheels.Clear();
-                var datas = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().ToList();
-                for (int i = 0; i < datas.Count; i++) TodayWheels.Add(datas[i].WheelType);
+                //TodayWheels.Clear();
+                //var datas = sDB.Queryable<Sys_bd_activewheeltypedatamodel>().ToList();
+                //for (int i = 0; i < datas.Count; i++) 
+                //    TodayWheels.Add(datas[i].WheelType);
                 EventMessage.MessageDisplay("系统数据加载完成。", true, false);
             }
             catch (Exception ex)
@@ -1107,7 +1108,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
-            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
+            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}"object , true, true);
             new Thread((obj) =>
             {
                 int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1195,6 +1196,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             //关闭连接
             pDB.Close();
+            model = null;
 
         }
 
@@ -1352,14 +1354,14 @@ namespace WheelRecognitionSystem.ViewModels
         /// <returns></returns>
         private bool LoginCheck(string name, string pass)
         {
+            var sDB = new SqlAccess().SystemDataAccess;
+
             try
             {
-                var sDB = new SqlAccess().SystemDataAccess;
                 List<Tbl_user> listUsers = sDB.Queryable<Tbl_user>().Where(x => x.User_name == name
                                                 && x.Password == pass
                                                 && x.Del_flag == "0"
                                                 && x.Status == "0").ToList();
-                sDB.Close();
                 if (listUsers.Count > 0)
                     return true;
 
@@ -1367,6 +1369,9 @@ namespace WheelRecognitionSystem.ViewModels
             catch (Exception e)
             {
                 Console.WriteLine($"LoginCheck : {e.Message}");
+            }finally
+            {
+                sDB?.Close();
             }
             return false;
         }
