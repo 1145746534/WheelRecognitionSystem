@@ -500,7 +500,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 finally
                 {
-                    _image?.Dispose();
+                    //_image?.Dispose();
                     resultDisplayModel?.Dispose();
 
                 }
@@ -603,7 +603,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 index = interact.Index
 
             };
-            _image?.Dispose();
+            //_image?.Dispose();
             return autoRecognitionResult;
             //图像结果显示
             //EventMessage.MessageHelper.GetEvent<AutoRecognitionResultDisplayEvent>().Publish(autoRecognitionResult);
@@ -1139,6 +1139,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     saveImagePath = savePath.Replace(@"\", "/");
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+                    saveImage.Dispose();
                 });
                 if (way == SaveWay.Hand)
                     Application.Current.Dispatcher.Invoke(() =>
