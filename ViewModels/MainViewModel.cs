@@ -36,7 +36,6 @@ using Mysqlx;
 using System.Windows.Media.Media3D;
 using NPOI.Util;
 using System.ComponentModel.DataAnnotations;
-using System.Net.Http;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -619,8 +618,6 @@ namespace WheelRecognitionSystem.ViewModels
 
         private int[] countInt = new int[5];
 
-        private Dictionary<string, string> dicMesGuid = new Dictionary<string, string>();
-
         #endregion
 
         public MainViewModel(IRegionManager regionManager)
@@ -862,15 +859,15 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
-            readPLCSignals[0].CameraName = "1检1";
+            readPLCSignals[0].Name = "1检1";
             readPLCSignals[0].Index = 0;
-            readPLCSignals[1].CameraName = "1检2A_B";
+            readPLCSignals[1].Name = "1检2A_B";
             readPLCSignals[1].Index = 1;
-            readPLCSignals[2].CameraName = "1检3";
+            readPLCSignals[2].Name = "1检3";
             readPLCSignals[2].Index = 2;
-            readPLCSignals[3].CameraName = "1检3返修";
+            readPLCSignals[3].Name = "1检3返修";
             readPLCSignals[3].Index = 3;
-            readPLCSignals[4].CameraName = "2检1";
+            readPLCSignals[4].Name = "2检1";
             readPLCSignals[4].Index = 4;
             PlcDataInteractionControl = true;
             Task.Run(async () =>
@@ -914,7 +911,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     if (b)
                                     {
                                         S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
-                                        EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].CameraName} 143.{i}", true, true);
+                                        EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
                                         new Thread((obj) =>
                                         {
                                             int threadI = (int)obj;  // 将 object 类型转为 int
@@ -950,14 +947,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
                                         PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         OnDataModifiNextStation(modifiValue);
-                                        //上传mes
-                                        string dev = readPLCSignals[i].CameraName;
-                                        string value = dicMesGuid[prefix_WheelCoding];
-                                        PostMes(dev, value);
-                                        dicMesGuid.Remove(prefix_WheelCoding);
-
                                         EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
-                                        //信号复位
                                         new Thread((obj) =>
                                         {
                                             int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1077,7 +1067,7 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 ReadPLCSignal plcSignal = sender as ReadPLCSignal;
                 //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 轮毂到位：{plcSignal.Index}");
-                EventMessage.MessageDisplay($"轮毂到位：{plcSignal.CameraName}", true, true);
+                EventMessage.MessageDisplay($"轮毂到位：{plcSignal.Name}", true, true);
 
                 int n = plcSignal.Index + 1; //线体 下标加1
                 countInt[plcSignal.Index] = countInt[plcSignal.Index] + 1;
@@ -1175,6 +1165,9 @@ namespace WheelRecognitionSystem.ViewModels
             SetStatus(model.Index, model.resultModel.status);
             EventMessage.MessageDisplay($"{model.Index}号{model.resultModel.status} 型号：{wheelType}", true, false);
 
+
+            //插入数据库
+            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
             Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
             dataModel.GUID = Guid.NewGuid().ToString("N");
             dataModel.WheelType = recognType;
@@ -1189,17 +1182,25 @@ namespace WheelRecognitionSystem.ViewModels
             dataModel.ImagePath = model.imagePath;
             dataModel.ResultBool = model.resultModel.ResultBol;
             dataModel.Remark = "-1";
-            dicMesGuid.Add(dataModel.TransmissionCoding, dataModel.GUID);
-            //插入数据库
-            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
             pDB.Insertable(dataModel).ExecuteCommand();
 
-            //关闭连接
             pDB.Close();
             model = null;
 
         }
 
+        private async void PostMes()
+        {
+            await Task.Run(() =>
+            {
+                //http://192.168.0.101/vboard/boardGrid
+                //单工位示例参数：
+                //        {
+                //    "deviceNo": "123456",
+                //            "guids": ["guid_01"]
+                //        }
+            });
+        }
 
         /// <summary>
         /// 修改产品流向 下转/回流
@@ -1218,6 +1219,8 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     throw new Exception($"NextStation-Prefix_WheelCoding数据长度错误：{parts.Count()}");
                 }
+
+                //string oldWheelType = new string(parts, 4, 8);
 
                 // 步骤1：查询符合条件的最新一条记录
                 Tbl_productiondatamodel latestRecord = db.Queryable<Tbl_productiondatamodel>()
@@ -1253,38 +1256,6 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 db?.Close();
             }
-        }
-
-        private async void PostMes(string _deviceNo, string _guid)
-        {
-            string url = "http://192.168.0.101/vboard/boardGrid";
-            //http://192.168.0.101/vboard/boardGrid
-            //单工位示例参数：
-            //        {
-            //    "deviceNo": "123456",
-            //            "guids": ["guid_01"]
-            //        }
-
-            using (var httpClient = new HttpClient())
-            {
-                var apiClient = new ApiClient(httpClient);
-
-                try
-                {
-                    var response = await apiClient.PostJsonAsync<LoginRequest, ApiResponse>(
-                        url,
-                        new LoginRequest { deviceNo = _deviceNo, guids = _guid }
-                    );
-
-                    Console.WriteLine($"成功: {response.success}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"失败: {ex.Message}");
-                }
-            }
-
-
         }
 
         /// <summary>

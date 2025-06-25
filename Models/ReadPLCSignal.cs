@@ -33,7 +33,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 名称
         /// </summary>
-        public string CameraName
+        public string Name
         {
             get { return _name; }
             set { SetProperty(ref _name, value); }
