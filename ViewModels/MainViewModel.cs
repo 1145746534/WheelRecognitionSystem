@@ -36,6 +36,7 @@ using Mysqlx;
 using System.Windows.Media.Media3D;
 using NPOI.Util;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -509,7 +510,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 读缓冲区
         /// </summary>
-        private byte[] ReadBuffer = new byte[1400];
+        private byte[] _readBuffer = new byte[1400];
         /// <summary>
         /// 写入PLC数据的DB块
         /// </summary>
@@ -529,6 +530,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// 写入缓冲区
         /// </summary>
         private byte[] WriteBuffer = new byte[90];
+
 
 
         /// <summary>
@@ -776,10 +778,12 @@ namespace WheelRecognitionSystem.ViewModels
         private void ExternalConnectionThread()
         {
             ExternalConnectionThreadControl = true;
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (ExternalConnectionThreadControl)
                 {
+                    await Task.Delay(50);
+
                     if (PlcCilent != null && !PlcCilent.Connected)
                     {
                         //连接PLC
@@ -844,16 +848,15 @@ namespace WheelRecognitionSystem.ViewModels
                         S7.SetBitAt(ref WriteBuffer, 0, 5, heartBool);
                         heartBool = !heartBool;
                     }
-                    else
-                    {
 
-                    }
-                    await Task.Delay(500);
+                    await Task.Delay(800);
                 }
             });
         }
 
         int count;
+        private readonly object _writeBufferLock;
+
         /// <summary>
         /// PLC数据交互线程
         /// </summary>
@@ -870,6 +873,10 @@ namespace WheelRecognitionSystem.ViewModels
             readPLCSignals[4].Name = "2检1";
             readPLCSignals[4].Index = 4;
             PlcDataInteractionControl = true;
+            _readBuffer = new byte[ReadLenght - ReadStartAddress];
+            float temperature;
+            KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>();
+            KeyValuePair<string, int> wheel;
             Task.Run(async () =>
             {
                 while (PlcDataInteractionControl)
@@ -878,162 +885,141 @@ namespace WheelRecognitionSystem.ViewModels
                     {
                         try
                         {
-                            //读PLC给视觉的数据
                             //1.相机拍照信号 分为五个相机触发信号  1检1 1检2A和2B共用一个相机  1检3 一检3返修  2检1
-                            //                               0         1290
-                            ReadBuffer = new byte[ReadLenght - ReadStartAddress];
-                            int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, ReadBuffer);
-                            if (bytes_read == 0) // 成功读取
-                            {
-                                //轮毂温度 3条线
-                                readPLCSignals[0].WheelTemperature = S7.GetRealAt(ReadBuffer, 124);
-                                float temperature = S7.GetRealAt(ReadBuffer, 128);
-                                readPLCSignals[1].WheelTemperature = temperature;
-                                readPLCSignals[2].WheelTemperature = temperature;
-                                readPLCSignals[3].WheelTemperature = S7.GetRealAt(ReadBuffer, 132);
+                            //5个相机 5个触摸屏
 
-                                //计数
-                                count = S7.GetIntAt(ReadBuffer, 156);
-
-                                //Console.WriteLine($"PLC计算数量：{count}");
-
-                                //1.相机拍照部分
-                                //轮毂到位允许拍照信号
-                                for (int i = 0; i < readPLCSignals.Length; i++)
-                                {
-                                    //轮型编码 =  分秒 + 轮型  用于看板显示
-                                    readPLCSignals[i].WheelCoding = GetBytesToString(ReadBuffer, 2 + i * 16).Trim();
-                                    //轮毂高度
-                                    readPLCSignals[i].WheelHeight = S7.GetRealAt(ReadBuffer, 136 + i * 4);
-
-                                    bool b = S7.GetBitAt(ReadBuffer, 108, i);
-                                    readPLCSignals[i].ArrivalSignal = b;
-                                    if (b)
-                                    {
-                                        S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
-                                        EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
-                                        new Thread((obj) =>
-                                        {
-                                            int threadI = (int)obj;  // 将 object 类型转为 int
-                                            Thread.Sleep(500);
-                                            S7.SetBitAt(ref WriteBuffer, 143, threadI, false); //复位读取成功
-                                            EventMessage.MessageDisplay($"复位{143}.{threadI}读取拍照成功", true, true);
-
-                                        }).Start(i);
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                    }
-                                }
-
-                                //回流状态 - 修改数据
-                                for (int i = 0; i < readPLCSignals.Length; i++)
-                                {
-                                    //读取回流状态触发信号
-                                    bool back = S7.GetBitAt(ReadBuffer, 192, i + 1);
-                                    //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
-                                    string prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
-                                    bool FlowOrDown = S7.GetBitAt(ReadBuffer, 192, 0); //1回流 0下转
-                                    string showStatus = FlowOrDown ? "回流" : "下转";
-                                    if (back)
-                                    {
-                                        KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>(prefix_WheelCoding, showStatus);
-                                        int indexPos = 144;
-                                        int indexBit = i + 5;
-                                        if (i >= 8)
-                                        {
-                                            indexPos = indexPos + 1;
-                                            indexBit = indexBit - 8;
-                                        }
-
-                                        S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                        OnDataModifiNextStation(modifiValue);
-                                        EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
-                                        new Thread((obj) =>
-                                        {
-                                            int threadI = (int)obj;  // 将 object 类型转为 int
-                                            int indexPos1 = 144;
-                                            int indexBit1 = threadI + 5;
-                                            if (i >= 8)
-                                            {
-                                                indexPos1 = indexPos1 + 1;
-                                                indexBit1 = indexBit1 - 8;
-                                            }
-                                            Thread.Sleep(500);
-                                            S7.SetBitAt(ref WriteBuffer, indexPos1, indexBit1, false); //复位读取成功
-                                            EventMessage.MessageDisplay($"复位{indexPos1}.{indexBit1}回流状态", true, true);
-                                        }).Start(i);
-                                    }
-                                }
-
-                                //产品NG - 修改数据
-                                for (int i = 0; i < readPLCSignals.Length; i++)
-                                {
-                                    //轮形编码 -PLC传输过来的 mmss_轮形号 用于修改数据
-                                    string prefix_WheelCoding = GetBytesToString(ReadBuffer, 314 + i * 16);
-                                    //缺陷
-                                    int wheelDefect = BitConverter.ToInt16(new byte[] { ReadBuffer[99 + i * 2], ReadBuffer[98 + i * 2] }, 0);
-                                    KeyValuePair<string, int> wheel = new KeyValuePair<string, int>(prefix_WheelCoding, wheelDefect);
-                                    //数据修正信号
-                                    bool b = S7.GetBitAt(ReadBuffer, 193, i);
-                                    if (b)
-                                    {
-                                        S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                        OnDataModificationTriggered(wheel);
-                                        EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
-                                        new Thread((obj) =>
-                                        {
-                                            int threadI = (int)obj;  // 将 object 类型转为 int
-                                            Thread.Sleep(500);
-                                            S7.SetBitAt(ref WriteBuffer, 144, threadI, false); //复位读取成功
-                                            EventMessage.MessageDisplay($"复位{144}.{threadI}回复读取修正信号成功", true, true);
-                                        }).Start(i);
-                                    }
-
-                                }
-
-
-
-                                //读取登录信号
-                                for (int i = 0; i < 5; i++)
-                                {
-                                    S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
-                                    S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
-                                                                                 //Console.WriteLine($"完成信号{i}：{S7.GetBitAt(WriteBuffer, 141, i)}");
-                                    bool loginTrigger = S7.GetBitAt(ReadBuffer, 191, i);
-                                    string name = GetBytesToString(ReadBuffer, 194 + i * 12).Replace("\0", "");
-                                    string password = GetBytesToString(ReadBuffer, 254 + i * 12).Replace("\0", "");
-                                    if (loginTrigger)
-                                    {
-                                        bool isLogin = LoginCheck(name, password);
-                                        if (isLogin)
-                                            S7.SetBitAt(ref WriteBuffer, 142, i, true);
-
-                                        S7.SetBitAt(ref WriteBuffer, 141, i, true);
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyyMMdd HH:mm:ss:fff")}-loginIndex:{i},ID:{name},pass:{password},Result: {isLogin}");
-                                    }
-
-                                }
-                            }
-                            else
+                            // 重用缓冲区而不是重新创建
+                            Array.Clear(_readBuffer, 0, _readBuffer.Length);
+                            int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, _readBuffer);
+                            if (bytes_read != 0)
                             {
                                 //读取失败
-
                                 Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
+                                continue;
                             }
 
-                            ////发送PLC的数据
-                            //string prefix = DateTime.Now.ToString("ddss");
-                            //string text = prefix + "-" + "08124C05__".Trim('_');
-                            //int maxLength = 16;          // PLC 中定义的最大长度
-                            //                             // 转换字符串为 PLC 格式字节数组
-                            //byte[] buffer = StringToS7Bytes(text, maxLength);
-                            //CopyBytes(buffer, WriteBuffer, 10 + (1 - 1) * 16);
-                            //写给PLC的视觉系统数据
-                            PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                            //轮毂温度 3条线
+                            readPLCSignals[0].WheelTemperature = S7.GetRealAt(_readBuffer, 124);
+                            temperature = S7.GetRealAt(_readBuffer, 128);
+                            readPLCSignals[1].WheelTemperature = temperature;
+                            readPLCSignals[2].WheelTemperature = temperature;
+                            readPLCSignals[3].WheelTemperature = S7.GetRealAt(_readBuffer, 132);
+                            //计数
+                            count = S7.GetIntAt(_readBuffer, 156);
 
-                            //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                            //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
+                            for (int i = 0; i < 5; i++)
+                            {
+                                //轮型编码=分秒+轮型  用于看板显示
+                                //readPLCSignals[i].WheelCoding = GetBytesToString(_readBuffer, 2 + i * 16).Trim();
+
+                                //轮毂高度
+                                readPLCSignals[i].WheelHeight = S7.GetRealAt(_readBuffer, 136 + i * 4);
+
+                                //1.相机拍照部分                                 
+                                bool photo = S7.GetBitAt(_readBuffer, 108, i);
+                                readPLCSignals[i].ArrivalSignal = photo;
+                                if (photo)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
+                                    EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
+                                    _ = ResetSignalAsync(143, i, 600); // 拍照信号复位                                 
+                                }
+
+                                //轮形编码 - PLC传输过来的 mmss_轮形号 用于修改数据
+                                string prefix_WheelCoding = GetBytesToString(_readBuffer, 314 + i * 16);
+
+                                // 2. 回流状态处理
+                                bool back = S7.GetBitAt(_readBuffer, 192, i + 1);
+                                bool FlowOrDown = S7.GetBitAt(_readBuffer, 192, 0); //1回流 0下转
+                                string showStatus = FlowOrDown ? "回流" : "下转";
+                                if (back)
+                                {
+                                    modifiValue = new KeyValuePair<string, string>(prefix_WheelCoding, showStatus);
+                                    int indexPos = 144;
+                                    int indexBit = i + 5;
+                                    if (i >= 8)
+                                    {
+                                        indexPos = indexPos + 1;
+                                        indexBit = indexBit - 8;
+                                    }
+
+                                    S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
+                                    //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                    OnDataModifiNextStation(modifiValue);
+                                    EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
+                                    _ = ResetSignalAsync(indexPos, indexBit, 600); // 回流状态复位                                 
+
+
+
+                                    //new Thread((obj) =>
+                                    //{
+                                    //    int threadI = (int)obj;  // 将 object 类型转为 int
+                                    //    int indexPos1 = 144;
+                                    //    int indexBit1 = threadI + 5;
+                                    //    if (i >= 8)
+                                    //    {
+                                    //        indexPos1 = indexPos1 + 1;
+                                    //        indexBit1 = indexBit1 - 8;
+                                    //    }
+                                    //    Thread.Sleep(500);
+                                    //    S7.SetBitAt(ref WriteBuffer, indexPos1, indexBit1, false); //复位读取成功
+                                    //    EventMessage.MessageDisplay($"复位{indexPos1}.{indexBit1}回流状态", true, true);
+                                    //}).Start(i);
+                                }
+
+
+                                // 3. 产品NG处理
+                                int wheelDefect = BitConverter.ToInt16(new byte[] { _readBuffer[99 + i * 2], _readBuffer[98 + i * 2] }, 0);
+                                wheel = new KeyValuePair<string, int>(prefix_WheelCoding, wheelDefect);
+                                //数据修正信号
+                                bool b = S7.GetBitAt(_readBuffer, 193, i);
+                                if (b)
+                                {
+                                    S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
+                                    //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                    OnDataModificationTriggered(wheel);
+                                    EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
+                                    _ = ResetSignalAsync(144, i, 600); // 修正信号复位                                 
+
+                                    //new Thread((obj) =>
+                                    //{
+                                    //    int threadI = (int)obj;  // 将 object 类型转为 int
+                                    //    Thread.Sleep(500);
+                                    //    S7.SetBitAt(ref WriteBuffer, 144, threadI, false); //复位读取成功
+                                    //    EventMessage.MessageDisplay($"复位{144}.{threadI}回复读取修正信号成功", true, true);
+                                    //}).Start(i);
+                                }
+
+                                //读取登录信号
+                                S7.SetBitAt(ref WriteBuffer, 141, i, false); //复位信号
+                                S7.SetBitAt(ref WriteBuffer, 142, i, false); //复位信号
+                                //Console.WriteLine($"完成信号{i}：{S7.GetBitAt(WriteBuffer, 141, i)}");
+                                bool loginTrigger = S7.GetBitAt(_readBuffer, 191, i);
+                                string name = GetBytesToString(_readBuffer, 194 + i * 12).Replace("\0", "");
+                                string password = GetBytesToString(_readBuffer, 254 + i * 12).Replace("\0", "");
+                                if (loginTrigger)
+                                {
+                                    bool isLogin = LoginCheck(name, password);
+                                    if (isLogin)
+                                        S7.SetBitAt(ref WriteBuffer, 142, i, true);
+
+                                    S7.SetBitAt(ref WriteBuffer, 141, i, true);
+                                    Console.WriteLine($"{DateTime.Now.ToString("yyyyMMdd HH:mm:ss:fff")}-loginIndex:{i},ID:{name},pass:{password},Result: {isLogin}");
+                                }
+
+                                ////发送PLC的数据
+                                //string prefix = DateTime.Now.ToString("ddss");
+                                //string text = prefix + "-" + "08124C05__".Trim('_');
+                                //int maxLength = 16;          // PLC 中定义的最大长度
+                                //                             // 转换字符串为 PLC 格式字节数组
+                                //byte[] buffer = StringToS7Bytes(text, maxLength);
+                                //CopyBytes(buffer, WriteBuffer, 10 + (1 - 1) * 16);
+                                //写给PLC的视觉系统数据
+                                PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+
+                                //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -1051,9 +1037,21 @@ namespace WheelRecognitionSystem.ViewModels
                     }
 
 
-                    await Task.Delay(10);
+                    await Task.Delay(80);
                 }
             });
+        }
+
+        // 修改后 - 使用异步方法
+        private async Task ResetSignalAsync(int bytePos, int bitPos, int delayMs)
+        {
+            await Task.Delay(delayMs);
+            lock (_writeBufferLock)
+            {
+                S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
+                PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
+            }
         }
 
         /// <summary>
@@ -1098,7 +1096,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
-            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}" , true, true);
+            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
             new Thread((obj) =>
             {
                 int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1245,8 +1243,6 @@ namespace WheelRecognitionSystem.ViewModels
                     Console.WriteLine($"NextStation-未找到匹配的记录:{prefix_WheelCoding}");
                 }
 
-
-
             }
             catch (Exception ex)
             {
@@ -1340,7 +1336,8 @@ namespace WheelRecognitionSystem.ViewModels
             catch (Exception e)
             {
                 Console.WriteLine($"LoginCheck : {e.Message}");
-            }finally
+            }
+            finally
             {
                 sDB?.Close();
             }
