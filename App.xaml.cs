@@ -81,7 +81,7 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterForNavigation<DisplayInterfaceView>();
             containerRegistry.RegisterForNavigation<MonitoringView>();
             containerRegistry.RegisterForNavigation<ReportManagementView>();
-            //containerRegistry.RegisterForNavigation<DateSupplementView>();
+            containerRegistry.RegisterForNavigation<DateSupplementView>();
             containerRegistry.RegisterForNavigation<SystemSettingsView>();
             containerRegistry.RegisterForNavigation<TemplateManagementView>();
 
@@ -91,7 +91,7 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterDialog<ParameterSettingDialog>("ParameterSetting");
             containerRegistry.RegisterDialog<MatchResultDialog>("MatchResult");
             containerRegistry.RegisterDialog<CameraSetDialog>("CameraSet");
-            //containerRegistry.RegisterDialog<DateSupplementView>("DateSupplement");
+            containerRegistry.RegisterDialog<DateSupplementView>("DateSupplement");
             containerRegistry.RegisterDialog<TemplateDataEditDialog>("TemplateDataEdit");
             //注册弹窗窗口，这句代码会将框架内的默认弹窗窗口替换掉
             containerRegistry.RegisterDialogWindow<DialogParent>();
