@@ -642,7 +642,7 @@ namespace WheelRecognitionSystem.ViewModels
             regionManager.RegisterViewWithRegion("ViewRegion", "DisplayInterfaceView");
             //regionManager.RegisterViewWithRegion("ViewRegion", "MonitoringView");
             regionManager.RegisterViewWithRegion("ViewRegion", "TemplateManagementView");
-            regionManager.RegisterViewWithRegion("ViewRegion", "DateSupplementView");
+            //regionManager.RegisterViewWithRegion("ViewRegion", "DateSupplementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "ReportManagementView");
             regionManager.RegisterViewWithRegion("ViewRegion", "SystemSettingsView");
             _regionManager = regionManager;
