@@ -855,7 +855,7 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
         int count;
-        private readonly object _writeBufferLock;
+        private readonly object _writeBufferLock = new object();
 
         /// <summary>
         /// PLC数据交互线程
@@ -922,7 +922,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 {
                                     S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
                                     EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
-                                    _ = ResetSignalAsync(143, i, 600); // 拍照信号复位                                 
+                                    ResetSignal(143, i, 600); // 拍照信号复位                                 
                                 }
 
                                 //轮形编码 - PLC传输过来的 mmss_轮形号 用于修改数据
@@ -947,7 +947,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                     OnDataModifiNextStation(modifiValue);
                                     EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{prefix_WheelCoding} ： {showStatus}", true, true);
-                                    _ = ResetSignalAsync(indexPos, indexBit, 600); // 回流状态复位                                 
+                                    ResetSignal(indexPos, indexBit, 600); // 回流状态复位                                 
 
 
 
@@ -979,7 +979,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                     OnDataModificationTriggered(wheel);
                                     EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
-                                    _ = ResetSignalAsync(144, i, 600); // 修正信号复位                                 
+                                    ResetSignal(144, i, 600); // 修正信号复位                                 
 
                                     //new Thread((obj) =>
                                     //{
@@ -1052,6 +1052,21 @@ namespace WheelRecognitionSystem.ViewModels
                 PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                 EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
             }
+        }
+
+        private void ResetSignal(int bytePos, int bitPos, int delayMs)
+        {
+            
+            new Thread(()=>
+            {
+                lock (_writeBufferLock)
+                {
+                    Thread.Sleep(600);
+                    S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
+                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                    EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
+                }
+            }).Start();
         }
 
         /// <summary>
