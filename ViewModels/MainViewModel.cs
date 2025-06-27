@@ -633,10 +633,11 @@ namespace WheelRecognitionSystem.ViewModels
             IsIdentifying = false;
             //PLC连接
             PlcCilent = new S7Client();
-            PlcCilent.ConnTimeout = 3000;
+            PlcCilent.ConnTimeout = 1000;
             PlcCilent.RecvTimeout = 90;
             PlcCilent.SendTimeout = 90;
-            LoadSystemDatas();          
+            LoadSystemDatas();
+            ExternalConnectionThread();
             //初始化数据库
             SqlAccess sqlAccess = new SqlAccess();
             sqlAccess.InitializeTable();
@@ -667,7 +668,6 @@ namespace WheelRecognitionSystem.ViewModels
             pictrueDeleteTimer.Tick += new EventHandler(pictrueDeleteTimer_Tick);//添加事件(到达时间间隔后会自动调用)
             pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
             pictrueDeleteTimer.Start();//启动定时器
-            ExternalConnectionThread();
             HeartbeatThread();
             PlcDataInteractionThread();
             StartTrigger5();
@@ -788,7 +788,8 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 while (ExternalConnectionThreadControl)
                 {
-                    await Task.Delay(30);
+                    //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")}:间隔时间");
+                  
 
                     if (PlcCilent != null && !PlcCilent.Connected)
                     {
@@ -798,43 +799,18 @@ namespace WheelRecognitionSystem.ViewModels
                         {
                             if (PlcStatus != "1")
                                 PlcStatus = "1";
-
                         }
                         else
                         {
                             Console.WriteLine($"连接失败：{PlcCilent.Connected}");
-
-                            //if (PlcDataInteractionControl)
-                            //    PlcDataInteractionControl = false;
-                            //if (HeartbeatThreadControl)
-                            //    HeartbeatThreadControl = false;
-                            //PlcCilent.Disconnect();
                             if (PlcStatus != "0")
                                 PlcStatus = "0";
                         }
                     }
 
-                    //if (CameraHandle == null || CameraHandle.Length == 0)
-                    //{
-                    //    try
-                    //    {
-                    //        //连接相机
-                    //        HOperatorSet.OpenFramegrabber("GigEVision2", 0, 0, 0, 0, 0, 0, "progressive", -1, "default", -1, "false", "default", CameraIdentifier, 0, -1, out CameraHandle);
-                    //        HOperatorSet.GrabImageStart(CameraHandle, -1);
-                    //        HOperatorSet.SetFramegrabberParam(CameraHandle, "TriggerMode", "Off");
-                    //        if (CameraStatus != "1") CameraStatus = "1";
-                    //    }
-                    //    catch
-                    //    {
-                    //        if (CameraStatus != "0")
-                    //        {
-                    //            CameraStatus = "0";
-                    //        }
-                    //    }
-                    //}
+                    await Task.Delay(3000);
 
-                    //if (PlcStatus == "1")
-                    //    ExternalConnectionThreadControl = false;
+
                 }
             });
         }
@@ -857,7 +833,7 @@ namespace WheelRecognitionSystem.ViewModels
                         heartBool = !heartBool;
                     }
 
-                    await Task.Delay(400);
+                    await Task.Delay(500);
                 }
             });
         }
