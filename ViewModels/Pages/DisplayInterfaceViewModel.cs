@@ -421,7 +421,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         public DisplayInterfaceViewModel(IDialogService dialogService, IContainerProvider containerProvider)
         {
-            loadAIProcessParam(); //加载AI参数
+            //loadAIProcessParam(); //加载AI参数
             _dialogService = dialogService;
             _containerProvider = containerProvider;
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
