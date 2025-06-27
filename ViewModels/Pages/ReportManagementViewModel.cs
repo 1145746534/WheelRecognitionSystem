@@ -184,6 +184,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             IdentificationDatas?.Clear();
             IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
             IdentificationDataVisibility = Visibility.Visible;
+            pDB.Close();
+            pDB.Dispose();
         }
         private void DataInquire()
         {
@@ -198,6 +200,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 IdentificationDatas?.Clear();
                 IdentificationDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
                 IdentificationDataVisibility = Visibility.Visible;
+                pDB.Close(); pDB.Dispose();
             }
             else EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
         }
@@ -210,6 +213,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 var pDB = new SqlAccess().SystemDataAccess;
                 var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();
                 List<StatisticsDataModel> statisticsDatas = new List<StatisticsDataModel>();
+                pDB.Close(); pDB.Dispose();  
                 for (int i = 0; i < productionList.Count; i++)
                 {
                     int index = statisticsDatas.FindIndex(x => x.WheelType == productionList[i].Model);
@@ -332,7 +336,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 List<Tbl_productiondatamodel> list = db.Queryable<Tbl_productiondatamodel>()
                     .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
                     .ToList();
-
+                db.Close();db.Dispose();
                 var summaryResults = GroupByModelThenRemarkWithSummary(list);
                 //每一个单元格都需要往队列里面添数据
                 Queue<ExportDataModel> exportDatas = new Queue<ExportDataModel>();

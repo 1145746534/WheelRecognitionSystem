@@ -553,6 +553,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     WheelType = RecWheelType,
                     WheelStyle = RecWheelStyle
                 }).Where(it => it.ID == Convert.ToInt32(UnrIndex)).ExecuteCommand();
+            pDB.Close(); pDB.Dispose();
             DataInquireProduct();
             RecWheelType = "";
             RecWheelStyle = "";
@@ -635,6 +636,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var exp = Expressionable.Create<Tbl_productiondatamodel>()
                 .And(it => it.Model == "error").Or(it => it.Model == null).ToExpression();
             List<Tbl_productiondatamodel> productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(exp).ToList();
+            pDB.Close(); pDB.Dispose();
             //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
             //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();
             if (productionList.Count != UnrecognizedDatas.Count)
@@ -710,6 +712,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     DataGridSelectedItem = TemplateDatas[DataGridSelectedIndex];
                     var sDB = new SqlAccess().SystemDataAccess;
                     sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
+                    sDB.Close(); sDB.Dispose();
                 }
             }
         }
@@ -756,9 +759,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void LoadedTemplateDatas()
         {
-            List<sys_bd_Templatedatamodel> Datas = new SqlAccess().SystemDataAccess.Queryable<sys_bd_Templatedatamodel>().ToList();
+            var db = new SqlAccess().SystemDataAccess;
+            List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
             DisplayTemplateDatas(Datas);
-
+            db.Close(); db.Dispose();
             Task.Run(() =>
             {
                 for (int i = 0; i < Datas.Count; i++)
@@ -916,6 +920,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var db = new SqlAccess().SystemDataAccess;
             db.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
             db.Insertable(newDatas).ExecuteCommand();
+            db.Close(); db.Dispose();
         }
 
         /// <summary>
@@ -926,7 +931,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             var db = new SqlAccess().SystemDataAccess;
             db.Updateable(newModel).ExecuteCommand();
-            db.Close();
+            db.Close(); db.Dispose();
         }
 
         /// <summary>
@@ -936,9 +941,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <returns>找到的 Templatedata，未找到时返回null</returns>
         public sys_bd_Templatedatamodel GetTemplatedataForType(string targetType)
         {
-            sys_bd_Templatedatamodel foundItem = new SqlAccess().SystemDataAccess
-                .Queryable<sys_bd_Templatedatamodel>()
-                .Where(w => w.WheelType == targetType).First();
+            var db = new SqlAccess().SystemDataAccess;
+            sys_bd_Templatedatamodel foundItem = db.Queryable<sys_bd_Templatedatamodel>()
+                                            .Where(w => w.WheelType == targetType).First();
+            db.Close();db.Dispose();
             // 检查是否找到
             if (foundItem != null)
             {
@@ -1655,6 +1661,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 var sDB = new SqlAccess().SystemDataAccess;
                 sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                 sDB.Insertable(newTemplateDatas).ExecuteCommand();
+                sDB.Close();sDB.Dispose();
                 EventMessage.SystemMessageDisplay("模板检查执行成功！", MessageType.Success);
                 EventMessage.MessageDisplay("模板检查执行成功！", true, true);
             }

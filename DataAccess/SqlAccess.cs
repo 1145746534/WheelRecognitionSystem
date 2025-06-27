@@ -58,6 +58,7 @@ namespace WheelRecognitionSystem.DataAccess
             data.Value = value;
             sDB.Updateable(data).Where(x => x.Name == name).ExecuteCommand();
             sDB.Close();
+            sDB.Dispose();
         }
 
         /// <summary>

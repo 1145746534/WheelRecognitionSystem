@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Media;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
 using WheelRecognitionSystem.ViewModels.Dialogs;
@@ -100,5 +102,7 @@ namespace WheelRecognitionSystem
             containerRegistry.RegisterSingleton<TemplateManagementViewModel>();
 
         }
+
+       
     }
 }

@@ -633,9 +633,9 @@ namespace WheelRecognitionSystem.ViewModels
             IsIdentifying = false;
             //PLC连接
             PlcCilent = new S7Client();
-            PlcCilent.ConnTimeout = 1000;
-            PlcCilent.RecvTimeout = 90;
-            PlcCilent.SendTimeout = 90;
+            PlcCilent.ConnTimeout = 3000;
+            //PlcCilent.RecvTimeout = 90;
+            //PlcCilent.SendTimeout = 90;
             LoadSystemDatas();
             ExternalConnectionThread();
             //初始化数据库
@@ -752,6 +752,8 @@ namespace WheelRecognitionSystem.ViewModels
                 TemplateAdjustDays = int.Parse(systemDatas.First(x => x.Name == "TemplateAdjustDays").Value);
                 UpdatedDay = int.Parse(systemDatas.First(x => x.Name == "UpdatedDay").Value);
                 WheelMinRadius = int.Parse(systemDatas.First(x => x.Name == "WheelMinRadius").Value);
+                sDB.Close();
+                sDB.Dispose();
                 #endregion
                 //加载活跃轮型数据
                 //TodayWheels.Clear();
@@ -788,17 +790,19 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 while (ExternalConnectionThreadControl)
                 {
-                    //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")}:间隔时间");
-                  
+
+                    await Task.Delay(200);
 
                     if (PlcCilent != null && !PlcCilent.Connected)
                     {
                         //连接PLC
                         int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
+                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")}:连接PLC");
                         if (result == 0 && PlcCilent.Connected)
                         {
                             if (PlcStatus != "1")
                                 PlcStatus = "1";
+                            await Task.Delay(10000);
                         }
                         else
                         {
@@ -808,7 +812,7 @@ namespace WheelRecognitionSystem.ViewModels
                         }
                     }
 
-                    await Task.Delay(3000);
+                    //await Task.Delay(1000);
 
 
                 }
@@ -846,6 +850,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
+            Thread.Sleep(300);
             Console.WriteLine("进来次数");
             readPLCSignals[0].Name = "1检1";
             readPLCSignals[0].Index = 0;
@@ -1195,6 +1200,7 @@ namespace WheelRecognitionSystem.ViewModels
             pDB.Insertable(dataModel).ExecuteCommand();
 
             pDB.Close();
+            pDB.Dispose();
             model = null;
 
         }
@@ -1263,6 +1269,7 @@ namespace WheelRecognitionSystem.ViewModels
             finally
             {
                 db?.Close();
+                db?.Dispose();
             }
         }
 
@@ -1324,6 +1331,7 @@ namespace WheelRecognitionSystem.ViewModels
             finally
             {
                 db?.Close();
+                db?.Dispose();
             }
         }
 
@@ -1352,6 +1360,7 @@ namespace WheelRecognitionSystem.ViewModels
             finally
             {
                 sDB?.Close();
+                sDB?.Dispose();
             }
             return false;
         }

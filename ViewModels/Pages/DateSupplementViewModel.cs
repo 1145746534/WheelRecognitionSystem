@@ -265,7 +265,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             UnrIndex = "";
             UnrWheelType = "";
             CurrentImage = null;
-           
+            pDB.Close();
+            pDB.Dispose();
         }
 
         
@@ -301,6 +302,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 UnrecognizedDatas?.Clear();
                 UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
             }
+            pDB.Close();
+            pDB.Dispose();
         }
 
         /// <summary>
@@ -308,12 +311,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         public void DataInquireTemplate()
         {
-            List<sys_bd_Templatedatamodel> datas = new SqlAccess().SystemDataAccess.Queryable<sys_bd_Templatedatamodel>().ToList();
+            var db = new SqlAccess().SystemDataAccess;
+            List<sys_bd_Templatedatamodel> datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
             datas.ForEach(data => { data.WheelType = data.WheelType.Trim('_'); });
             var datasGrb = datas.GroupBy(g => new { g.WheelType, g.WheelStyle }).ToList();
 
-
-
+            db.Close();
+            db.Dispose();
             if (datasGrb.Count != TemplateDatas.Count)
             {
                 List<sys_bd_Templatedatamodel> newDatas = new List<sys_bd_Templatedatamodel>();
@@ -330,6 +334,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 TemplateDatas?.Clear();
                 TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newDatas);
+                
             }
 
 

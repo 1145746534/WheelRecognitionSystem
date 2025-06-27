@@ -397,11 +397,31 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 弹窗服务
         /// </summary>
         readonly IDialogService _dialogService;
+
         private readonly IContainerProvider _containerProvider;
+
+        private readonly object _lockAI = new object();
+        /// <summary>
+        /// 大模型hdict文件路径
+        /// </summary>
+        private HTuple hv_PreprocessParamFileName = new HTuple();
+        /// <summary>
+        /// 文件内存
+        /// </summary>
+        private HTuple hv_DLPreprocessParam = new HTuple();
+        /// <summary>
+        /// 大模型文件路径
+        /// </summary>
+        private HTuple hv_RetrainedModelFileName = new HTuple();
+        /// <summary>
+        /// 模型内存
+        /// </summary>
+        private HTuple hv_DLModelHandle = new HTuple();
 
 
         public DisplayInterfaceViewModel(IDialogService dialogService, IContainerProvider containerProvider)
         {
+            loadAIProcessParam(); //加载AI参数
             _dialogService = dialogService;
             _containerProvider = containerProvider;
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
@@ -417,6 +437,44 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             EventMessage.MessageHelper.GetEvent<InplaceEvent>().Subscribe(Inplace); //轮毂到位信号显示
 
             SDKSystem.Initialize();
+        }
+        /// <summary>
+        /// 加载模型参数
+        /// </summary>
+        private void loadAIProcessParam(string _paraHalconPath,string _modelHaclonPath)
+        {
+            lock (_lockAI)
+            {
+                try
+                {
+                    //Halcon路径
+                    hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
+                    HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
+                        out hv_DLPreprocessParam);
+                    hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
+                    HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"加载AI参数异常：{ex.ToString()}");
+                }
+            }
+        }
+
+        private HTuple GetDLPreprocessParam()
+        {
+            lock (_lockAI)
+            {
+                return hv_DLPreprocessParam;
+            }
+        }
+
+        private HTuple GetRetrainedModel()
+        {
+            lock (_lockAI)
+            {
+                return hv_DLModelHandle;
+            }
         }
 
         /// <summary>
@@ -502,7 +560,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     //_image?.Dispose();
                     resultDisplayModel?.Dispose();
-
+                    resultDisplayModel = null ;
                 }
             }
             else
@@ -818,6 +876,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         Exposure = newExposure,
                         LinkID = newLinkID
                     }).Where(it => it.Name == camera.info.Name).ExecuteCommand();
+                    sDB.Close();
+                    sDB.Dispose();
                     EventMessage.MessageDisplay("参数保存成功！", true, false);
                 }
 
@@ -852,6 +912,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     AutoRecognitionResultDisplayModel resultDisplayModel = new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 };
                     ResultDisplay(resultDisplayModel);
                     resultDisplayModel.Dispose();
+                    resultDisplayModel = null;
                 }
                 catch (Exception ex)
                 {
@@ -883,6 +944,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
 
             }
+            sDB.Close();
+            sDB.Dispose();
             LoadCameraConnStatus();
         }
         /// <summary>

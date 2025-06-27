@@ -564,6 +564,8 @@ namespace WheelRecognitionSystem.Public
                     //{
                     //    Console.WriteLine($"数据：{names[i].S} 结果：{confidences[i].D.ToString("0.0000")}");
                     //}
+
+
                     return hv_DLResult;
 
                 }
@@ -601,6 +603,13 @@ namespace WheelRecognitionSystem.Public
             catch (HalconException HDevExpDefaultException)
             {
 
+                
+
+                throw HDevExpDefaultException;
+
+            }finally
+            {
+
                 hv_DLDeviceHandles.Dispose();
                 hv_DLDevice.Dispose();
                 //hv_ImageDir.Dispose();
@@ -621,35 +630,12 @@ namespace WheelRecognitionSystem.Public
                 hv_DLResultBatch.Dispose();
                 hv_SampleIndex.Dispose();
                 hv_DLSample.Dispose();
-                hv_DLResult.Dispose();
-                hv_WindowHandles.Dispose();
 
-                throw HDevExpDefaultException;
+                hv_WindowHandles.Dispose();
             }
 
 
-            hv_DLDeviceHandles.Dispose();
-            hv_DLDevice.Dispose();
-            //hv_ImageDir.Dispose();
-            hv_PreprocessParamFileName.Dispose();
-            hv_RetrainedModelFileName.Dispose();
-            hv_BatchSizeInference.Dispose();
-            hv_DLModelHandle.Dispose();
-            hv_ClassNames.Dispose();
-            hv_ClassIDs.Dispose();
-            hv_DLPreprocessParam.Dispose();
-            hv_WindowHandleDict.Dispose();
-            hv_DLDataInfo.Dispose();
-            hv_GenParam.Dispose();
-            hv_ImageFiles.Dispose();
-            hv_BatchIndex.Dispose();
-            hv_Batch.Dispose();
-            hv_DLSampleBatch.Dispose();
-            hv_DLResultBatch.Dispose();
-            hv_SampleIndex.Dispose();
-            hv_DLSample.Dispose();
-            hv_DLResult.Dispose();
-            hv_WindowHandles.Dispose();
+            
 
         }
 
