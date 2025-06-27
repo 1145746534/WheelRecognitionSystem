@@ -28,7 +28,7 @@ namespace WheelRecognitionSystem.Public
         /// <summary>
         /// PLC数据交互线程控制
         /// </summary>
-        public static bool PlcDataInteractionControl { get; set; } = false;
+        public static bool PlcDataInteractionControl { get; set; } = true;
 
         /// <summary>
         /// 心跳线程控制
