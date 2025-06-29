@@ -37,6 +37,27 @@ namespace WheelRecognitionSystem.Public
             int TargetHeight = (int)height.D;
             HOperatorSet.CropPart(image, out croppedImage, x1, y1, TargetWidth, TargetHeight);
         }
+        /// <summary>
+        /// 获取灰度图 返回一个新对象
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static HObject RGBTransGray(HObject image)
+        {
+            //彩色图需转成灰度图
+            HOperatorSet.CountChannels(image, out HTuple Channels);
+
+            if (Channels.I == 3)
+            {
+                HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
+                image2.Dispose();
+                image3.Dispose();
+                return image1.Clone();
+            }
+            else
+                return image.Clone();
+
+        }
 
 
         /// <summary>
@@ -53,6 +74,7 @@ namespace WheelRecognitionSystem.Public
             {
                 //全图灰度
                 HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
+                resultModel.FullFigureGary = (float)(Mean1.D);
                 if (SystemDatas.CroppingOrNot)
                 {
                     minThreshold = (int)Mean1.D;
@@ -63,14 +85,19 @@ namespace WheelRecognitionSystem.Public
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
 
-                resultModel.FullFigureGary = (float)(Mean1.D);
-                resultModel.WheelImage = null;
-                resultModel.WheelContour = null;
+               
+                //resultModel.WheelImage = null;
+                //resultModel.WheelContour = null;
+
+                Deviation?.Dispose();
+                Mean1?.Dispose();
+                region.Dispose();
+                connectedRegions?.Dispose();
+                regionFillUp?.Dispose();
+                relectedRegions?.Dispose();
 
                 if (row.Length != 0) //存在轮毂
                 {
-
-
                     //确认半径范围
                     if (isConfirmRadius && radius < minRadius)
                     {
@@ -96,8 +123,16 @@ namespace WheelRecognitionSystem.Public
                             column = hv_Parameter.TupleSelect(1);
                             radius = hv_Parameter.TupleSelect(2);
                         }                                                                                                                     //
-
+                        width?.Dispose();
+                        height?.Dispose();
+                        CircleIndex?.Dispose();
+                        hv_Parameter.Dispose();
+                        ho_Contours.Dispose();
+                        hv_Row.Dispose();
+                        hv_Column.Dispose();
+                        ho_Contour.Dispose();
                         HOperatorSet.ClearMetrologyModel(MetrologyCircleHandle);
+                        MetrologyCircleHandle?.Dispose();
 
 
                         resultModel.CenterRow = row;
@@ -111,9 +146,13 @@ namespace WheelRecognitionSystem.Public
                         resultModel.InnerCircleMean = (float)(mean.D);
                         resultModel.WheelImage = wheelImage;
                         resultModel.WheelContour = wheelContour;
+                        reducedCircle?.Dispose();
+                        mean?.Dispose(); 
+                        deviation?.Dispose();
 
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -288,36 +327,6 @@ namespace WheelRecognitionSystem.Public
                 RecognitionWheelType = "NG"
             };
 
-            // 定义一个通用模板匹配方法
-            //Action<bool> performMatching = (useFilter) =>
-            //{
-            //    foreach (var templateData in templateDatas.Where(t => t.Use == useFilter))
-            //    {
-
-            //        HOperatorSet.FindNccModel(
-            //            image, templateData.Template,
-            //            angleStart, angleExtent,
-            //            0.5, 1, 0.5,
-            //            "true", 0,
-            //            out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
-
-            //        if (score != null && score.Length > 0 && score.D > 0.5)
-            //        {
-            //            recognitionResults.Add(new RecognitionResultModel
-            //            {
-            //                CenterRow = row,
-            //                CenterColumn = column,
-            //                Radian = angle,
-            //                RecognitionWheelType = templateData.TemplateName,
-            //                Similarity = Math.Round(score.D, 3)
-            //            });
-            //        }
-            //    }
-            //};
-
-            //// 先尝试匹配“活跃”模板
-            //performMatching(true);
-
             foreach (var templateData in templateDatas.Where(t => t.Use == true))
             {
 
@@ -332,13 +341,17 @@ namespace WheelRecognitionSystem.Public
                 {
                     recognitionResults.Add(new RecognitionResultModel
                     {
-                        CenterRow = row,
-                        CenterColumn = column,
-                        Radian = angle,
+                        CenterRow = row.D,
+                        CenterColumn = column.D,
+                        Radian = angle.D,
                         RecognitionWheelType = templateData.TemplateName,
                         Similarity = Math.Round(score.D, 3)
                     });
                 }
+                row?.Dispose();
+                column?.Dispose();
+                angle?.Dispose();
+                score?.Dispose();
             }
 
 
@@ -365,13 +378,17 @@ namespace WheelRecognitionSystem.Public
                 {
                     recognitionResults.Add(new RecognitionResultModel
                     {
-                        CenterRow = row,
-                        CenterColumn = column,
-                        Radian = angle,
+                        CenterRow = row.D,
+                        CenterColumn = column.D,
+                        Radian = angle.D,
                         RecognitionWheelType = templateData.TemplateName,
                         Similarity = Math.Round(score.D, 3)
                     });
                 }
+                row?.Dispose();
+                column?.Dispose();
+                angle?.Dispose();
+                score?.Dispose();
             }
 
 
@@ -653,6 +670,12 @@ namespace WheelRecognitionSystem.Public
             HOperatorSet.VectorAngleToRigid(0, 0, 0, newRow, newColumn, newRadian, out HTuple homMat2D);
             HOperatorSet.AffineTransRegion(modelRegion, out HObject regionAffineTrans, homMat2D, "nearest_neighbor");
             HOperatorSet.GenContourRegionXld(regionAffineTrans, out HObject templateContour, "border_holes");
+            modelRegion?.Dispose();
+            newRow?.Dispose();
+            newColumn?.Dispose();
+            newRadian?.Dispose();
+            homMat2D?.Dispose();
+            regionAffineTrans?.Dispose();
             return templateContour;
         }
 

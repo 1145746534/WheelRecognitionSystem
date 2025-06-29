@@ -10,10 +10,10 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 自动模式识别结果显示模型
     /// </summary>
-    public class AutoRecognitionResultDisplayModel: IDisposable
+    public class AutoRecognitionResultDisplayModel
     {
         /// <summary>
-        /// 1开始
+        /// 显示索引 下标从1开始
         /// </summary>
         public int index { get; set; }
         /// <summary>
@@ -33,12 +33,12 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public HObject TemplateContour { get; set; }
 
-        public void Dispose()
-        {
-            CurrentImage=null;
-            WheelContour=null;
-            TemplateContour=null;
-        }
+        
+        /// <summary>
+        /// 全图灰度
+        /// </summary>
+        public float FullFigureGary { get; set; }
+
         ///// <summary>
         /////  浇口轮廓
         ///// </summary>

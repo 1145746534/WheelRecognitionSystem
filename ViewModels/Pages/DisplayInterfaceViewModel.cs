@@ -37,6 +37,7 @@ using System.Windows;
 using Prism.Ioc;
 using WheelRecognitionSystem.ViewModels.Dialogs;
 using static NPOI.HSSF.Util.HSSFColor;
+using System.Windows.Controls;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -227,7 +228,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject CurrentImage1
         {
             get { return _currentImage1; }
-            set { SetProperty<HObject>(ref _currentImage1, value); }
+            set {
+                // 释放旧对象
+                if (_currentImage1 != null && _currentImage1.IsInitialized())
+                {
+                    _currentImage1.Dispose();
+                }
+                SetProperty<HObject>(ref _currentImage1, value); 
+            }
         }
 
         private HObject _wheelContour1;
@@ -237,7 +245,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject WheelContour1
         {
             get { return _wheelContour1; }
-            set { SetProperty<HObject>(ref _wheelContour1, value); }
+            set {
+                // 释放旧对象
+                if (_wheelContour1 != null && _wheelContour1.IsInitialized())
+                {
+                    _wheelContour1.Dispose();
+                }
+                SetProperty<HObject>(ref _wheelContour1, value); 
+            }
         }
 
         private HObject _templateContour1;
@@ -247,7 +262,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject TemplateContour1
         {
             get { return _templateContour1; }
-            set { SetProperty<HObject>(ref _templateContour1, value); }
+            set {
+                // 释放旧对象
+                if (_templateContour1 != null && _templateContour1.IsInitialized())
+                {
+                    _templateContour1.Dispose();
+                }
+                SetProperty<HObject>(ref _templateContour1, value); 
+            }
         }
 
         private HObject _currentImage2;
@@ -257,7 +279,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject CurrentImage2
         {
             get { return _currentImage2; }
-            set { SetProperty<HObject>(ref _currentImage2, value); }
+            set {
+                // 释放旧对象
+                if (_currentImage2 != null && _currentImage2.IsInitialized())
+                {
+                    _currentImage2.Dispose();
+                }
+                SetProperty<HObject>(ref _currentImage2, value); 
+            }
         }
         private HObject _wheelContour2;
         /// <summary>
@@ -266,7 +295,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject WheelContour2
         {
             get { return _wheelContour2; }
-            set { SetProperty<HObject>(ref _wheelContour2, value); }
+            set {
+                // 释放旧对象
+                if (_wheelContour2 != null && _wheelContour2.IsInitialized())
+                {
+                    _wheelContour2.Dispose();
+                }
+                SetProperty<HObject>(ref _wheelContour2, value); 
+            }
         }
         private HObject _templateContour2;
         /// <summary>
@@ -275,7 +311,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject TemplateContour2
         {
             get { return _templateContour2; }
-            set { SetProperty<HObject>(ref _templateContour2, value); }
+            set {
+                // 释放旧对象
+                if (_templateContour2 != null && _templateContour2.IsInitialized())
+                {
+                    _templateContour2.Dispose();
+                }
+                SetProperty<HObject>(ref _templateContour2, value); 
+            }
         }
 
         private HObject _currentImage3;
@@ -285,7 +328,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject CurrentImage3
         {
             get { return _currentImage3; }
-            set { SetProperty<HObject>(ref _currentImage3, value); }
+            set {
+                // 释放旧对象
+                if (CurrentImage3 != null && CurrentImage3.IsInitialized())
+                {
+                    CurrentImage3.Dispose();
+                }
+                SetProperty<HObject>(ref _currentImage3, value); 
+            }
         }
         private HObject _wheelContour3;
         /// <summary>
@@ -294,7 +344,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject WheelContour3
         {
             get { return _wheelContour3; }
-            set { SetProperty<HObject>(ref _wheelContour3, value); }
+            set {
+                // 释放旧对象
+                if (_wheelContour3 != null && _wheelContour3.IsInitialized())
+                {
+                    _wheelContour3.Dispose();
+                }
+                SetProperty<HObject>(ref _wheelContour3, value); 
+            }
         }
         private HObject _templateContour3;
         /// <summary>
@@ -303,7 +360,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject TemplateContour3
         {
             get { return _templateContour3; }
-            set { SetProperty<HObject>(ref _templateContour3, value); }
+            set {
+                // 释放旧对象
+                if (_templateContour3 != null && _templateContour3.IsInitialized())
+                {
+                    _templateContour3.Dispose();
+                }
+                SetProperty<HObject>(ref _templateContour3, value); 
+            }
         }
 
         private HObject _currentImage4;
@@ -313,7 +377,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject CurrentImage4
         {
             get { return _currentImage4; }
-            set { SetProperty<HObject>(ref _currentImage4, value); }
+            set {
+                // 释放旧对象
+                if (CurrentImage4 != null && CurrentImage4.IsInitialized())
+                {
+                    CurrentImage4.Dispose();
+                }
+                SetProperty<HObject>(ref _currentImage4, value); }
         }
         private HObject _wheelContour4;
         /// <summary>
@@ -322,7 +392,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject WheelContour4
         {
             get { return _wheelContour4; }
-            set { SetProperty<HObject>(ref _wheelContour4, value); }
+            set {
+                // 释放旧对象
+                if (_wheelContour4 != null && _wheelContour4.IsInitialized())
+                {
+                    _wheelContour4.Dispose();
+                }
+                SetProperty<HObject>(ref _wheelContour4, value); }
         }
         private HObject _templateContour4;
         /// <summary>
@@ -331,7 +407,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject TemplateContour4
         {
             get { return _templateContour4; }
-            set { SetProperty<HObject>(ref _templateContour4, value); }
+            set {
+                // 释放旧对象
+                if (TemplateContour4 != null && TemplateContour4.IsInitialized())
+                {
+                    TemplateContour4.Dispose();
+                }
+                SetProperty<HObject>(ref _templateContour4, value); }
         }
 
         private HObject _currentImage5;
@@ -341,7 +423,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject CurrentImage5
         {
             get { return _currentImage5; }
-            set { SetProperty<HObject>(ref _currentImage5, value); }
+            set {
+                // 释放旧对象
+                if (CurrentImage5 != null && CurrentImage5.IsInitialized())
+                {
+                    CurrentImage5.Dispose();
+                }
+                SetProperty<HObject>(ref _currentImage5, value); }
         }
         private HObject _wheelContour5;
         /// <summary>
@@ -350,7 +438,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject WheelContour5
         {
             get { return _wheelContour5; }
-            set { SetProperty<HObject>(ref _wheelContour5, value); }
+            set {
+                // 释放旧对象
+                if (_wheelContour5 != null && _wheelContour5.IsInitialized())
+                {
+                    _wheelContour5.Dispose();
+                }
+                SetProperty<HObject>(ref _wheelContour5, value); }
         }
         private HObject _templateContour5;
         /// <summary>
@@ -359,7 +453,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject TemplateContour5
         {
             get { return _templateContour5; }
-            set { SetProperty<HObject>(ref _templateContour5, value); }
+            set {
+                // 释放旧对象
+                if (_templateContour5 != null && _templateContour5.IsInitialized())
+                {
+                    _templateContour5.Dispose();
+                }
+                SetProperty<HObject>(ref _templateContour5, value); }
         }
         #endregion
 
@@ -399,8 +499,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         readonly IDialogService _dialogService;
 
         private readonly IContainerProvider _containerProvider;
-
-        private readonly object _lockAI = new object();
         /// <summary>
         /// 大模型hdict文件路径
         /// </summary>
@@ -421,7 +519,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         public DisplayInterfaceViewModel(IDialogService dialogService, IContainerProvider containerProvider)
         {
-            //loadAIProcessParam(); //加载AI参数
+            loadAIProcessParam(); //加载AI参数
             _dialogService = dialogService;
             _containerProvider = containerProvider;
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
@@ -441,41 +539,26 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 加载模型参数
         /// </summary>
-        private void loadAIProcessParam(string _paraHalconPath,string _modelHaclonPath)
+        private void loadAIProcessParam()
         {
-            lock (_lockAI)
+
+            try
             {
-                try
-                {
-                    //Halcon路径
-                    hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
-                    HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
-                        out hv_DLPreprocessParam);
-                    hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
-                    HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"加载AI参数异常：{ex.ToString()}");
-                }
+                //Halcon路径
+                hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
+                HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
+                    out hv_DLPreprocessParam);
+                hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
+                HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"加载AI参数异常：{ex.ToString()}");
+            }
+
         }
 
-        private HTuple GetDLPreprocessParam()
-        {
-            lock (_lockAI)
-            {
-                return hv_DLPreprocessParam;
-            }
-        }
 
-        private HTuple GetRetrainedModel()
-        {
-            lock (_lockAI)
-            {
-                return hv_DLModelHandle;
-            }
-        }
 
         /// <summary>
         /// 轮毂到位显示
@@ -537,6 +620,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 AutoRecognitionResultDisplayModel resultDisplayModel = null;
                 HObject _image = null;
+                HObject gray = new HObject();
                 try
                 {
 
@@ -544,12 +628,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
                     _image = camera.Grabimage();
-                    resultDisplayModel = Tackle(interact, _image);
+                    //显示用原图 大模型识别标签用原图 保存图片用原图
+                    //传统识别用灰度图  大模型识别轮毂用灰度图 
+                    gray = RGBTransGray(_image);
+                    resultDisplayModel = Tackle(interact, gray);
+                    resultDisplayModel.CurrentImage = _image; //显示
                     interact.endTime = DateTime.Now;
                     ResultDisplay(resultDisplayModel);
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                     //保存图片
-                    interact.imagePath = await SaveImageDatasAsync(_image, way, resultDisplayModel.WheelType);
+                    HObject saveImage = _image.Clone();
+                    interact.imagePath = await SaveImageDatasAsync(saveImage, way, resultDisplayModel.WheelType);
                 }
                 catch (Exception ex)
                 {
@@ -558,9 +647,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 finally
                 {
-                    //_image?.Dispose();
-                    resultDisplayModel?.Dispose();
-                    resultDisplayModel = null ;
+                    gray?.Dispose(); //使用完后释放                                    
                 }
             }
             else
@@ -574,52 +661,40 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         }
 
         /// <summary>
-        /// 处理识别-接收主控发送的消息
+        /// 处理识别图像
+        /// </summary>
         /// </summary>
         /// <param name="interact"></param>
-        /// <param name="CurrentImage"></param>
-        public AutoRecognitionResultDisplayModel Tackle(InteractS7PLCModel interact, HObject CurrentImage)
+        /// <param name="grayImage"></param>
+        public AutoRecognitionResultDisplayModel Tackle(InteractS7PLCModel interact, HObject grayImage)
         {
-            //灰度图
-            HObject _image = new HObject();
-            //彩色图需转成灰度图
-            HOperatorSet.CountChannels(CurrentImage, out HTuple Channels);
-            if (Channels.I == 3)
-            {
-                HOperatorSet.Decompose3(CurrentImage, out HObject image1, out HObject image2, out HObject image3);
-                _image = image1;
-            }
-            else
-                _image = CurrentImage;
-
 
             //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(_image, WheelMinThreshold, 255, WheelMinRadius);
+            PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
+            pResult.CenterColumn?.Dispose();
+            pResult.CenterRow?.Dispose();
+            pResult.Radius?.Dispose();
             //存储识别结果
             RecognitionResultModel recognitionResult = new RecognitionResultModel();
+            recognitionResult.FullFigureGary = pResult.FullFigureGary;
             HObject imageRecogn = new HObject();
-            //如果定位到轮毂
-            if (pResult.WheelImage != null)
+
+            if (pResult.WheelImage != null && pResult.WheelImage.IsInitialized())
             {
-                recognitionResult.FullFigureGary = pResult.FullFigureGary;
+                //如果定位到轮毂             
                 recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
                 imageRecogn = pResult.WheelImage;
             }
             else
             {
-                imageRecogn = _image;
+                imageRecogn = grayImage;
             }
-            //没有定位到轮毂            
-            //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-
-            //轮毂识别 传统视觉
-            //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             List<RecognitionResultModel> list = new List<RecognitionResultModel>();
             TemplateManagementViewModel someService = _containerProvider.Resolve<TemplateManagementViewModel>();
             List<TemplatedataModels> models = someService.GetCanUseTemplates();
             recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
             HObject templateContour = new HObject();
-            if (recognitionResult.RecognitionWheelType != "NG")
+            if (recognitionResult.RecognitionWheelType != "NG") //
             {
 
                 templateContour = GetAffineTemplateContour(someService.GetHTupleByName(recognitionResult.RecognitionWheelType),
@@ -627,11 +702,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //根据高度确定为哪个轮型
 
             }
-            if (recognitionResult.RecognitionWheelType == "NG" && pResult.WheelImage == null)
+            if (recognitionResult.RecognitionWheelType == "NG" && pResult.WheelImage == null) //识别NG & 没定位到轮毂
             {
                 //大模型推算
-                //HTuple hv_DLResult = WheelDeepLearning(image);
-                HTuple hv_DLResult = WheelDeepLearning(CurrentImage);
+                HTuple hv_DLResult = WheelDeepLearning(grayImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > 0.85)
@@ -647,6 +721,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
                 //}
                 hv_DLResult.Dispose();
+                names.Dispose();
+                confidences.Dispose();
             }
             interact.resultModel = recognitionResult;
 
@@ -654,13 +730,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
             autoRecognitionResult = new AutoRecognitionResultDisplayModel
             {
+                FullFigureGary = recognitionResult.FullFigureGary,
                 WheelType = recognitionResult.RecognitionWheelType,
-                CurrentImage = CurrentImage,
+                
                 WheelContour = pResult.WheelContour,
                 TemplateContour = templateContour,
                 index = interact.Index
 
             };
+            grayImage?.Dispose();
+            imageRecogn?.Dispose();
             //_image?.Dispose();
             return autoRecognitionResult;
             //图像结果显示
@@ -668,6 +747,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
 
         }
+
+       
 
         /// <summary>
         /// 相机连接 - 循环扫描
@@ -742,20 +823,20 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 case 0:
                     //SaveImageDatas(CurrentImage1, SaveWay.Hand);
-                    await SaveImageDatasAsync(CurrentImage1, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage1.Clone(), SaveWay.Hand);
                     break;
                 case 1:
                     //SaveImageDatas(CurrentImage2, SaveWay.Hand);
-                    await SaveImageDatasAsync(CurrentImage2, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage2.Clone(), SaveWay.Hand);
                     break;
                 case 2:
-                    await SaveImageDatasAsync(CurrentImage3, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage3.Clone(), SaveWay.Hand);
                     break;
                 case 3:
-                    await SaveImageDatasAsync(CurrentImage4, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage4.Clone(), SaveWay.Hand);
                     break;
                 case 4:
-                    await SaveImageDatasAsync(CurrentImage5, SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage5.Clone(), SaveWay.Hand);
                     break;
             }
 
@@ -911,8 +992,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     image = camera.Grabimage();
                     AutoRecognitionResultDisplayModel resultDisplayModel = new AutoRecognitionResultDisplayModel() { CurrentImage = image, index = _index + 1 };
                     ResultDisplay(resultDisplayModel);
-                    resultDisplayModel.Dispose();
-                    resultDisplayModel = null;
+                   
                 }
                 catch (Exception ex)
                 {
@@ -957,36 +1037,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (model == null)
                 return;
-
-            string value = string.Empty;
-            //计算图像灰度值
-            if (model.CurrentImage != null && model.CurrentImage.IsInitialized())
-            {
-                HObject imageM = new HObject();
-                imageM = model.CurrentImage.Clone();
-                HOperatorSet.CountChannels(imageM, out HTuple Channels);
-                if (Channels.I == 3)
-                {
-                    HOperatorSet.Decompose3(imageM, out HObject red, out HObject green, out HObject blue);
-                    imageM = red;
-                }
-                HOperatorSet.Intensity(imageM, imageM, out HTuple Mean1, out HTuple Deviation);
-                value = "均:" + (int)Mean1.D;
-                imageM.Dispose();
-            }
+            string value = "均:" + model.FullFigureGary;
+           
             if (model.index == 1)
             {
                 CurrentImage1?.Dispose();
                 WheelContour1?.Dispose();
                 TemplateContour1?.Dispose();
                 if (model.CurrentImage != null && model.CurrentImage.IsInitialized())
-                    CurrentImage1 = model.CurrentImage.Clone();
+                    CurrentImage1 = model.CurrentImage;
 
                 if (model.WheelContour != null && model.WheelContour.IsInitialized())
-                    WheelContour1 = model.WheelContour.Clone();
+                    WheelContour1 = model.WheelContour;
 
                 if (model.TemplateContour != null && model.TemplateContour.IsInitialized())
-                    TemplateContour1 = model.TemplateContour.Clone();
+                    TemplateContour1 = model.TemplateContour;
 
                 FullGray1 = value;
             }

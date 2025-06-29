@@ -20,6 +20,7 @@ using WheelRecognitionSystem.Public;
 using Prism.Ioc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using WheelRecognitionSystem.ViewModels.Pages;
+using System.Diagnostics;
 
 namespace WheelRecognitionSystem.Views.Pages
 {
@@ -34,6 +35,7 @@ namespace WheelRecognitionSystem.Views.Pages
             InitializeComponent();
             //订阅模板数据编辑的消息
             EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Subscribe(Edit);
+            EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Subscribe(ClearHalconWPF);
             Loaded += TemplateManagementView_Loaded;
 
         }
@@ -49,6 +51,14 @@ namespace WheelRecognitionSystem.Views.Pages
             TemplateDataGrid.ScrollIntoView(model);
         }
 
+        private void ClearHalconWPF(HObject sourceImage)
+        {
+            halconWPF.HalconWindow.ClearWindow();
+            if (sourceImage != null && sourceImage.IsInitialized())
+                halconWPF.HalconWindow.DispObj(sourceImage);            
+           
+           
+        }
 
         
 

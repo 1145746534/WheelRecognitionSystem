@@ -76,6 +76,7 @@ namespace WheelRecognitionSystem.Public
         }
     }
 
+    public class TemplateClearEvent : PubSubEvent<HObject> { }
     /// <summary>
     /// 模板表格数据编辑事件，用于编辑数据时将表格显示滚动到编辑的项
     /// </summary>

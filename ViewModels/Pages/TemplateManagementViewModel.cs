@@ -33,6 +33,7 @@ using MySqlX.XDevAPI.Common;
 using System.Collections;
 using System.Windows.Threading;
 using Prism.Regions;
+using System.Diagnostics;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
@@ -78,7 +79,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplateImage
         {
             get { return _displayTemplateImage; }
-            set { SetProperty<HObject>(ref _displayTemplateImage, value); }
+            set {
+                // 释放旧对象
+                if (_displayTemplateImage != null && _displayTemplateImage.IsInitialized())
+                {
+                    _displayTemplateImage.Dispose();
+                }
+                SetProperty<HObject>(ref _displayTemplateImage, value); 
+            }
         }
 
         private HObject _displayTemplate;
@@ -88,7 +96,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplate
         {
             get { return _displayTemplate; }
-            set { SetProperty<HObject>(ref _displayTemplate, value); }
+            set {
+                // 释放旧对象
+                if (DisplayTemplate != null && DisplayTemplate.IsInitialized())
+                {
+                    DisplayTemplate.Dispose();
+                }
+                SetProperty<HObject>(ref _displayTemplate, value);
+            }
         }
 
         private HObject _displayTemplateContour;
@@ -98,7 +113,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplateContour
         {
             get { return _displayTemplateContour; }
-            set { SetProperty<HObject>(ref _displayTemplateContour, value); }
+            set {
+                // 释放旧对象
+                if (_displayTemplateContour != null && _displayTemplateContour.IsInitialized())
+                {
+                    _displayTemplateContour.Dispose();
+                }
+                SetProperty<HObject>(ref _displayTemplateContour, value); 
+            }
         }
 
         private HObject _displayWheelContour;
@@ -108,7 +130,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayWheelContour
         {
             get { return _displayWheelContour; }
-            set { SetProperty(ref _displayWheelContour, value); }
+            set {
+                // 释放旧对象
+                if (_displayWheelContour != null && _displayWheelContour.IsInitialized())
+                {
+                    _displayWheelContour.Dispose();
+                }
+                SetProperty(ref _displayWheelContour, value);
+            }
         }
 
         private HObject _displayInGateContour;
@@ -313,10 +342,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 读取或采集的原始模板图像
         /// </summary>
         private HObject SourceTemplateImage = new HObject();
-        /// <summary>
-        /// 原始RGB图片
-        /// </summary>
-        private HObject SourceImageRGB = new HObject();
+
 
         /// <summary>
         /// 定位轮毂获取到的轮毂图像
@@ -507,20 +533,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //CurrentImage?.Dispose();
                 if (File.Exists(path))
                 {
-                    SourceImageRGB.Dispose();
-                    SourceTemplateImage.Dispose();
+
+                    SourceTemplateImage?.Dispose();
                     HObject image = new HObject();
                     HOperatorSet.ReadImage(out image, path);
-                    SourceImageRGB = image.Clone();
-                    HOperatorSet.CountChannels(image, out HTuple Channels);
-                    if (Channels?.I == 3)
-                    {
-                        HOperatorSet.Decompose3(image, out SourceTemplateImage, out HObject image2, out HObject image3);
-
-                    }
-                    else
-                        SourceTemplateImage = image.Clone();
-                    image.Dispose();
+                    SourceTemplateImage = image;
 
 
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -657,14 +674,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (model.image != null && model.camera != null)
             {
-                SourceTemplateImage.Dispose();
-                SourceImageRGB.Dispose();
-                SourceImageRGB = model.image;
-                HOperatorSet.CountChannels(model.image, out HTuple Channels);
-                if (Channels?.I == 3)
-                    HOperatorSet.Decompose3(model.image, out SourceTemplateImage, out HObject image2, out HObject image3);
-                else
-                    SourceTemplateImage = model.image;
+                SourceTemplateImage?.Dispose();
+                SourceTemplateImage = model.image.Clone();
 
 
                 TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -725,6 +736,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="inGateContour">浇口轮廓</param>
         private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
         {
+            
             DisplayTemplateImage.Dispose();
             DisplayTemplate.Dispose();
             DisplayWheelContour.Dispose();
@@ -788,7 +800,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == type);
                 if (templatedata != null)
                 {
-
+                    //当前使用时间减去上次使用时间
                     TimeSpan timeSpan = DateTime.Now - templatedata.LastUsedTime;
                     item.UnusedDays = timeSpan.Days;
                     if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围               
@@ -796,10 +808,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     else
                         templatedata.Use = false;
                 }
-
-
-                //当前使用时间减去上次使用时间
-
             }
             return Models;
         }
@@ -944,7 +952,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var db = new SqlAccess().SystemDataAccess;
             sys_bd_Templatedatamodel foundItem = db.Queryable<sys_bd_Templatedatamodel>()
                                             .Where(w => w.WheelType == targetType).First();
-            db.Close();db.Dispose();
+            db.Close(); db.Dispose();
             // 检查是否找到
             if (foundItem != null)
             {
@@ -1066,20 +1074,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 try
                 {
                     var File_Name = openFileDialog.FileName;
-                    SourceTemplateImage.Dispose();
-                    SourceImageRGB.Dispose();
+                    SourceTemplateImage?.Dispose();
                     HOperatorSet.ReadImage(out HObject image, File_Name);
-                    SourceImageRGB = image.Clone();
-                    //彩色图需转成灰度图
-                    HOperatorSet.CountChannels(image, out HTuple Channels);
-                    if (Channels.I == 3)
-                    {
-                        HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
-                        SourceTemplateImage = image1.Clone();
-                    }
-                    else
-                        SourceTemplateImage = image.Clone();
-                    image.Dispose();
+                    SourceTemplateImage = image;
+                    //image.Dispose();
                     ImageDisVisibility = Visibility.Visible;
                     ImageDisName = "手动读取图片";
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -1136,7 +1134,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-
+                
                 PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
                 if (pResult.WheelImage == null)
                 {
@@ -1145,11 +1143,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 else
                 {
-                    EventMessage.SystemMessageDisplay($"轮毂半径：{pResult.Radius}。", MessageType.Default);
+                    EventMessage.SystemMessageDisplay($"轮毂半径：{pResult.Radius.D}。", MessageType.Default);
+                    pResult.CenterColumn?.Dispose();
+                    pResult.CenterRow?.Dispose();
+                    pResult.Radius?.Dispose();
                     InPoseWheelImage.Dispose();
                     InPoseWheelImage = pResult.WheelImage;
+                    //EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Publish(SourceTemplateImage);
+
                     TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, null, null);
+                    pResult.WheelContour.Dispose();
                     InnerCircleGary = pResult.InnerCircleMean.ToString();
+                    pResult = null;
                     GrayDisplay = Visibility.Visible;
                 }
             }
@@ -1184,7 +1189,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HOperatorSet.Difference(reduced, regionUnion, out HObject regionDifference);
             TemplateImage.Dispose();
             HOperatorSet.ReduceDomain(reduced, regionDifference, out TemplateImage);
+
             TemplateWindowDisplay(null, TemplateImage, null, null, null);
+            row.Dispose(); column.Dispose(); radius.Dispose(); circleSector.Dispose();
+            reduced.Dispose(); region.Dispose(); connectedRegions.Dispose(); regionClosing.Dispose();
+            RegionOpening.Dispose(); selectedRegions.Dispose(); regionUnion.Dispose();
+            regionDifference.Dispose();
         }
         /// <summary>
         /// 保存模板
@@ -1432,6 +1442,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 HOperatorSet.ReadImage(out HObject Image, strPath);
                 TemplateWindowDisplay(Image, null, null, null, null);
+                Image.Dispose();
             }
             else
             {
@@ -1517,7 +1528,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 RecognitionSimilarity = "0";
                 RecognitionWay = " 大模型";
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(SourceImageRGB);
+                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > 0.85) //识别结果
@@ -1661,7 +1672,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 var sDB = new SqlAccess().SystemDataAccess;
                 sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                 sDB.Insertable(newTemplateDatas).ExecuteCommand();
-                sDB.Close();sDB.Dispose();
+                sDB.Close(); sDB.Dispose();
                 EventMessage.SystemMessageDisplay("模板检查执行成功！", MessageType.Success);
                 EventMessage.MessageDisplay("模板检查执行成功！", true, true);
             }
