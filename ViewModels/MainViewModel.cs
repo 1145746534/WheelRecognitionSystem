@@ -933,11 +933,12 @@ namespace WheelRecognitionSystem.ViewModels
                                     readPLCSignals[i].ArrivalSignal = photo;
                                     if (photo)
                                     {
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照信号108.{i}：{photo}");
+                                        EventMessage.MessageDisplay($"接收到拍照信号：{readPLCSignals[i].Name} （108.{i}.True）", true, true);
+                                        //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 接收到拍照信号108.{i}：{photo}");
                                         S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取成功：{readPLCSignals[i].Name} 143.{i}");
-                                        EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
+                                        //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取拍照成功：{readPLCSignals[i].Name} 143.{i}.True");
+                                        EventMessage.MessageDisplay($"回复读取拍照成功：{readPLCSignals[i].Name} （143.{i}.True）", true, true);
                                         ResetSignal(143, i, 600); // 拍照信号复位                                 
                                     }
 
@@ -951,6 +952,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     string showStatus = FlowOrDown ? "回流" : "下转";
                                     if (back)
                                     {
+                                        EventMessage.MessageDisplay($"接收到回流信号：（92.{i + 1}） 轮形：{back_WheelCoding}-{showStatus}", true, true);
                                         Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回流信号192.{i + 1}：{back}");
                                         modifiValue = new KeyValuePair<string, string>(back_WheelCoding, showStatus);
                                         int indexPos = 144;
@@ -962,10 +964,10 @@ namespace WheelRecognitionSystem.ViewModels
                                         }
 
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
+                                        EventMessage.MessageDisplay($"回复读取回流成功：（{indexPos}.{indexBit}）", true, true);
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
+                                        //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
                                         OnDataModifiNextStation(modifiValue);
-                                        EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{back_WheelCoding} ： {showStatus}", true, true);
                                         ResetSignal(indexPos, indexBit, 600); // 回流状态复位                                 
 
 
@@ -994,10 +996,12 @@ namespace WheelRecognitionSystem.ViewModels
                                     bool b = S7.GetBitAt(_readBuffer, 193, i);
                                     if (b)
                                     {
+                                        EventMessage.MessageDisplay($"接收到修正信号：（193.{i}） 轮形：{NG_WheelCoding}-{wheelDefect}", true, true);
+
                                         S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         OnDataModificationTriggered(wheel);
-                                        EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
+                                        EventMessage.MessageDisplay($"回复读取修正成功：（144.{i}）", true, true);
                                         ResetSignal(144, i, 600); // 修正信号复位                                 
 
                                         //new Thread((obj) =>
@@ -1075,7 +1079,7 @@ namespace WheelRecognitionSystem.ViewModels
                     S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
                     //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                     Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{bytePos}.{bitPos}成功");
-                    EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
+                    //EventMessage.MessageDisplay($"复位信号:{bytePos}.{bitPos}.False", true, true);
                 }
             }).Start();
         }
@@ -1091,7 +1095,7 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 ReadPLCSignal plcSignal = sender as ReadPLCSignal;
                 //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 轮毂到位：{plcSignal.Index}");
-                EventMessage.MessageDisplay($"轮毂到位：{plcSignal.Name}", true, true);
+                //EventMessage.MessageDisplay($"轮毂到位：{plcSignal.Name}", true, true);
 
                 int n = plcSignal.Index + 1; //线体 下标加1
                 countInt[plcSignal.Index] = countInt[plcSignal.Index] + 1;
@@ -1122,7 +1126,6 @@ namespace WheelRecognitionSystem.ViewModels
         {
             S7.SetBitAt(ref WriteBuffer, 0, model.Index - 1, true); //拍照流程完成
             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
-            EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
             new Thread((obj) =>
             {
                 int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1187,7 +1190,9 @@ namespace WheelRecognitionSystem.ViewModels
             }
             //显示状态信息
             SetStatus(model.Index, model.resultModel.status);
-            EventMessage.MessageDisplay($"{model.Index}号{model.resultModel.status} 型号：{wheelType}", true, false);
+            //EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
+
+            EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
 
 
             //插入数据库

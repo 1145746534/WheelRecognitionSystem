@@ -37,6 +37,7 @@ namespace WheelRecognitionSystem.Public
             {
                 try
                 {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} {message}");
                     string currentLogPath = AppDomain.CurrentDomain.BaseDirectory + @"Logs\" + DateTime.Now.ToString("yy-MM") + "_log.txt";
                     FileStream fs;
                     StreamWriter sw;
