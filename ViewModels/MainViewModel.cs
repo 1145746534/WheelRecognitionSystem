@@ -21,22 +21,8 @@ using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Media;
 using SqlSugar;
-using Prism.Ioc;
-using WheelRecognitionSystem.Views.Pages;
-using System.Windows.Shapes;
-using NPOI.SS.Formula.Functions;
 using System.Threading;
-using System.Reflection;
-using ZstdSharp.Unsafe;
-using MySqlX.XDevAPI.Common;
-using MySqlX.XDevAPI;
-using Mysqlx.Session;
-using Org.BouncyCastle.Asn1.X509;
-using Mysqlx;
-using System.Windows.Media.Media3D;
-using NPOI.Util;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
+
 
 namespace WheelRecognitionSystem.ViewModels
 {
@@ -620,6 +606,11 @@ namespace WheelRecognitionSystem.ViewModels
 
         private int[] countInt = new int[5];
 
+        /// <summary>
+        /// 回流状态上次更新的二维码
+        /// </summary>
+        private string lastUpdateCodeBack;
+
         #endregion
 
         public MainViewModel(IRegionManager regionManager)
@@ -632,7 +623,7 @@ namespace WheelRecognitionSystem.ViewModels
             //PlcCilent.RecvTimeout = 90;
             //PlcCilent.SendTimeout = 90;
             LoadSystemDatas();
-            ExternalConnectionThread();
+            //ExternalConnectionThread();
             //初始化数据库
             SqlAccess sqlAccess = new SqlAccess();
             sqlAccess.InitializeTable();
@@ -851,6 +842,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
+
             Thread.Sleep(500);
             Console.WriteLine("进来次数");
             readPLCSignals[0].Name = "1检1";
@@ -863,7 +855,7 @@ namespace WheelRecognitionSystem.ViewModels
             readPLCSignals[3].Index = 3;
             readPLCSignals[4].Name = "2检1";
             readPLCSignals[4].Index = 4;
-            _readBuffer = new byte[ReadLenght - ReadStartAddress + 2];
+            _readBuffer = new byte[ReadLenght - ReadStartAddress + 1];
             float temperature;
             KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>();
             KeyValuePair<string, int> wheel;
@@ -871,6 +863,28 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 while (PlcDataInteractionControl)
                 {
+
+                    if (PlcCilent != null && !PlcCilent.Connected) //未连接
+                    {
+                        //连接PLC
+                        int result = PlcCilent.ConnectTo(PlcIP, 0, 0);
+                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")}:连接PLC");
+                        if (result == 0 && PlcCilent.Connected)
+                        {
+                            if (PlcStatus != "1")
+                                PlcStatus = "1";
+
+                        }
+                        else
+                        {
+                            Console.WriteLine($"连接失败：{PlcCilent.Connected}");
+                            if (PlcStatus != "0")
+                                PlcStatus = "0";
+                        }
+                        Thread.Sleep(1000);
+
+                    }
+
 
                     //1.相机拍照信号 分为五个相机触发信号  1检1 1检2A和2B共用一个相机  1检3 一检3返修  2检1
                     //5个相机 5个触摸屏
@@ -889,7 +903,7 @@ namespace WheelRecognitionSystem.ViewModels
                             int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, _readBuffer);
                             if (bytes_read != 0)
                             {
-                                //Console.WriteLine($"实际 {_readBuffer.Length} 字节");
+                                Console.WriteLine($"实际 {_readBuffer.Length} 字节");
                                 //读取失败
                                 Console.WriteLine($"错误码: {bytes_read}, 描述: {PlcCilent.ErrorText(bytes_read)}");
 
@@ -921,7 +935,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     {
                                         Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照信号108.{i}：{photo}");
                                         S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                        //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取成功：{readPLCSignals[i].Name} 143.{i}");
                                         EventMessage.MessageDisplay($"回复读取成功：{readPLCSignals[i].Name} 143.{i}", true, true);
                                         ResetSignal(143, i, 600); // 拍照信号复位                                 
@@ -948,7 +962,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         }
 
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                        //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
                                         OnDataModifiNextStation(modifiValue);
                                         EventMessage.MessageDisplay($"回复读取回流状态成功：{indexPos}.{indexBit}。轮形：{back_WheelCoding} ： {showStatus}", true, true);
@@ -981,7 +995,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     if (b)
                                     {
                                         S7.SetBitAt(ref WriteBuffer, 144, i, true); //回复读取修正信号成功
-                                        PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                                        //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         OnDataModificationTriggered(wheel);
                                         EventMessage.MessageDisplay($"回复读取修正信号成功：144.{i}", true, true);
                                         ResetSignal(144, i, 600); // 修正信号复位                                 
@@ -1049,16 +1063,6 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
         // 修改后 - 使用异步方法
-        private async Task ResetSignalAsync(int bytePos, int bitPos, int delayMs)
-        {
-            await Task.Delay(delayMs);
-            lock (_writeBufferLock)
-            {
-                S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
-                PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
-                EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
-            }
-        }
 
         private void ResetSignal(int bytePos, int bitPos, int delayMs)
         {
@@ -1069,7 +1073,7 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     Thread.Sleep(600);
                     S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
-                    PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
+                    //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                     Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{bytePos}.{bitPos}成功");
                     EventMessage.MessageDisplay($"复位{bytePos}.{bitPos}成功", true, true);
                 }
@@ -1233,13 +1237,20 @@ namespace WheelRecognitionSystem.ViewModels
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
+               
                 string prefix_WheelCoding = keyValue.Key;
                 string station = keyValue.Value;
                 char[] parts = prefix_WheelCoding.ToCharArray();
+                if (prefix_WheelCoding == lastUpdateCodeBack)
+                {
+                    EventMessage.MessageDisplay($"两次状态码一致：{lastUpdateCodeBack}", true, true);
+                    return;
+                }
                 if (parts.Count() != 12)
                 {
                     throw new Exception($"NextStation-Prefix_WheelCoding数据长度错误：{parts.Count()}");
                 }
+                lastUpdateCodeBack = prefix_WheelCoding;
 
                 //string oldWheelType = new string(parts, 4, 8);
 
@@ -1249,7 +1260,7 @@ namespace WheelRecognitionSystem.ViewModels
                     .OrderByDescending(x => x.ID)
                     .First();
 
-                if (latestRecord != null)
+                if (latestRecord != null  )
                 {
                     // 步骤2：更新 Result 和 Code
                     var rowsAffected = db.Updateable<Tbl_productiondatamodel>()
@@ -1258,7 +1269,6 @@ namespace WheelRecognitionSystem.ViewModels
                             NextStation = station
                         }).Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
-
                     Console.WriteLine($"NextStation-成功更新了{rowsAffected}条记录");
                 }
                 else
