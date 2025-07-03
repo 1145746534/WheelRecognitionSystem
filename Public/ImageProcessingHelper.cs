@@ -52,6 +52,7 @@ namespace WheelRecognitionSystem.Public
                 HOperatorSet.Decompose3(image, out HObject image1, out HObject image2, out HObject image3);
                 image2.Dispose();
                 image3.Dispose();
+                Channels.Dispose();
                 return image1.Clone();
             }
             else
@@ -59,6 +60,20 @@ namespace WheelRecognitionSystem.Public
 
         }
 
+        private static void SafeHalconDispose<T>(T obj) where T : class, IDisposable
+        {
+            if (obj != null)
+            {
+                obj.Dispose();
+                obj = null; // 关键：解除引用使GC可回收
+            }
+        }
+
+        // 安全克隆方法
+        private static HObject CloneImageSafely(HObject source)
+        {
+            return (source != null && source.IsInitialized()) ? source.Clone() : null;
+        }
 
         /// <summary>
         /// 定位轮毂
@@ -67,11 +82,13 @@ namespace WheelRecognitionSystem.Public
         /// <param name="minThreshold">最小阈值</param>
         /// <param name="maxThreshold">最大阈值</param>
         /// <returns>定位到的轮毂图像和轮毂轮廓</returns>
-        public static PositioningWheelResultModel PositioningWheel(HObject image, int minThreshold, int maxThreshold, int minRadius, bool isConfirmRadius = true)
+        public static PositioningWheelResultModel PositioningWheel(HObject imageSource, int minThreshold, int maxThreshold, int minRadius, bool isConfirmRadius = true)
         {
             PositioningWheelResultModel resultModel = new PositioningWheelResultModel();
+            HObject image = null;
             try
             {
+                image = CloneImageSafely(imageSource);
                 //全图灰度
                 HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
                 resultModel.FullFigureGary = (float)(Mean1.D);
@@ -85,16 +102,13 @@ namespace WheelRecognitionSystem.Public
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
 
-               
-                //resultModel.WheelImage = null;
-                //resultModel.WheelContour = null;
-
-                Deviation?.Dispose();
-                Mean1?.Dispose();
-                region.Dispose();
-                connectedRegions?.Dispose();
-                regionFillUp?.Dispose();
-                relectedRegions?.Dispose();
+                SafeHalconDispose(Mean1);
+                SafeHalconDispose(Deviation);
+                SafeHalconDispose(region);
+                SafeHalconDispose(connectedRegions);
+                SafeHalconDispose(regionFillUp);
+                SafeHalconDispose(relectedRegions);
+                             
 
                 if (row.Length != 0) //存在轮毂
                 {
@@ -109,7 +123,9 @@ namespace WheelRecognitionSystem.Public
                         HOperatorSet.GetImageSize(image, out HTuple width, out HTuple height);
                         HOperatorSet.CreateMetrologyModel(out HTuple MetrologyCircleHandle);
                         HOperatorSet.SetMetrologyModelImageSize(MetrologyCircleHandle, width, height);
-                        HOperatorSet.AddMetrologyObjectCircleMeasure(MetrologyCircleHandle, row, column, radius + 10, 160, 3, 1, 30, new HTuple(), new HTuple(), out HTuple CircleIndex);
+                        HTuple H1 = new HTuple();
+                        HTuple H2 = new HTuple();
+                        HOperatorSet.AddMetrologyObjectCircleMeasure(MetrologyCircleHandle, row, column, radius + 10, 160, 3, 1, 30, H1, H2, out HTuple CircleIndex);
                         HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "num_instances", 1);
                         HOperatorSet.SetMetrologyObjectParam(MetrologyCircleHandle, CircleIndex, "min_score", 0.1);
                         HOperatorSet.ApplyMetrologyModel(image, MetrologyCircleHandle);
@@ -122,42 +138,54 @@ namespace WheelRecognitionSystem.Public
                             row = hv_Parameter.TupleSelect(0);
                             column = hv_Parameter.TupleSelect(1);
                             radius = hv_Parameter.TupleSelect(2);
-                        }                                                                                                                     //
-                        width?.Dispose();
-                        height?.Dispose();
-                        CircleIndex?.Dispose();
-                        hv_Parameter.Dispose();
-                        ho_Contours.Dispose();
-                        hv_Row.Dispose();
-                        hv_Column.Dispose();
-                        ho_Contour.Dispose();
+                        }
+
                         HOperatorSet.ClearMetrologyModel(MetrologyCircleHandle);
-                        MetrologyCircleHandle?.Dispose();
+                        SafeHalconDispose(width);
+                        SafeHalconDispose(height);
+                        SafeHalconDispose(MetrologyCircleHandle);
+                        SafeHalconDispose(H1);
+                        SafeHalconDispose(H2);
+                        SafeHalconDispose(CircleIndex);
+                        SafeHalconDispose(hv_Parameter);
+                        SafeHalconDispose(ho_Contours);
+                        SafeHalconDispose(hv_Row);
+                        SafeHalconDispose(hv_Column);
+                        SafeHalconDispose(ho_Contour);
 
 
-                        resultModel.CenterRow = row;
-                        resultModel.CenterColumn = column;
-                        resultModel.Radius = radius;
+
+                        resultModel.CenterRow = row.Clone();
+                        resultModel.CenterColumn = column.Clone();
+                        resultModel.Radius = radius.Clone();
 
                         HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
                         HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
                         HOperatorSet.ReduceDomain(image, reducedCircle, out HObject wheelImage);
                         HOperatorSet.Intensity(wheelImage, wheelImage, out HTuple mean, out HTuple deviation); //圈内灰度
                         resultModel.InnerCircleMean = (float)(mean.D);
-                        resultModel.WheelImage = wheelImage;
-                        resultModel.WheelContour = wheelContour;
-                        reducedCircle?.Dispose();
-                        mean?.Dispose(); 
-                        deviation?.Dispose();
+                        resultModel.WheelImage = wheelImage.Clone();
+                        resultModel.WheelContour = wheelContour.Clone();
+
+                        SafeHalconDispose(reducedCircle);
+                        SafeHalconDispose(wheelImage);
+                        SafeHalconDispose(mean);
+                        SafeHalconDispose(deviation);
+                        SafeHalconDispose(wheelContour);
+                       
 
                     }
                 }
+                SafeHalconDispose(row);
+                SafeHalconDispose(column);
+                SafeHalconDispose(radius);
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"PositioningWheelResultModel:{ex.Message}");
             }
+            SafeHalconDispose(image);
             return resultModel;
         }
 
@@ -318,9 +346,10 @@ namespace WheelRecognitionSystem.Public
         //    }
         //}
 
-        public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart,
+        public static RecognitionResultModel WheelRecognitionAlgorithm(HObject imageSource, List<TemplatedataModels> templateDatas, double angleStart,
                                                                         double angleExtent, double minSimilarity, List<RecognitionResultModel> recognitionResults)
         {
+           HObject image = CloneImageSafely(imageSource);
             var resultIfFailed = new RecognitionResultModel
             {
                 status = "识别失败",
@@ -348,10 +377,11 @@ namespace WheelRecognitionSystem.Public
                         Similarity = Math.Round(score.D, 3)
                     });
                 }
-                row?.Dispose();
-                column?.Dispose();
-                angle?.Dispose();
-                score?.Dispose();
+                SafeHalconDispose(row);
+                SafeHalconDispose(column);
+                SafeHalconDispose(angle);
+                SafeHalconDispose(score);
+               
             }
 
 
@@ -385,10 +415,11 @@ namespace WheelRecognitionSystem.Public
                         Similarity = Math.Round(score.D, 3)
                     });
                 }
-                row?.Dispose();
-                column?.Dispose();
-                angle?.Dispose();
-                score?.Dispose();
+                SafeHalconDispose(row);
+                SafeHalconDispose(column);
+                SafeHalconDispose(angle);
+                SafeHalconDispose(score);
+                
             }
 
 
@@ -397,7 +428,7 @@ namespace WheelRecognitionSystem.Public
                 bestMatch.status = "识别成功";
                 return bestMatch;
             }
-
+            SafeHalconDispose(image);
             return resultIfFailed;
         }
 
@@ -620,11 +651,12 @@ namespace WheelRecognitionSystem.Public
             catch (HalconException HDevExpDefaultException)
             {
 
-                
+
 
                 throw HDevExpDefaultException;
 
-            }finally
+            }
+            finally
             {
 
                 hv_DLDeviceHandles.Dispose();
@@ -652,7 +684,7 @@ namespace WheelRecognitionSystem.Public
             }
 
 
-            
+
 
         }
 

@@ -10,7 +10,7 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 自动模式识别结果显示模型
     /// </summary>
-    public class AutoRecognitionResultDisplayModel
+    public class AutoRecognitionResultDisplayModel : IDisposable
     {
         /// <summary>
         /// 显示索引 下标从1开始
@@ -48,6 +48,14 @@ namespace WheelRecognitionSystem.Models
         ///// </summary>
         //public bool IsGate { get; set; }
 
-
+        public void Dispose()
+        {
+            CurrentImage?.Dispose();
+            WheelContour?.Dispose();
+            TemplateContour?.Dispose();
+            CurrentImage= null;
+            WheelContour = null;
+            TemplateContour = null;
+        }
     }
 }

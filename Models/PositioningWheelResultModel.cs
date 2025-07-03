@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WheelRecognitionSystem.Models
 {
-    public class PositioningWheelResultModel
+    public class PositioningWheelResultModel : IDisposable
     {
         /// <summary>
         /// 定位到的轮毂图像
@@ -39,5 +39,22 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public float FullFigureGary { get; set; }
 
+        public void Dispose()
+        {
+            SafeHalconDispose(WheelImage);
+            SafeHalconDispose(WheelContour);
+            SafeHalconDispose(CenterRow);
+            SafeHalconDispose(CenterColumn);
+            SafeHalconDispose(Radius);
+        }
+
+        private void SafeHalconDispose<T>(T obj) where T : class, IDisposable
+        {
+            if (obj != null)
+            {
+                obj.Dispose();
+                obj = null; // 关键：解除引用使GC可回收
+            }
+        }
     }
 }
