@@ -42,7 +42,7 @@ namespace WheelRecognitionSystem.Views.Pages
 
         private void TemplateManagementView_Loaded(object sender, RoutedEventArgs e)
         {
-            cmb.ItemsSource = new List<string>() { "精车", "涂装" };
+            cmb.ItemsSource = new List<string>() { "成品", "半成品" };
         }
 
         //将模板数据窗口的显示滚动到model项

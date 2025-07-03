@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
@@ -337,92 +338,115 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     .Where(it => it.RecognitionTime >= lastShiftStart && it.RecognitionTime < lastShiftEnd)
                     .ToList();
                 db.Close();db.Dispose();
-                var summaryResults = GroupByModelThenRemarkWithSummary(list);
-                //每一个单元格都需要往队列里面添数据
-                Queue<ExportDataModel> exportDatas = new Queue<ExportDataModel>();
-                int appendIndex = 0;
-                foreach (var modelSummary in summaryResults)
-                {
-                    //班次
-                    int matchRow = 760;
-                    string matchName = "班次";
-                    int setRow = 765 + appendIndex;
-                    object setValue = workShift;
-                    exportDatas.Enqueue(new ExportDataModel()
-                    {
-                        MatchRow = matchRow,
-                        MatchName = matchName,
-                        SettingRow = setRow,
-                        SettingValue = setValue
-                    });
-                    //单元
+
+                // 获取所有成品
+                List<Tbl_productiondatamodel> finishedProducts = list
+                    .Where(p => p.WheelStyle == "成品")
+                    .ToList();
+
+                // 获取所有半成品
+                List<Tbl_productiondatamodel> NotfinishedProducts = list
+                    .Where(p => p.WheelStyle == "半成品")
+                    .ToList();
+
+                //ExportProducts(finishedProducts, workShift);
+                ExportProducts("半成品", list, workShift);
+                ExportProducts("成品", list, workShift);
 
 
-                    //轮形
-                    matchRow = 760;
-                    matchName = "轮型";
-                    setRow = 765 + appendIndex;
-                    setValue = modelSummary.Model;
-                    exportDatas.Enqueue(new ExportDataModel()
-                    {
-                        MatchRow = matchRow,
-                        MatchName = matchName,
-                        SettingRow = setRow,
-                        SettingValue = setValue
-                    });
-
-                    Console.WriteLine($"型号: {modelSummary.Model}");
-                    Console.WriteLine($"  总记录数: {modelSummary.TotalCount}");
-
-
-                    foreach (var remarkGroup in modelSummary.RemarkGroups)
-                    {
-                        double percentage = (double)remarkGroup.Count / modelSummary.TotalCount * 100;
-                        Console.WriteLine($"    - 备注: {remarkGroup.Remark}, 数量: {remarkGroup.Count} ({percentage:F1}%)");
-                        if (string.IsNullOrEmpty(remarkGroup.Remark) || remarkGroup.Remark == "-1") //为空或者-1就是OK的产品
-                        {
-
-                            //OK量
-                            matchRow = 760;
-                            matchName = "成品量";
-                            
-                        }else
-                        {
-                            string result = remarkGroup.Remark.PadLeft(3, '0');
-                            matchRow = 763;
-                            matchName = $"5{result}";
-
-                        }
-                        setRow = 765 + appendIndex;
-                        setValue = remarkGroup.Count;
-
-                        exportDatas.Enqueue(new ExportDataModel()
-                        {
-                            MatchRow = matchRow,
-                            MatchName = matchName,
-                            SettingRow = setRow,
-                            SettingValue = setValue
-                        });
-
-                    }
-
-                    Console.WriteLine("----------------------------------");
-                    appendIndex = appendIndex + 1;
-                }
-                ExcelHelper excelHelper = new ExcelHelper();
-                excelHelper.ModifyExcelFile(exportDatas,"D:\\ZS\\数据导出.xlsx", "D:\\");
-                excelHelper = null;
-                exportDatas = null;
-                db.Dispose();
-                summaryResults = null;
                 //PrintSummaryResults(summaryResults);
-
-                //ExcelHelper excelHelper = new ExcelHelper();
 
             });
 
             return true;
         }
+
+        private void ExportProducts(string style, List<Tbl_productiondatamodel> products, string workShift)
+        {
+           
+            List<Tbl_productiondatamodel> list = products
+                .Where(p => p.WheelStyle == style)
+                .ToList();
+
+            List<ModelGroupSummary> summaryResults = GroupByModelThenRemarkWithSummary(list);
+            //每一个单元格都需要往队列里面添数据
+            Queue<ExportDataModel> exportDatas = new Queue<ExportDataModel>();
+            int appendIndex = 0;
+            foreach (var modelSummary in summaryResults)
+            {
+                //班次
+                int matchRow = 760;
+                string matchName = "班次";
+                int setRow = 765 + appendIndex;
+                object setValue = workShift;
+                exportDatas.Enqueue(new ExportDataModel()
+                {
+                    MatchRow = matchRow,
+                    MatchName = matchName,
+                    SettingRow = setRow,
+                    SettingValue = setValue
+                });
+                //单元
+
+
+                //轮形
+                matchRow = 760;
+                matchName = "轮型";
+                setRow = 765 + appendIndex;
+                setValue = modelSummary.Model;
+                exportDatas.Enqueue(new ExportDataModel()
+                {
+                    MatchRow = matchRow,
+                    MatchName = matchName,
+                    SettingRow = setRow,
+                    SettingValue = setValue
+                });
+
+                Console.WriteLine($"型号: {modelSummary.Model}");
+                Console.WriteLine($"  总记录数: {modelSummary.TotalCount}");
+
+
+                foreach (var remarkGroup in modelSummary.RemarkGroups)
+                {
+                    double percentage = (double)remarkGroup.Count / modelSummary.TotalCount * 100;
+                    Console.WriteLine($"    - 备注: {remarkGroup.Remark}, 数量: {remarkGroup.Count} ({percentage:F1}%)");
+                    if (string.IsNullOrEmpty(remarkGroup.Remark) || remarkGroup.Remark == "-1") //为空或者-1就是OK的产品
+                    {
+
+                        //OK量
+                        matchRow = 760;
+                        matchName = "成品量";
+
+                    }
+                    else
+                    {
+                        string result = remarkGroup.Remark.PadLeft(3, '0');
+                        matchRow = 763;
+                        matchName = $"5{result}";
+
+                    }
+                    setRow = 765 + appendIndex;
+                    setValue = remarkGroup.Count;
+
+                    exportDatas.Enqueue(new ExportDataModel()
+                    {
+                        MatchRow = matchRow,
+                        MatchName = matchName,
+                        SettingRow = setRow,
+                        SettingValue = setValue
+                    });
+
+                }
+
+                Console.WriteLine("----------------------------------");
+                appendIndex = appendIndex + 1;
+            }
+            ExcelHelper excelHelper = new ExcelHelper();
+            excelHelper.ModifyExcelFile(exportDatas, "D:\\ZS\\数据导出.xlsx", $"D:\\{style}\\");
+
+        }
+
+
 
         /// <summary>
         /// 双层分组统计（带汇总信息）

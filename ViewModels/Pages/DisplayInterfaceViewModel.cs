@@ -614,7 +614,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     ResultDisplay(resultDisplayModel);
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                     //保存图片
-                    interact.imagePath = await SaveImageDatasAsync(_image, way, resultDisplayModel.WheelType);
+                    string value = interact.resultModel.WheelStyle == "成品" ? "成" : "半";
+                    string _prefixName = $"{interact.resultModel.RecognitionWheelType}_{value}";
+                    interact.imagePath = await SaveImageDatasAsync(_image, way, _prefixName);
                 }
                 catch (Exception ex)
                 {
@@ -685,7 +687,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > 0.85)
                 {
-                    recognitionResult.RecognitionWheelType = names[0].S;
+                    string[] name = names[0].S.Split('_'); //00619C70_半
+                    string value = name[1] == "半" ? "半成品" : "成品";
+                    recognitionResult.RecognitionWheelType = name[0]; //识别结果
+                    recognitionResult.WheelStyle = value; //识别样式
                     recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
                     recognitionResult.status = "识别成功";
 
@@ -744,10 +749,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     ResultDisplay(displayModel);
                     SaveWay way = SaveWay.Hand;
                     //保存图片
-                  
+
                     await SaveImageDatasAsync(image, way, displayModel.WheelType);
 
-                    SafeHalconDispose(displayModel);                   
+                    SafeHalconDispose(displayModel);
                     SafeHalconDispose(gray);
                     SafeHalconDispose(image);
 
@@ -1231,7 +1236,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             return savePath;
         }
 
-        private async Task<string> SaveImageDatasAsync(HObject _image, SaveWay way, string wheelType = null)
+        /// <summary>
+        /// 存储图片
+        /// </summary>
+        /// <param name="_image"></param>
+        /// <param name="way"></param>
+        /// <param name="prefixName"></param>
+        /// <returns></returns>
+        private async Task<string> SaveImageDatasAsync(HObject _image, SaveWay way, string prefixName = null)
         {
             HObject saveImage = CloneImageSafely(_image);
 
@@ -1270,9 +1282,23 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 string saveWheelTypePath = "";
                 if (way == SaveWay.AutoOK)
                 {
-                    saveWheelTypePath = Path.Combine(dayPath, wheelType);
+                    // 查找下划线的位置
+                    int index = prefixName.IndexOf("_", StringComparison.Ordinal);
+
+                    // 如果找到双下划线，返回前面的部分
+                    if (index >= 0)
+                    {
+                        string value = prefixName.Substring(0, index);
+                        string finallyName = prefixName.Contains("半") ? "半": "成";
+                        value = $"{value}_{finallyName}";
+                        saveWheelTypePath = Path.Combine(dayPath, value);
+
+                    }
+                    else
+                        saveWheelTypePath = Path.Combine(dayPath, prefixName);
+
                     await Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
-                    savePath = Path.Combine(saveWheelTypePath, $"{wheelType}&{dateTime:yyMMddHHmmss}.tif");
+                    savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{dateTime:yyMMddHHmmss}.tif");
                 }
                 else if (way == SaveWay.AutoNG)
                 {
