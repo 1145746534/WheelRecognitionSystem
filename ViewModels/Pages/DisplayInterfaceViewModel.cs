@@ -598,7 +598,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 AutoRecognitionResultDisplayModel resultDisplayModel = null;
                 HObject _image = null;
-                HObject gray = new HObject();
+                HObject gray = null;
                 try
                 {
 
@@ -606,8 +606,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     interact.IsGrayscale = camera.info.Grayscale;
                     interact.starTime = DateTime.Now;
                     _image = camera.Grabimage();
-                    //显示用原图 大模型识别标签用原图 保存图片用原图
-                    //传统识别用灰度图  大模型识别轮毂用灰度图 
+                    //传统识别用灰度图  大模型识别轮毂用灰度图  显示用原图 大模型识别标签用原图 保存图片用原图
                     gray = RGBTransGray(_image);
                     resultDisplayModel = Tackle(interact, gray);
                     resultDisplayModel.CurrentImage = CloneImageSafely(_image); //显示
@@ -615,8 +614,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     ResultDisplay(resultDisplayModel);
                     SaveWay way = interact.resultModel.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                     //保存图片
-                    HObject saveImage = _image.Clone();
-                    interact.imagePath = await SaveImageDatasAsync(saveImage, way, resultDisplayModel.WheelType);
+                    interact.imagePath = await SaveImageDatasAsync(_image, way, resultDisplayModel.WheelType);
                 }
                 catch (Exception ex)
                 {
@@ -625,7 +623,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 finally
                 {
-                    gray?.Dispose(); //使用完后释放                                    
+                    SafeHalconDispose(resultDisplayModel);
+
+                    SafeHalconDispose(_image);
+                    SafeHalconDispose(gray);
+
                 }
             }
             else
@@ -731,9 +733,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     await Task.Delay(1000);
 
-
-                    //string path = "D:\\ZS\\终检\\训练图\\15\\02023C18&250622213348.tif";
-                    //string path = "D:\\ZS\\终检\\训练图\\11\\NG&250622134436.tif";
                     HOperatorSet.ReadImage(out HObject image, filePath);
                     HObject gray = RGBTransGray(image);
                     AutoRecognitionResultDisplayModel displayModel = new AutoRecognitionResultDisplayModel();
@@ -745,17 +744,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     ResultDisplay(displayModel);
                     SaveWay way = SaveWay.Hand;
                     //保存图片
-                    HObject saveImage = CloneImageSafely(image);
-                    await SaveImageDatasAsync(saveImage, way, displayModel.WheelType);
+                  
+                    await SaveImageDatasAsync(image, way, displayModel.WheelType);
 
-                    SafeHalconDispose(displayModel);
-                    //AutoRecognitionResultDisplayModel resultDisplayModel = Tackle(new InteractS7PLCModel(), gray);
-                    //resultDisplayModel.index = 1;
-                    //resultDisplayModel.CurrentImage = image; //显示
-
-                    //ResultDisplay(resultDisplayModel);
-
-
+                    SafeHalconDispose(displayModel);                   
                     SafeHalconDispose(gray);
                     SafeHalconDispose(image);
 
@@ -849,20 +841,20 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 case 0:
                     //SaveImageDatas(CurrentImage1, SaveWay.Hand);
-                    await SaveImageDatasAsync(CloneImageSafely(CurrentImage1), SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage1, SaveWay.Hand);
                     break;
                 case 1:
                     //SaveImageDatas(CurrentImage2, SaveWay.Hand);
-                    await SaveImageDatasAsync(CloneImageSafely(CurrentImage2), SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage2, SaveWay.Hand);
                     break;
                 case 2:
-                    await SaveImageDatasAsync(CloneImageSafely(CurrentImage3), SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage3, SaveWay.Hand);
                     break;
                 case 3:
-                    await SaveImageDatasAsync(CloneImageSafely(CurrentImage4), SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage4, SaveWay.Hand);
                     break;
                 case 4:
-                    await SaveImageDatasAsync(CloneImageSafely(CurrentImage5), SaveWay.Hand);
+                    await SaveImageDatasAsync(CurrentImage5, SaveWay.Hand);
                     break;
             }
 
@@ -1239,8 +1231,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             return savePath;
         }
 
-        private async Task<string> SaveImageDatasAsync(HObject saveImage, SaveWay way, string wheelType = null)
+        private async Task<string> SaveImageDatasAsync(HObject _image, SaveWay way, string wheelType = null)
         {
+            HObject saveImage = CloneImageSafely(_image);
+
             string savePath = string.Empty;
             DateTime dateTime = DateTime.Now;
 
@@ -1294,7 +1288,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 {
                     saveImagePath = savePath.Replace(@"\", "/");
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
-                    saveImage.Dispose();
+                    SafeHalconDispose(saveImage);
                 });
                 if (way == SaveWay.Hand)
                     Application.Current.Dispatcher.Invoke(() =>
