@@ -657,6 +657,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             TemplateManagementViewModel someService = _containerProvider.Resolve<TemplateManagementViewModel>();
             HObject templateContour = new HObject();
 
+            //获取整张图的灰度值 如果小于指定数值 判定为半成品 
+            //全图灰度
+            HOperatorSet.Intensity(grayImage, grayImage, out HTuple mean, out HTuple deviation);
+            float fullFigureGary = (float)(mean.D);
+            SafeHalconDispose(mean);
+            SafeHalconDispose(deviation);
+
+
             //定位轮毂
             PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
 
@@ -688,7 +696,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (names.Length > 0 && confidences[0].D > 0.85)
                 {
                     string[] name = names[0].S.Split('_'); //00619C70_半
-                    string value = name[1] == "半" ? "半成品" : "成品";
+                    string value = "大模型";
+                    if (name.Length == 2)
+                        value = name[1] == "半" ? "半成品" : "成品";
+
+
                     recognitionResult.RecognitionWheelType = name[0]; //识别结果
                     recognitionResult.WheelStyle = value; //识别样式
                     recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
@@ -747,10 +759,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     displayModel.CurrentImage = CloneImageSafely(image);
 
                     ResultDisplay(displayModel);
-                    SaveWay way = SaveWay.Hand;
+                    //SaveWay way = SaveWay.Hand;
                     //保存图片
 
-                    await SaveImageDatasAsync(image, way, displayModel.WheelType);
+                    //await SaveImageDatasAsync(image, way, displayModel.WheelType);
 
                     SafeHalconDispose(displayModel);
                     SafeHalconDispose(gray);
@@ -1072,6 +1084,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 CurrentImage1 = CloneImageSafely(model.CurrentImage);
                 WheelContour1 = CloneImageSafely(model.WheelContour);
                 TemplateContour1 = CloneImageSafely(model.TemplateContour);
+                FullGray1 = value;
 
 
             }
@@ -1289,7 +1302,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     if (index >= 0)
                     {
                         string value = prefixName.Substring(0, index);
-                        string finallyName = prefixName.Contains("半") ? "半": "成";
+                        string finallyName = prefixName.Contains("半") ? "半" : "成";
                         value = $"{value}_{finallyName}";
                         saveWheelTypePath = Path.Combine(dayPath, value);
 

@@ -185,11 +185,13 @@
                     <DataGrid ItemsSource="{Binding IdentificationDatas}" Visibility="{Binding IdentificationDataVisibility}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
                       FontSize="14" FontWeight="Bold" Foreground="#333">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="识别用时" Binding="{Binding TimeConsumed}" Width="0.4*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="相似度" Binding="{Binding Similarity}" Width="0.4*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="识别时间" Binding="{Binding RecognitionTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}" Width="0.7*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="序号" Binding="{Binding ID}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding Model}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂样式" Binding="{Binding WheelStyle}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="NG编号" Binding="{Binding Remark}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="上报方式" Binding="{Binding ReportWay}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="相似度" Binding="{Binding Similarity}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="识别时间" Binding="{Binding RecognitionTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}" Width="0.2*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <DataGrid ItemsSource="{Binding StatisticsDatas}" Visibility="{Binding StatisticsDataVisibility}" Background="Transparent" BorderThickness="0" IsReadOnly="True"

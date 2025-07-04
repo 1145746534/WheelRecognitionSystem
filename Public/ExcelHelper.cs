@@ -51,12 +51,16 @@ namespace WheelRecognitionSystem.Public
                     ExportDataModel data = exportDatas.Dequeue();
                     //匹配项
                     int matchR = data.MatchRow;
+                    int startCol = data.MatchStartCol;
+                    int endCol = data.MatchEndCol;
                     string matchN = data.MatchName;
                     //插入项
                     int setR = data.SettingRow;
                     object setV = data.SettingValue;
+                    Console.WriteLine($"{startCol} -> {endCol} - {setR} - {setV}");
+
                     //循环这个行下所有的列
-                    for (int i = 1; i < 242; i++)
+                    for (int i = startCol; i <= endCol; i++)
                     {
                         // 单元格值（转换为字符串）
                         Excel.Range cell1 = (Excel.Range)worksheet.Cells[matchR, i];

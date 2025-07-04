@@ -374,7 +374,8 @@ namespace WheelRecognitionSystem.Public
                         CenterColumn = column.D,
                         Radian = angle.D,
                         RecognitionWheelType = templateData.TemplateName,
-                        Similarity = Math.Round(score.D, 3)
+                        Similarity = Math.Round(score.D, 3),
+                        WheelStyle = templateData.Style
                     });
                 }
                 SafeHalconDispose(row);
@@ -412,7 +413,8 @@ namespace WheelRecognitionSystem.Public
                         CenterColumn = column.D,
                         Radian = angle.D,
                         RecognitionWheelType = templateData.TemplateName,
-                        Similarity = Math.Round(score.D, 3)
+                        Similarity = Math.Round(score.D, 3),
+                        WheelStyle = templateData.Style
                     });
                 }
                 SafeHalconDispose(row);

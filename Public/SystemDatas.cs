@@ -129,14 +129,7 @@ namespace WheelRecognitionSystem.Public
         /// 模板数据集合
         /// </summary>
         public static TemplateDatasModel TemplateDataCollection { get; set;} = new TemplateDatasModel();
-        /// <summary>
-        /// 增加或修改的模板数据
-        /// </summary>
-        public static TemplateDatasModel AddOrReviseTemplateDatas {  get; set;} = new TemplateDatasModel();
-        /// <summary>
-        /// 需要从模板数据集合删除模板的轮型列表
-        /// </summary>
-        public static List<string> DelTemplateNames = new List<string>();
+        
 
         /// <summary>
         /// 系统模式 True为自动模式
@@ -177,5 +170,16 @@ namespace WheelRecognitionSystem.Public
         /// 图片是否裁剪
         /// </summary>
         public static bool CroppingOrNot { get; set; } = false;
+
+        /// <summary>
+        /// 大模型最低匹配相似度
+        /// </summary>
+        public static double ConfidenceMatch { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public static double MinFullFigureGary { get; set; }
+
+
     }
 }

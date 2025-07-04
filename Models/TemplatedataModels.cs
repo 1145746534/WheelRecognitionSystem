@@ -57,5 +57,13 @@ namespace WheelRecognitionSystem.Models
                 SetProperty(ref _lastUsedTime, value);
             }
         }
+
+
+        private string _style;
+        public string Style
+        {
+            get { return _style; }
+            set { SetProperty(ref _style, value); }
+        }
     }
 }

@@ -803,6 +803,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     //当前使用时间减去上次使用时间
                     TimeSpan timeSpan = DateTime.Now - templatedata.LastUsedTime;
                     item.UnusedDays = timeSpan.Days;
+                    templatedata.Style = item.WheelStyle;
                     if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围               
                         templatedata.Use = true;
                     else

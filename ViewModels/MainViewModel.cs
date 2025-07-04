@@ -22,6 +22,7 @@ using System.Windows;
 using System.Windows.Media;
 using SqlSugar;
 using System.Threading;
+using System.Net.Http;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -517,7 +518,10 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private byte[] WriteBuffer = new byte[90];
 
-
+        /// <summary>
+        /// 上传地址
+        /// </summary>
+        private string UpMesUri;
 
         /// <summary>
         /// 大屏显示的分选数据
@@ -707,7 +711,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                 ReadAppSettings("ArrivalDelay", out string arrivalDelay);
                 _ArrivalDelay = int.Parse(arrivalDelay);
-
+                ReadAppSettings("uri", out UpMesUri);
                 ReadAppSettings("IsScreenedResult", out string isScreenedResult);
                 bool r = bool.TryParse(isScreenedResult, out bool result);
                 if (r) IsScreenedResult = result;
@@ -892,13 +896,13 @@ namespace WheelRecognitionSystem.ViewModels
                     if (PlcCilent != null && PlcCilent.Connected)
                     {
                         try
-                        {                         
+                        {
                             // 重用缓冲区而不是重新创建
                             Array.Clear(_readBuffer, 0, _readBuffer.Length);
                             //_readBuffer = new byte[ReadLenght - ReadStartAddress + 1];
                             if (_readBuffer == null)
                                 Console.WriteLine("缓冲区未初始化");
-                         
+
                             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 扫描周期");
                             int bytes_read = PlcCilent.DBRead(ReadDB, ReadStartAddress, ReadLenght, _readBuffer);
                             if (bytes_read != 0)
@@ -947,7 +951,8 @@ namespace WheelRecognitionSystem.ViewModels
                                     string NG_WheelCoding = GetBytesToString(_readBuffer, 2 + i * 16);
                                     Thread.Sleep(10);
                                     // 2. 回流状态处理
-                                    bool back = S7.GetBitAt(_readBuffer, 192, i + 1);
+                                    int backBit = i + 1;
+                                    bool back = S7.GetBitAt(_readBuffer, 192, backBit);
                                     bool FlowOrDown = S7.GetBitAt(_readBuffer, 192, 0); //1回流 0下转
                                     string showStatus = FlowOrDown ? "回流" : "下转";
                                     if (back)
@@ -967,25 +972,13 @@ namespace WheelRecognitionSystem.ViewModels
                                         EventMessage.MessageDisplay($"回复读取回流成功：（{indexPos}.{indexBit}）", true, true);
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
-                                        OnDataModifiNextStation(modifiValue);
+                                        //0 1检1  1 
+                                        await OnDataModifiNextStationAsync(modifiValue);
                                         ResetSignal(indexPos, indexBit, 600); // 回流状态复位                                 
 
 
 
-                                        //new Thread((obj) =>
-                                        //{
-                                        //    int threadI = (int)obj;  // 将 object 类型转为 int
-                                        //    int indexPos1 = 144;
-                                        //    int indexBit1 = threadI + 5;
-                                        //    if (i >= 8)
-                                        //    {
-                                        //        indexPos1 = indexPos1 + 1;
-                                        //        indexBit1 = indexBit1 - 8;
-                                        //    }
-                                        //    Thread.Sleep(500);
-                                        //    S7.SetBitAt(ref WriteBuffer, indexPos1, indexBit1, false); //复位读取成功
-                                        //    EventMessage.MessageDisplay($"复位{indexPos1}.{indexBit1}回流状态", true, true);
-                                        //}).Start(i);
+
                                     }
 
                                     Thread.Sleep(10);
@@ -1209,6 +1202,7 @@ namespace WheelRecognitionSystem.ViewModels
             dataModel.Model = wheelType;
             dataModel.Station = "";
             dataModel.ImagePath = model.imagePath;
+            dataModel.ReportWay = "线上";
             dataModel.ResultBool = model.resultModel.ResultBol;
             dataModel.Remark = "-1";
             pDB.Insertable(dataModel).ExecuteCommand();
@@ -1237,12 +1231,12 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="keyValue"></param>
 
-        private void OnDataModifiNextStation(KeyValuePair<string, string> keyValue)
+        private async Task OnDataModifiNextStationAsync(KeyValuePair<string, string> keyValue)
         {
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
-               
+
                 string prefix_WheelCoding = keyValue.Key;
                 string station = keyValue.Value;
                 char[] parts = prefix_WheelCoding.ToCharArray();
@@ -1257,7 +1251,7 @@ namespace WheelRecognitionSystem.ViewModels
                 }
                 lastUpdateCodeBack = prefix_WheelCoding;
 
-                //string oldWheelType = new string(parts, 4, 8);
+
 
                 // 步骤1：查询符合条件的最新一条记录
                 Tbl_productiondatamodel latestRecord = db.Queryable<Tbl_productiondatamodel>()
@@ -1265,8 +1259,11 @@ namespace WheelRecognitionSystem.ViewModels
                     .OrderByDescending(x => x.ID)
                     .First();
 
-                if (latestRecord != null  )
+                if (latestRecord != null)
                 {
+                    //上传mes
+                    await SendMes(UpMesUri, "1检1", latestRecord.GUID);
+                    //await SendMes(UpMesUri, "1检1", "97624f8807e14e89b95b653e03b2c9e9");
                     // 步骤2：更新 Result 和 Code
                     var rowsAffected = db.Updateable<Tbl_productiondatamodel>()
                         .SetColumns(it => new Tbl_productiondatamodel()
@@ -1274,7 +1271,7 @@ namespace WheelRecognitionSystem.ViewModels
                             NextStation = station
                         }).Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
-                    Console.WriteLine($"NextStation-成功更新了{rowsAffected}条记录");
+                    Console.WriteLine($"NextStation-成功更新了{rowsAffected}条记录 - {latestRecord.GUID}");
                 }
                 else
                 {
@@ -1292,6 +1289,33 @@ namespace WheelRecognitionSystem.ViewModels
                 db?.Dispose();
             }
         }
+
+        public async Task SendMes(string _uri, string _sation, string _guid)
+        {
+
+            // 使用传统using块管理HttpClient
+            using (var httpClient = new HttpClient())
+            {
+                var apiClient = new ApiClient(httpClient);
+
+                try
+                {
+                    var response = await apiClient.PostJsonAsync<LoginRequest, ApiResponse>(
+                       _uri,
+                        new LoginRequest { stationNo = _sation, guid = _guid }
+                    );
+
+                    Console.WriteLine($"SendMes成功: {response?.msg}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"SendMes失败: {ex.Message}");
+                }
+            }
+
+        }
+           
+        
 
         /// <summary>
         /// 数据修改 - 产品NG
