@@ -15,7 +15,7 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 模板数据 - 新构造
     /// </summary>
-    public class TemplatedataModels : BindableBase
+    public class TemplatedataModels : sys_bd_Templatedatamodel
     {
         // 新增字段
         private string _templateFilePath; // 硬盘存储路径
