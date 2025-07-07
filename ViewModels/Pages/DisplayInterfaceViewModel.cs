@@ -626,7 +626,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 finally
                 {
                     SafeHalconDispose(resultDisplayModel);
-
                     SafeHalconDispose(_image);
                     SafeHalconDispose(gray);
 
@@ -657,43 +656,43 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             TemplateManagementViewModel someService = _containerProvider.Resolve<TemplateManagementViewModel>();
             HObject templateContour = new HObject();
 
-            //获取整张图的灰度值 如果小于指定数值 判定为半成品 
-            //全图灰度
-            HOperatorSet.Intensity(grayImage, grayImage, out HTuple mean, out HTuple deviation);
-            float fullFigureGary = (float)(mean.D);
-            SafeHalconDispose(mean);
-            SafeHalconDispose(deviation);
-
-
-            //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
-
-            //存储识别结果                    
-            if (pResult.WheelImage != null && pResult.WheelImage.IsInitialized())
-                imageRecogn = CloneImageSafely(pResult.WheelImage);
-            else
-                imageRecogn = CloneImageSafely(grayImage);
-
-            List<TemplatedataModels> models = someService.GetCanUseTemplates();
-            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
-            recognitionResult.FullFigureGary = pResult.FullFigureGary;
-            //如果定位到轮毂             
-            recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
-            if (recognitionResult.RecognitionWheelType != "NG") //
+            //显示需要的参数
+            AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
+            //获取整张图的灰度值 如果小于指定数值 判定为半成品            
+            double fullFigureGary = GetIntensity(grayImage);
+            if (fullFigureGary > MinFullFigureGary)
             {
+                //定位轮毂
+                PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
+                //存储识别结果                    
+                if (pResult.WheelImage != null && pResult.WheelImage.IsInitialized())
+                    imageRecogn = CloneImageSafely(pResult.WheelImage);
+                else
+                    imageRecogn = CloneImageSafely(grayImage);
 
-                templateContour = GetAffineTemplateContour(someService.GetHTupleByName(recognitionResult.RecognitionWheelType),
-                    recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
-                //根据高度确定为哪个轮型
+                List<TemplatedataModels> models = someService.GetCanUseTemplates();
+                recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
+                recognitionResult.FullFigureGary = (float)fullFigureGary;
+                recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
+                if (recognitionResult.RecognitionWheelType != "NG") //
+                {
+
+                    templateContour = GetAffineTemplateContour(someService.GetHTupleByName(recognitionResult.RecognitionWheelType),
+                        recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+
+                    autoRecognitionResult.WheelContour = CloneImageSafely(pResult.WheelContour);
+                }
+                SafeHalconDispose(pResult);
 
             }
-            if (recognitionResult.RecognitionWheelType == "NG" && pResult.WheelImage == null) //识别NG & 没定位到轮毂
+
+            if (recognitionResult.RecognitionWheelType == "NG") //识别NG 
             {
                 //大模型推算
                 HTuple hv_DLResult = WheelDeepLearning(grayImage);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                if (names.Length > 0 && confidences[0].D > 0.85)
+                if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
                 {
                     string[] name = names[0].S.Split('_'); //00619C70_半
                     string value = "大模型";
@@ -717,22 +716,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 SafeHalconDispose(confidences);
 
             }
+
             interact.resultModel = recognitionResult;
+            autoRecognitionResult.FullFigureGary = (float)fullFigureGary;
+            autoRecognitionResult.WheelType = recognitionResult.RecognitionWheelType;
+            autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
+            autoRecognitionResult.index = interact.Index;
+            
 
-            //显示需要的参数
-            AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
-            autoRecognitionResult = new AutoRecognitionResultDisplayModel
-            {
-                FullFigureGary = recognitionResult.FullFigureGary,
-                WheelType = recognitionResult.RecognitionWheelType,
-
-                WheelContour = CloneImageSafely(pResult.WheelContour),
-                TemplateContour = CloneImageSafely(templateContour),
-                index = interact.Index
-
-            };
-
-            SafeHalconDispose(pResult);
             SafeHalconDispose(imageRecogn);
             SafeHalconDispose(grayImage);
             SafeHalconDispose(templateContour);

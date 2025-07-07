@@ -689,7 +689,13 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadAppSettings("AngleExtent", out string angleExtent);
                 AngleExtent = double.Parse(angleExtent);
                 ReadAppSettings("ScalingCoefficient", out string scalingCoefficient);
-                ScalingCoefficient = double.Parse(scalingCoefficient);
+                ScalingCoefficient = double.Parse(scalingCoefficient); 
+                //---
+                ReadAppSettings("MinFullFigureGary", out string _minFullFigureGary);
+                MinFullFigureGary = double.Parse(_minFullFigureGary);
+                ReadAppSettings("ConfidenceMatch", out string _confidenceMatch);
+                ConfidenceMatch = double.Parse(_confidenceMatch);
+
                 #endregion
                 #region======外部连接数据======
                 ReadAppSettings("PlcIP", out string plcIP);

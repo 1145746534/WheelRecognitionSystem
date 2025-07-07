@@ -90,25 +90,21 @@ namespace WheelRecognitionSystem.Public
             {
                 image = CloneImageSafely(imageSource);
                 //全图灰度
-                HOperatorSet.Intensity(image, image, out HTuple Mean1, out HTuple Deviation);
-                resultModel.FullFigureGary = (float)(Mean1.D);
-                if (SystemDatas.CroppingOrNot)
-                {
-                    minThreshold = (int)Mean1.D;
-                }
+                resultModel.FullFigureGary = (float)GetIntensity(image);
+               
+                
                 HOperatorSet.Threshold(image, out HObject region, minThreshold, maxThreshold);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
 
-                SafeHalconDispose(Mean1);
-                SafeHalconDispose(Deviation);
+           
                 SafeHalconDispose(region);
                 SafeHalconDispose(connectedRegions);
                 SafeHalconDispose(regionFillUp);
                 SafeHalconDispose(relectedRegions);
-                             
+
 
                 if (row.Length != 0) //存在轮毂
                 {
@@ -172,7 +168,7 @@ namespace WheelRecognitionSystem.Public
                         SafeHalconDispose(mean);
                         SafeHalconDispose(deviation);
                         SafeHalconDispose(wheelContour);
-                       
+
 
                     }
                 }
@@ -188,6 +184,25 @@ namespace WheelRecognitionSystem.Public
             SafeHalconDispose(image);
             return resultModel;
         }
+
+        /// <summary>
+        /// 获取图片平均灰度值
+        /// </summary>
+        /// <param name="imageSource"></param>
+        /// <returns></returns>
+        public static double GetIntensity(HObject imageSource)
+        {
+            HObject grayImage = CloneImageSafely(imageSource);
+            //全图灰度
+            HOperatorSet.Intensity(grayImage, grayImage, out HTuple mean, out HTuple deviation);
+            float fullFigureGary = (float)(mean.D);
+            SafeHalconDispose(grayImage);
+            SafeHalconDispose(mean);
+            SafeHalconDispose(deviation);
+            return fullFigureGary;
+        }
+
+
 
         /// <summary>
         /// 轮毂识别算法
@@ -349,7 +364,7 @@ namespace WheelRecognitionSystem.Public
         public static RecognitionResultModel WheelRecognitionAlgorithm(HObject imageSource, List<TemplatedataModels> templateDatas, double angleStart,
                                                                         double angleExtent, double minSimilarity, List<RecognitionResultModel> recognitionResults)
         {
-           HObject image = CloneImageSafely(imageSource);
+            HObject image = CloneImageSafely(imageSource);
             var resultIfFailed = new RecognitionResultModel
             {
                 status = "识别失败",
@@ -382,7 +397,7 @@ namespace WheelRecognitionSystem.Public
                 SafeHalconDispose(column);
                 SafeHalconDispose(angle);
                 SafeHalconDispose(score);
-               
+
             }
 
 
@@ -421,7 +436,7 @@ namespace WheelRecognitionSystem.Public
                 SafeHalconDispose(column);
                 SafeHalconDispose(angle);
                 SafeHalconDispose(score);
-                
+
             }
 
 

@@ -176,7 +176,7 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static double ConfidenceMatch { get; set; }
         /// <summary>
-        /// 
+        /// 判断是否使用传统识别的最小全图灰度值
         /// </summary>
         public static double MinFullFigureGary { get; set; }
 
