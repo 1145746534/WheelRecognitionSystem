@@ -60,7 +60,7 @@ namespace WheelRecognitionSystem.Public
 
         }
 
-        private static void SafeHalconDispose<T>(T obj) where T : class, IDisposable
+        public static void SafeHalconDispose<T>(T obj) where T : class, IDisposable
         {
             if (obj != null)
             {

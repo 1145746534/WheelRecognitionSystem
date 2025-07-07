@@ -50,7 +50,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 模板数据源 - 供外部使用
         /// </summary>
-        public List<TemplatedataModels> Models
+        public List<TemplatedataModels> TemplateModels
         {
             get { return _models; }
             set
@@ -79,13 +79,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplateImage
         {
             get { return _displayTemplateImage; }
-            set {
+            set
+            {
                 // 释放旧对象
                 if (_displayTemplateImage != null && _displayTemplateImage.IsInitialized())
                 {
                     _displayTemplateImage.Dispose();
                 }
-                SetProperty<HObject>(ref _displayTemplateImage, value); 
+                SetProperty<HObject>(ref _displayTemplateImage, value);
             }
         }
 
@@ -96,7 +97,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplate
         {
             get { return _displayTemplate; }
-            set {
+            set
+            {
                 // 释放旧对象
                 if (DisplayTemplate != null && DisplayTemplate.IsInitialized())
                 {
@@ -113,13 +115,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayTemplateContour
         {
             get { return _displayTemplateContour; }
-            set {
+            set
+            {
                 // 释放旧对象
                 if (_displayTemplateContour != null && _displayTemplateContour.IsInitialized())
                 {
                     _displayTemplateContour.Dispose();
                 }
-                SetProperty<HObject>(ref _displayTemplateContour, value); 
+                SetProperty<HObject>(ref _displayTemplateContour, value);
             }
         }
 
@@ -130,7 +133,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public HObject DisplayWheelContour
         {
             get { return _displayWheelContour; }
-            set {
+            set
+            {
                 // 释放旧对象
                 if (_displayWheelContour != null && _displayWheelContour.IsInitialized())
                 {
@@ -736,7 +740,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="inGateContour">浇口轮廓</param>
         private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
         {
-            
+
             DisplayTemplateImage.Dispose();
             DisplayTemplate.Dispose();
             DisplayWheelContour.Dispose();
@@ -797,7 +801,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             foreach (var item in TemplateDatas)
             {
                 string type = item.WheelType;
-                TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == type);
+                TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == type);
                 if (templatedata != null)
                 {
                     //当前使用时间减去上次使用时间
@@ -810,7 +814,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                         templatedata.Use = false;
                 }
             }
-            return Models;
+            return TemplateModels;
         }
 
         /// <summary>
@@ -819,7 +823,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="name"></param>
         public void UpdateLastUsedTime(string name)
         {
-            TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == name);
+            TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == name);
             templatedata.LastUsedTime = DateTime.Now;
             // 查找并修改符合条件的元素
             var targetItems = TemplateDatas
@@ -839,7 +843,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         public HTuple GetHTupleByName(string name)
         {
-            TemplatedataModels templatedata = Models.Find((x) => x.TemplateName == name);
+            TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == name);
 
             return templatedata.Template;
         }
@@ -853,8 +857,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             try
             {
-                if (Models == null)
-                    Models = new List<TemplatedataModels> { };
+                if (TemplateModels == null)
+                    TemplateModels = new List<TemplatedataModels> { };
                 if (File.Exists(path)) //文件存在
                 {
                     //添加到使用区
@@ -864,7 +868,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     model.Template = modelID;
                     model.TemplateName = name;
                     model.LastUsedTime = dateTime;
-                    Models.Add(model);
+                    TemplateModels.Add(model);
 
                 }
             }
@@ -883,19 +887,19 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void addModel(HTuple tuple, string name, DateTime time)
         {
 
-            int index = Models.FindIndex(x => x.TemplateName == name);
+            int index = TemplateModels.FindIndex(x => x.TemplateName == name);
             if (index == -1) //不存在 新增
             {
                 TemplatedataModels model = new TemplatedataModels();
                 model.Template = tuple;
                 model.TemplateName = name;
                 model.LastUsedTime = time;
-                Models.Add(model);
+                TemplateModels.Add(model);
             }
             else
             {
-                Models[index].Template.Dispose();
-                Models[index].Template = tuple;
+                TemplateModels[index].Template.Dispose();
+                TemplateModels[index].Template = tuple;
             }
         }
 
@@ -907,10 +911,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void DeleteModel(string path, string name)
         {
             //先删除使用区内存
-            int index = Models.FindIndex(x => x.TemplateName == name);
+            int index = TemplateModels.FindIndex(x => x.TemplateName == name);
             if (index != -1)
             {
-                Models.RemoveAt(index);
+                TemplateModels.RemoveAt(index);
             }
             if (File.Exists(path)) //文件存在
             {
@@ -1135,7 +1139,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             try
             {
-                
+
                 PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius, false);
                 if (pResult.WheelImage == null)
                 {
@@ -1200,7 +1204,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <summary>
         /// 保存模板
         /// </summary>
-        private void SaveTemplate()
+        private async void SaveTemplate()
         {
             if (DataGridSelectedItem == null)
             {
@@ -1215,82 +1219,72 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             bool result = WMessageBox.Show("保存确认", "您选择的轮型是：《" + DataGridSelectedItem.WheelType + "》，请确定轮型选择正确后，再点击确认！");
             if (result)
             {
-                //生成NCC模板
-                HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out HTuple nccTemplate);
-                //模板图像保存路径
-                string tPath = TemplateImagesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".tif";
-                //活跃模板保存路径
-                string aPath = ActiveTemplatesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".ncm";
+                ////生成NCC模板
+                //HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out HTuple nccTemplate);
+                ////模板图像保存路径
+                //string tPath = TemplateImagesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".tif";
+                ////活跃模板保存路径
+                //string aPath = ActiveTemplatesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".ncm";
 
-                //不活跃模板保存路径
-                //string nPath = NotActiveTemplatesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".ncm";
+                //HOperatorSet.WriteNccModel(nccTemplate, aPath);
+                //HOperatorSet.WriteImage(TemplateImage, "tiff", 0, tPath);//保存模板图像
+                //DataGridSelectedItem.CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm");
+                //DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
+                //DataGridSelectedItem.TemplatePath = aPath;
+                //DataGridSelectedItem.TemplatePicturePath = tPath;
+                //UpdataTemplateData(DataGridSelectedItem);
+                //addModel(nccTemplate, DataGridSelectedItem.WheelType, DateTime.Now);
 
-                //查找当前轮型名的索引
-                //int activeIndex = TemplateDataCollection.ActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
-                //int notActiveIndex = TemplateDataCollection.NotActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
-                ////如果在活跃轮型列表中找到 或 在活跃轮型列表和不活跃轮型列表中都没找到
-                //if (activeIndex >= 0 || (activeIndex < 0 && notActiveIndex < 0))
-                //{
-                //    HOperatorSet.WriteNccModel(nccTemplate, aPath);
-                //    //在AddOrReviseTemplateDatas中查找当前轮型
-                //    int index = AddOrReviseTemplateDatas.ActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
-                //    //如果没找到则增加
-                //    if (index < 0)
-                //    {
-                //        AddOrReviseTemplateDatas.ActiveTemplateNames.Add(DataGridSelectedItem.WheelType);
-                //        AddOrReviseTemplateDatas.ActiveTemplates.Add(nccTemplate);
-                //    }
-                //    //找到则修改
-                //    else
-                //    {
-                //        AddOrReviseTemplateDatas.ActiveTemplates[index].Dispose();
-                //        AddOrReviseTemplateDatas.ActiveTemplates[index] = nccTemplate;
-                //    }
-                //}
-                ////如果在不活跃轮型列表中找到 并且 在活跃轮型列表中没找到 则修改
-                //else if (notActiveIndex >= 0 && activeIndex < 0)
-                //{
-                //    HOperatorSet.WriteNccModel(nccTemplate, nPath);
-                //    var n = AddOrReviseTemplateDatas.NotActiveTemplateNames;
-                //    int index = AddOrReviseTemplateDatas.NotActiveTemplateNames.FindIndex(x => x == DataGridSelectedItem.WheelType);
-                //    if (index < 0)
-                //    {
-                //        AddOrReviseTemplateDatas.NotActiveTemplateNames.Add(DataGridSelectedItem.WheelType);
-                //        AddOrReviseTemplateDatas.NotActiveTemplates.Add(nccTemplate);
-                //    }
-                //    else
-                //    {
-                //        AddOrReviseTemplateDatas.NotActiveTemplates[index].Dispose();
-                //        AddOrReviseTemplateDatas.NotActiveTemplates[index] = nccTemplate;
-                //    }
-                //}
+                //SourceTemplateImage.Dispose();
+                //InPoseWheelImage.Dispose();
+                //TemplateImage.Dispose();
+
+                try
+                {
+                    string tPath = TemplateImagesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".tif";
+                    string aPath = ActiveTemplatesPath.Replace(@"\", "/") + @"/" + DataGridSelectedItem.WheelType + ".ncm";
+                    // NCC模板生成及保存
+                    HTuple nccTemplate = new HTuple();
+
+                    // 在后台线程执行耗时操作
+                    await Task.Run(async () =>
+                    {
+                        
+                        HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out nccTemplate);                       
+                        // 异步保存模板文件
+                        await Task.WhenAll(
+                            Task.Run(() => HOperatorSet.WriteNccModel(nccTemplate, aPath)),
+                            Task.Run(() => HOperatorSet.WriteImage(TemplateImage, "tiff", 0, tPath))
+                        );
+                    });
+
+                    // 在UI线程更新数据 (确保线程安全)
+                    DataGridSelectedItem.CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm");
+                    DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
+                    DataGridSelectedItem.TemplatePath = aPath;
+                    DataGridSelectedItem.TemplatePicturePath = tPath;
+                    UpdataTemplateData(DataGridSelectedItem); // 假设这是数据层更新
+                    addModel(nccTemplate, DataGridSelectedItem.WheelType, DateTime.Now); // 添加到模型管理
+              
+                }
+                finally
+                {
+                    // 确保资源释放
+                    SafeHalconDispose(SourceTemplateImage);
+                    SafeHalconDispose(InPoseWheelImage);
+                    SafeHalconDispose(TemplateImage);
+
+                    
+                }
 
 
-                HOperatorSet.WriteNccModel(nccTemplate, aPath);
-                HOperatorSet.WriteImage(TemplateImage, "tiff", 0, tPath);//保存模板图像
-                DataGridSelectedItem.CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm");
-                DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
-                DataGridSelectedItem.TemplatePath = aPath;
-                DataGridSelectedItem.TemplatePicturePath = tPath;
-                UpdataTemplateData(DataGridSelectedItem);
-                addModel(nccTemplate, DataGridSelectedItem.WheelType, DateTime.Now);
-                //var sDB = new SqlAccess().SystemDataAccess;
-                //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
-                //TemplateDatas[DataGridSelectedIndex].CreationTime = DataGridSelectedItem.CreationTime;
-
-                //修改自动模式匹配用模板数据
-                if (!TemplateDataUpdataControl)
-                    TemplateDataUpdataControl = true;
-                if (!AutoTemplateDataLoadControl)
-                    AutoTemplateDataLoadControl = true;
-
-                SourceTemplateImage.Dispose();
-                InPoseWheelImage.Dispose();
-                TemplateImage.Dispose();
                 EventMessage.SystemMessageDisplay("模板保存成功，型号是：" + DataGridSelectedItem.WheelType, MessageType.Success);
                 EventMessage.MessageDisplay("模板保存成功，型号是：" + DataGridSelectedItem.WheelType, true, true);
             }
         }
+
+
+       
         /// <summary>
         /// 删除模板
         /// </summary>
@@ -1469,7 +1463,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void RecognitionTest()
         {
-            if (Models.Count == 0)
+            if (TemplateModels.Count == 0)
             {
                 EventMessage.SystemMessageDisplay("无模板数据，请先录入模板!", MessageType.Warning);
                 return;

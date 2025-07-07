@@ -276,6 +276,7 @@
     <Compile Include="Models\TemplateDatasModel.cs" />
     <Compile Include="Public\ApiClient.cs" />
     <Compile Include="Public\CameraHelper.cs" />
+    <Compile Include="Public\TemplateManager.cs" />
     <Compile Include="Public\ConfigEdit.cs" />
     <Compile Include="Public\Converter\BackgroundConverter.cs" />
     <Compile Include="Public\Converter\BtuBackgroundConverter.cs" />
