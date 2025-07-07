@@ -15,7 +15,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 识别状态
         /// </summary>
-        public string status = "识别成功";
+        public string status = "识别失败";
 
         /// <summary>
         /// 识别结果bool值
@@ -74,9 +74,5 @@ namespace WheelRecognitionSystem.Models
         public double Radian { get; set; }
 
 
-        /// <summary>
-        /// 是否在不活跃模板中识别，用于实时移动模板
-        /// </summary>
-        public bool IsInNotTemplate { get; set; }
     }
 }

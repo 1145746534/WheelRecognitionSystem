@@ -670,7 +670,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 else
                     imageRecogn = CloneImageSafely(grayImage);
 
-                List<TemplatedataModels> models = someService.GetCanUseTemplates();
+                List<TemplatedataModels> models = someService.TemplateModels;
                 recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
                 recognitionResult.FullFigureGary = (float)fullFigureGary;
                 recognitionResult.InnerCircleGary = pResult.InnerCircleMean;

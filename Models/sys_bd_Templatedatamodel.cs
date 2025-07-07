@@ -57,7 +57,7 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _wheelHeight, value); }
         }
         /// <summary>
-        /// 轮毂样式
+        /// 轮毂样式 成品/半成品
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = true, Length = 25)]
         public string WheelStyle

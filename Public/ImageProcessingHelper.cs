@@ -70,7 +70,7 @@ namespace WheelRecognitionSystem.Public
         }
 
         // 安全克隆方法
-        private static HObject CloneImageSafely(HObject source)
+        public static HObject CloneImageSafely(HObject source)
         {
             return (source != null && source.IsInitialized()) ? source.Clone() : null;
         }
@@ -367,7 +367,6 @@ namespace WheelRecognitionSystem.Public
             HObject image = CloneImageSafely(imageSource);
             var resultIfFailed = new RecognitionResultModel
             {
-                status = "识别失败",
                 RecognitionWheelType = "NG"
             };
 
@@ -381,16 +380,17 @@ namespace WheelRecognitionSystem.Public
                     "true", 0,
                     out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                if (score != null && score.Length > 0 && score.D > 0.5)
+                if (score != null && score.Length > 0 && score.D > 0.6)
                 {
+                    templateData.LastUsedTime = DateTime.Now;
                     recognitionResults.Add(new RecognitionResultModel
                     {
                         CenterRow = row.D,
                         CenterColumn = column.D,
                         Radian = angle.D,
-                        RecognitionWheelType = templateData.TemplateName,
+                        RecognitionWheelType = templateData.WheelType,
                         Similarity = Math.Round(score.D, 3),
-                        WheelStyle = templateData.Style
+                        WheelStyle = templateData.WheelStyle
                     });
                 }
                 SafeHalconDispose(row);
@@ -412,7 +412,7 @@ namespace WheelRecognitionSystem.Public
             //performMatching(false);
             foreach (var templateData in templateDatas.Where(t => t.Use == false))
             {
-
+                templateData.LastUsedTime = DateTime.Now;
                 HOperatorSet.FindNccModel(
                     image, templateData.Template,
                     angleStart, angleExtent,
@@ -420,16 +420,16 @@ namespace WheelRecognitionSystem.Public
                     "true", 0,
                     out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                if (score != null && score.Length > 0 && score.D > 0.5)
+                if (score != null && score.Length > 0 && score.D > 0.6)
                 {
                     recognitionResults.Add(new RecognitionResultModel
                     {
                         CenterRow = row.D,
                         CenterColumn = column.D,
                         Radian = angle.D,
-                        RecognitionWheelType = templateData.TemplateName,
+                        RecognitionWheelType = templateData.WheelType,
                         Similarity = Math.Round(score.D, 3),
-                        WheelStyle = templateData.Style
+                        WheelStyle = templateData.WheelStyle
                     });
                 }
                 SafeHalconDispose(row);
@@ -715,16 +715,20 @@ namespace WheelRecognitionSystem.Public
         /// <param name="templateContour">仿射后的模板轮廓</param>
         public static HObject GetAffineTemplateContour(HTuple modelID, HTuple newRow, HTuple newColumn, HTuple newRadian)
         {
-            HOperatorSet.GetNccModelRegion(out HObject modelRegion, modelID);
+            HTuple model = modelID.Clone();
+            HOperatorSet.GetNccModelRegion(out HObject modelRegion, model);
             HOperatorSet.VectorAngleToRigid(0, 0, 0, newRow, newColumn, newRadian, out HTuple homMat2D);
             HOperatorSet.AffineTransRegion(modelRegion, out HObject regionAffineTrans, homMat2D, "nearest_neighbor");
             HOperatorSet.GenContourRegionXld(regionAffineTrans, out HObject templateContour, "border_holes");
-            modelRegion?.Dispose();
-            newRow?.Dispose();
-            newColumn?.Dispose();
-            newRadian?.Dispose();
-            homMat2D?.Dispose();
-            regionAffineTrans?.Dispose();
+           
+            SafeHalconDispose(modelRegion);
+            SafeHalconDispose(model);
+            SafeHalconDispose(newRow);
+            SafeHalconDispose(newColumn);
+            SafeHalconDispose(newRadian);
+            SafeHalconDispose(homMat2D);
+            SafeHalconDispose(regionAffineTrans);
+          
             return templateContour;
         }
 

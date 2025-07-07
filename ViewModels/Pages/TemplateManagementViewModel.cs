@@ -741,29 +741,34 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
         {
 
-            DisplayTemplateImage.Dispose();
-            DisplayTemplate.Dispose();
-            DisplayWheelContour.Dispose();
-            DisplayTemplateContour.Dispose();
-            DisplayInGateContour.Dispose();
+            //DisplayTemplateImage.Dispose();
+            //DisplayTemplate.Dispose();
+            //DisplayWheelContour.Dispose();
+            //DisplayTemplateContour.Dispose();
+            //DisplayInGateContour.Dispose();
+            SafeHalconDispose(DisplayTemplateImage);
+            SafeHalconDispose(DisplayTemplate);
+            SafeHalconDispose(DisplayWheelContour);
+            SafeHalconDispose(DisplayTemplateContour);
+            SafeHalconDispose(DisplayInGateContour);
             if (sourceImage != null)
-                DisplayTemplateImage = sourceImage.Clone();
+                DisplayTemplateImage = CloneImageSafely(sourceImage);
             if (templateImage != null)
-                DisplayTemplate = templateImage.Clone();
+                DisplayTemplate = CloneImageSafely(templateImage);
             if (wheelContour != null)
             {
                 LineWidth = 4.0;
-                DisplayWheelContour = wheelContour.Clone();
+                DisplayWheelContour = CloneImageSafely(wheelContour);
             }
             if (templateContour != null)
             {
                 LineWidth = 3.0;
-                DisplayTemplateContour = templateContour.Clone();
+                DisplayTemplateContour = CloneImageSafely(templateContour);
             }
             if (gateContour != null)
             {
                 LineWidth = 3.0;
-                DisplayInGateContour = gateContour.Clone();
+                DisplayInGateContour = CloneImageSafely(gateContour);
             }
         }
 
@@ -771,7 +776,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         #region 加载 增加 删除 插入 修改 查找 模板参数 显示 整理数据
         /// <summary>
-        /// 加载模板数据
+        /// 加载模板数据到使用区
         /// </summary>
         private void LoadedTemplateDatas()
         {
@@ -783,123 +788,47 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 for (int i = 0; i < Datas.Count; i++)
                 {
-                    string path = Datas[i].TemplatePath;
-                    string name = Datas[i].WheelType;
-                    DateTime dateTime = Datas[i].LastUsedTime;
-                    AddFileModel(path, name, dateTime);
+                    TemplatedataModels templatedata = new TemplatedataModels();
+                    templatedata.CopyPropertiesFrom(Datas[i]);
+                    TemplateModels.Add(templatedata);                   
                 }
                 Console.WriteLine($"模板加载完成");
             });
         }
 
         /// <summary>
-        /// 把活跃的模板标记为可使用状态
-        /// </summary>
-        /// <returns></returns>
-        public List<TemplatedataModels> GetCanUseTemplates()
-        {
-            foreach (var item in TemplateDatas)
-            {
-                string type = item.WheelType;
-                TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == type);
-                if (templatedata != null)
-                {
-                    //当前使用时间减去上次使用时间
-                    TimeSpan timeSpan = DateTime.Now - templatedata.LastUsedTime;
-                    item.UnusedDays = timeSpan.Days;
-                    templatedata.Style = item.WheelStyle;
-                    if (timeSpan.Days < SystemDatas.TemplateAdjustDays) //属于使用范围               
-                        templatedata.Use = true;
-                    else
-                        templatedata.Use = false;
-                }
-            }
-            return TemplateModels;
-        }
-
-        /// <summary>
-        /// 更新最后使用时间
+        /// 获取模板数据 供生成模板区域使用
         /// </summary>
         /// <param name="name"></param>
-        public void UpdateLastUsedTime(string name)
-        {
-            TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == name);
-            templatedata.LastUsedTime = DateTime.Now;
-            // 查找并修改符合条件的元素
-            var targetItems = TemplateDatas
-                .Where(item => item.WheelType == name)
-                .ToList();
-
-            foreach (var item in targetItems)
-            {
-                item.LastUsedTime = DateTime.Now;
-                UpdataTemplateData(item);
-
-            }
-
-
-        }
-
-
+        /// <returns></returns>
         public HTuple GetHTupleByName(string name)
         {
-            TemplatedataModels templatedata = TemplateModels.Find((x) => x.TemplateName == name);
+            TemplatedataModels templatedata = TemplateModels.Find((x) => x.WheelType == name);
 
             return templatedata.Template;
         }
 
-        /// <summary>
-        /// 添加本地模型到使用区
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="name"></param>
-        private void AddFileModel(string path, string name, DateTime dateTime)
-        {
-            try
-            {
-                if (TemplateModels == null)
-                    TemplateModels = new List<TemplatedataModels> { };
-                if (File.Exists(path)) //文件存在
-                {
-                    //添加到使用区
-                    string strPath = path.Replace(@"\", "/");//字符串替换
-                    HOperatorSet.ReadNccModel(strPath, out HTuple modelID);//读NCC模板
-                    TemplatedataModels model = new TemplatedataModels();
-                    model.Template = modelID;
-                    model.TemplateName = name;
-                    model.LastUsedTime = dateTime;
-                    TemplateModels.Add(model);
-
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
-
+        
         /// <summary>
         /// 添加新增模板到使用区
         /// </summary>
         /// <param name="tuple"></param>
         /// <param name="name"></param>
         /// <param name="time"></param>
-        private void addModel(HTuple tuple, string name, DateTime time)
+        private void addModel(sys_bd_Templatedatamodel _Bd_Templatedatamodel)
         {
 
-            int index = TemplateModels.FindIndex(x => x.TemplateName == name);
+            int index = TemplateModels.FindIndex(x => x.WheelType == _Bd_Templatedatamodel.WheelType);
             if (index == -1) //不存在 新增
             {
                 TemplatedataModels model = new TemplatedataModels();
-                model.Template = tuple;
-                model.TemplateName = name;
-                model.LastUsedTime = time;
+                model.CopyPropertiesFrom(_Bd_Templatedatamodel);               
                 TemplateModels.Add(model);
             }
             else
             {
-                TemplateModels[index].Template.Dispose();
-                TemplateModels[index].Template = tuple;
+                //手动释放，等下一次调用从别的地方加载
+                TemplateModels[index].UnloadTemplate(); 
             }
         }
 
@@ -911,9 +840,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private void DeleteModel(string path, string name)
         {
             //先删除使用区内存
-            int index = TemplateModels.FindIndex(x => x.TemplateName == name);
+            int index = TemplateModels.FindIndex(x => x.WheelType == name);
             if (index != -1)
             {
+                TemplateModels[index].UnloadTemplate();
                 TemplateModels.RemoveAt(index);
             }
             if (File.Exists(path)) //文件存在
@@ -1263,8 +1193,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
                     DataGridSelectedItem.TemplatePath = aPath;
                     DataGridSelectedItem.TemplatePicturePath = tPath;
+                    DataGridSelectedItem.LastUsedTime = DateTime.Now;
                     UpdataTemplateData(DataGridSelectedItem); // 假设这是数据层更新
-                    addModel(nccTemplate, DataGridSelectedItem.WheelType, DateTime.Now); // 添加到模型管理
+                    addModel(DataGridSelectedItem); // 添加到模型管理
               
                 }
                 finally
@@ -1499,7 +1430,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             //轮毂识别 传统视觉
             //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
             List<RecognitionResultModel> list = new List<RecognitionResultModel>();
-            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, GetCanUseTemplates(), AngleStart, AngleExtent, MinSimilarity, list);
+            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateModels, AngleStart, AngleExtent, MinSimilarity, list);
             InnerCircleGary = pResult.InnerCircleMean.ToString();
             recognitionResult.FullFigureGary = pResult.FullFigureGary;
             recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
@@ -1511,11 +1442,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 templateContour = GetAffineTemplateContour(GetHTupleByName(recognitionResult.RecognitionWheelType), recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                 RecognitionWheelType = recognitionResult.RecognitionWheelType;
                 RecognitionSimilarity = recognitionResult.Similarity.ToString();
-                foreach (RecognitionResultModel model in list)
-                {
-                    UpdateLastUsedTime(model.RecognitionWheelType);
-                }
-
             }
             else
             {
@@ -1546,7 +1472,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
 
             TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, templateContour, null);
-
+            SafeHalconDispose(templateContour);
             //匹配相似度结果显示
             List<MatchResultModel> matchResultModels = new List<MatchResultModel>();
             for (int i = 0; i < list.Count; i++)
