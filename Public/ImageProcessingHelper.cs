@@ -91,15 +91,15 @@ namespace WheelRecognitionSystem.Public
                 image = CloneImageSafely(imageSource);
                 //全图灰度
                 resultModel.FullFigureGary = (float)GetIntensity(image);
-               
-                
+
+
                 HOperatorSet.Threshold(image, out HObject region, minThreshold, maxThreshold);
                 HOperatorSet.Connection(region, out HObject connectedRegions);
                 HOperatorSet.FillUp(connectedRegions, out HObject regionFillUp);
                 HOperatorSet.SelectShapeStd(regionFillUp, out HObject relectedRegions, "max_area", 70);
                 HOperatorSet.InnerCircle(relectedRegions, out HTuple row, out HTuple column, out HTuple radius);
 
-           
+
                 SafeHalconDispose(region);
                 SafeHalconDispose(connectedRegions);
                 SafeHalconDispose(regionFillUp);
@@ -382,7 +382,7 @@ namespace WheelRecognitionSystem.Public
 
                 if (score != null && score.Length > 0 && score.D > 0.6)
                 {
-                    templateData.LastUsedTime = DateTime.Now;
+
                     recognitionResults.Add(new RecognitionResultModel
                     {
                         CenterRow = row.D,
@@ -405,6 +405,18 @@ namespace WheelRecognitionSystem.Public
             if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out var bestMatch))
             {
                 bestMatch.status = "识别成功";
+                //识别成功后 把这个轮形上次使用时间刷新
+                string _type = bestMatch.RecognitionWheelType;
+                var results = templateDatas
+                    .Where(t => t.WheelType != null &&
+                                t.WheelType == _type)
+                    .ToList();
+
+                // 输出结果
+                foreach (var item in results)
+                {
+                    item.LastUsedTime = DateTime.Now;
+                }
                 return bestMatch;
             }
 
@@ -412,7 +424,6 @@ namespace WheelRecognitionSystem.Public
             //performMatching(false);
             foreach (var templateData in templateDatas.Where(t => t.Use == false))
             {
-                templateData.LastUsedTime = DateTime.Now;
                 HOperatorSet.FindNccModel(
                     image, templateData.Template,
                     angleStart, angleExtent,
@@ -422,6 +433,7 @@ namespace WheelRecognitionSystem.Public
 
                 if (score != null && score.Length > 0 && score.D > 0.6)
                 {
+
                     recognitionResults.Add(new RecognitionResultModel
                     {
                         CenterRow = row.D,
@@ -443,6 +455,18 @@ namespace WheelRecognitionSystem.Public
             if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out bestMatch))
             {
                 bestMatch.status = "识别成功";
+                //识别成功后 把这个轮形上次使用时间刷新
+                string _type = bestMatch.RecognitionWheelType;
+                var results = templateDatas
+                    .Where(t => t.WheelType != null &&
+                                t.WheelType == _type)
+                    .ToList();
+
+                // 输出结果
+                foreach (var item in results)
+                {
+                    item.LastUsedTime = DateTime.Now;
+                }
                 return bestMatch;
             }
             SafeHalconDispose(image);
@@ -543,13 +567,13 @@ namespace WheelRecognitionSystem.Public
         //}
 
 
-        public static HTuple WheelDeepLearning(HObject ho_ImageBatch)
+        public static HTuple WheelDeepLearning(HObject ho_ImageBatch, HTuple hv_DLModelHandle, HTuple hv_DLPreprocessParam)
         {
             HTuple hv_DLDeviceHandles = new HTuple(), hv_DLDevice = new HTuple();
-            HTuple hv_ImageDir = new HTuple(), hv_PreprocessParamFileName = new HTuple();
-            HTuple hv_RetrainedModelFileName = new HTuple(), hv_BatchSizeInference = new HTuple();
-            HTuple hv_DLModelHandle = new HTuple(), hv_ClassNames = new HTuple();
-            HTuple hv_ClassIDs = new HTuple(), hv_DLPreprocessParam = new HTuple();
+            HTuple hv_ImageDir = new HTuple();
+            HTuple hv_BatchSizeInference = new HTuple();
+            HTuple hv_ClassNames = new HTuple();
+            HTuple hv_ClassIDs = new HTuple();
             HTuple hv_WindowHandleDict = new HTuple(), hv_DLDataInfo = new HTuple();
             HTuple hv_GenParam = new HTuple(), hv_ImageFiles = new HTuple();
             HTuple hv_BatchIndex = new HTuple(), hv_Batch = new HTuple();
@@ -578,17 +602,17 @@ namespace WheelRecognitionSystem.Public
                 //hv_ImageDir = "D:/ZS/终检/DLT/picture/JG12345";
                 //
                 //大模型路径跟预参路径
-                hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
-                hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
+                //hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
+                //hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
                 hv_BatchSizeInference = 1;
-                HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
+                //HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
                 HOperatorSet.SetDlModelParam(hv_DLModelHandle, "batch_size", hv_BatchSizeInference);
 
                 HOperatorSet.SetDlModelParam(hv_DLModelHandle, "device", hv_DLDevice);
                 HOperatorSet.GetDlModelParam(hv_DLModelHandle, "class_names", out hv_ClassNames);
                 HOperatorSet.GetDlModelParam(hv_DLModelHandle, "class_ids", out hv_ClassIDs);
-                HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
-                    out hv_DLPreprocessParam);
+                //HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
+                //    out hv_DLPreprocessParam);
 
                 HOperatorSet.CreateDict(out hv_WindowHandleDict);
                 HOperatorSet.CreateDict(out hv_DLDataInfo);
@@ -679,13 +703,13 @@ namespace WheelRecognitionSystem.Public
                 hv_DLDeviceHandles.Dispose();
                 hv_DLDevice.Dispose();
                 //hv_ImageDir.Dispose();
-                hv_PreprocessParamFileName.Dispose();
-                hv_RetrainedModelFileName.Dispose();
+                //hv_PreprocessParamFileName.Dispose();
+                //hv_RetrainedModelFileName.Dispose();
                 hv_BatchSizeInference.Dispose();
-                hv_DLModelHandle.Dispose();
+                //hv_DLModelHandle.Dispose();
                 hv_ClassNames.Dispose();
                 hv_ClassIDs.Dispose();
-                hv_DLPreprocessParam.Dispose();
+                //hv_DLPreprocessParam.Dispose();
                 hv_WindowHandleDict.Dispose();
                 hv_DLDataInfo.Dispose();
                 hv_GenParam.Dispose();
@@ -720,7 +744,7 @@ namespace WheelRecognitionSystem.Public
             HOperatorSet.VectorAngleToRigid(0, 0, 0, newRow, newColumn, newRadian, out HTuple homMat2D);
             HOperatorSet.AffineTransRegion(modelRegion, out HObject regionAffineTrans, homMat2D, "nearest_neighbor");
             HOperatorSet.GenContourRegionXld(regionAffineTrans, out HObject templateContour, "border_holes");
-           
+
             SafeHalconDispose(modelRegion);
             SafeHalconDispose(model);
             SafeHalconDispose(newRow);
@@ -728,7 +752,7 @@ namespace WheelRecognitionSystem.Public
             SafeHalconDispose(newRadian);
             SafeHalconDispose(homMat2D);
             SafeHalconDispose(regionAffineTrans);
-          
+
             return templateContour;
         }
 

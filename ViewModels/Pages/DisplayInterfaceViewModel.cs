@@ -476,27 +476,24 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         readonly IDialogService _dialogService;
 
         private readonly IContainerProvider _containerProvider;
-        /// <summary>
-        /// 大模型hdict文件路径
-        /// </summary>
-        private HTuple hv_PreprocessParamFileName = new HTuple();
+
+        // 大模型hdict文件路径
+        HTuple hv_PreprocessParamFileName = new HTuple();
+
+        HTuple hv_RetrainedModelFileName = new HTuple();
         /// <summary>
         /// 文件内存
         /// </summary>
-        private HTuple hv_DLPreprocessParam = new HTuple();
-        /// <summary>
-        /// 大模型文件路径
-        /// </summary>
-        private HTuple hv_RetrainedModelFileName = new HTuple();
+        public static HTuple hv_DLPreprocessParam = new HTuple();
         /// <summary>
         /// 模型内存
         /// </summary>
-        private HTuple hv_DLModelHandle = new HTuple();
+        public static HTuple hv_DLModelHandle = new HTuple();
 
 
         public DisplayInterfaceViewModel(IDialogService dialogService, IContainerProvider containerProvider)
         {
-            //loadAIProcessParam(); //加载AI参数
+            loadAIProcessParam(); //加载AI参数
             _dialogService = dialogService;
             _containerProvider = containerProvider;
             BtnSettingCommand = new DelegateCommand<string>(BtnSetting);
@@ -522,12 +519,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             try
             {
+              
                 //Halcon路径
                 hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
                 HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
                     out hv_DLPreprocessParam);
+
+                //HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
+
                 hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
                 HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
+                //SafeHalconDispose(hv_PreprocessParamFileName);
+                //SafeHalconDispose(hv_RetrainedModelFileName);
             }
             catch (Exception ex)
             {
@@ -689,7 +692,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (recognitionResult.RecognitionWheelType == "NG") //识别NG 
             {
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(grayImage);
+                HTuple hv_DLResult = WheelDeepLearning(grayImage , hv_DLModelHandle,hv_DLPreprocessParam);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
@@ -722,7 +725,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             autoRecognitionResult.WheelType = recognitionResult.RecognitionWheelType;
             autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
             autoRecognitionResult.index = interact.Index;
-            
+
 
             SafeHalconDispose(imageRecogn);
             SafeHalconDispose(grayImage);
@@ -733,7 +736,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         private async void Test(string obj)
         {
-            string[] files = Directory.GetFiles("D:\\ZS\\终检\\训练图\\11");
+            string[] files = Directory.GetFiles("D:\\ZS\\终检\\测试图");
             //5.处理每个文件
             foreach (string filePath in files)
             {
@@ -1143,7 +1146,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (obj != null)
             {
-                obj.Dispose();
+                obj?.Dispose();
                 obj = null; // 关键：解除引用使GC可回收
             }
         }

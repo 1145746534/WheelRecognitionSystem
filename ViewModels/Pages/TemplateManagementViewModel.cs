@@ -34,6 +34,7 @@ using System.Collections;
 using System.Windows.Threading;
 using Prism.Regions;
 using System.Diagnostics;
+using System.Timers;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
@@ -360,6 +361,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 匹配结果弹窗是否打开
         /// </summary>
         private bool IsMatchResultDialog = false;
+
+        private static  System.Timers.Timer _cleanupTimer;
+
         #endregion
 
         #region======命令定义======
@@ -511,8 +515,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
             _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
             _dispatcherTimer.Start();//启动定时器
+            _cleanupTimer = new System.Timers.Timer(TimeSpan.FromHours(1).TotalMilliseconds);
+            _cleanupTimer.Elapsed += CleanupHandler;
+            _cleanupTimer.Start();
 
         }
+
 
         #region 数据补录
 
@@ -784,6 +792,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
             DisplayTemplateDatas(Datas);
             db.Close(); db.Dispose();
+            TemplateModels = new List<TemplatedataModels>();
             Task.Run(() =>
             {
                 for (int i = 0; i < Datas.Count; i++)
@@ -810,7 +819,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         
         /// <summary>
-        /// 添加新增模板到使用区
+        /// 添加或修改数据到使用区
         /// </summary>
         /// <param name="tuple"></param>
         /// <param name="name"></param>
@@ -819,16 +828,18 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
 
             int index = TemplateModels.FindIndex(x => x.WheelType == _Bd_Templatedatamodel.WheelType);
+            TemplatedataModels model = new TemplatedataModels();
+            model.CopyPropertiesFrom(_Bd_Templatedatamodel);
             if (index == -1) //不存在 新增
             {
-                TemplatedataModels model = new TemplatedataModels();
-                model.CopyPropertiesFrom(_Bd_Templatedatamodel);               
+                     
                 TemplateModels.Add(model);
             }
             else
             {
-                //手动释放，等下一次调用从别的地方加载
-                TemplateModels[index].UnloadTemplate(); 
+                //手动释放，加载
+                TemplateModels[index].UnloadTemplate();
+                TemplateModels[index] = model;
             }
         }
 
@@ -850,6 +861,26 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 File.Delete(path);
             }
+        }
+
+        /// <summary>
+        /// 将使用区的数据反向刷新到数据表中
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void CleanupHandler(object sender, ElapsedEventArgs e)
+        {
+            for (int i = 0; i < TemplateModels.Count; i++)
+            {
+                string _type = TemplateModels[i].WheelType;
+                var result = TemplateDatas.FirstOrDefault(item =>string.Equals(item.WheelType, _type, StringComparison.OrdinalIgnoreCase));
+                if (result != null)
+                {
+                    result.LastUsedTime = TemplateModels[i].LastUsedTime;
+                }
+            }
+            InsertTemplateDatas(TemplateDatas.ToList());
         }
 
 
@@ -875,6 +906,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var db = new SqlAccess().SystemDataAccess;
             db.Updateable(newModel).ExecuteCommand();
             db.Close(); db.Dispose();
+            addModel(DataGridSelectedItem);
         }
 
         /// <summary>
@@ -1194,9 +1226,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     DataGridSelectedItem.TemplatePath = aPath;
                     DataGridSelectedItem.TemplatePicturePath = tPath;
                     DataGridSelectedItem.LastUsedTime = DateTime.Now;
-                    UpdataTemplateData(DataGridSelectedItem); // 假设这是数据层更新
-                    addModel(DataGridSelectedItem); // 添加到模型管理
-              
+                    UpdataTemplateData(DataGridSelectedItem); // 假设这是数据层更新              
                 }
                 finally
                 {
@@ -1449,7 +1479,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 RecognitionSimilarity = "0";
                 RecognitionWay = " 大模型";
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage);
+                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage, DisplayInterfaceViewModel.hv_DLModelHandle, DisplayInterfaceViewModel.hv_DLPreprocessParam);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > 0.85) //识别结果

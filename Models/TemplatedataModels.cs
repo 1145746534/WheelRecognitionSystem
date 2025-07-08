@@ -29,6 +29,7 @@ namespace WheelRecognitionSystem.Models
         public HTuple Template
         {
             get {
+                Console.WriteLine( $"_isLoaded -- {_isLoaded}" );
                 // 按需加载：访问时若未加载则从硬盘加载
                 if (!_isLoaded)
                 {
@@ -60,10 +61,10 @@ namespace WheelRecognitionSystem.Models
                 else
                 {
                     _use = false;
-                    if (UnusedDays > 3) //3天未使用
-                    {
-                        UnloadTemplate();
-                    }
+                    //if (UnusedDays > 3) //3天未使用
+                    //{
+                    //    UnloadTemplate();
+                    //}
                 }
 
                 return _use; 
@@ -71,20 +72,8 @@ namespace WheelRecognitionSystem.Models
         }
 
 
-
-        // 保存模板到文件
-        public async void SaveTemplateAsync()
-        {
-            if (_template != null)
-            {
-
-                await Task.Run(() => HOperatorSet.WriteNccModel(_template, TemplatePath));
-
-            }
-        }
-
         // 从文件加载模板
-        private async void LoadTemplate()
+        public async void LoadTemplate()
         {
             if (!File.Exists(TemplatePath))
                 return;

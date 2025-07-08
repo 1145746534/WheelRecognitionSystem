@@ -52,7 +52,7 @@ namespace WheelRecognitionSystem.Models
         {
             if (obj != null)
             {
-                obj.Dispose();
+                obj?.Dispose();
                 obj = null; // 关键：解除引用使GC可回收
             }
         }
