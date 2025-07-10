@@ -519,7 +519,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             try
             {
-              
+
                 //Halcon路径
                 hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
                 HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
@@ -692,7 +692,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (recognitionResult.RecognitionWheelType == "NG") //识别NG 
             {
                 //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(grayImage , hv_DLModelHandle,hv_DLPreprocessParam);
+                HTuple hv_DLResult = WheelDeepLearning(grayImage, hv_DLModelHandle, hv_DLPreprocessParam);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                 HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                 if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
@@ -709,11 +709,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     recognitionResult.status = "识别成功";
 
                 }
-                //for (int i = 0; i < names.Length; i++)
-                //{
-                //    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                //    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
-                //}
+                for (int i = 0; i < names.Length; i++)
+                {
+                    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
+                    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
+                }
                 SafeHalconDispose(hv_DLResult);
                 SafeHalconDispose(names);
                 SafeHalconDispose(confidences);
@@ -1146,8 +1146,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (obj != null)
             {
-                obj?.Dispose();
-                obj = null; // 关键：解除引用使GC可回收
+                try
+                {
+                    obj?.Dispose();
+                    obj = null; // 关键：解除引用使GC可回收
+                }
+                catch
+                {
+                    obj = null; // 关键：解除引用使GC可回收
+                }
+
             }
         }
 
