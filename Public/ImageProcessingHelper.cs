@@ -372,31 +372,34 @@ namespace WheelRecognitionSystem.Public
 
             foreach (var templateData in templateDatas.Where(t => t.Use == true))
             {
-
-                HOperatorSet.FindNccModel(
+                if (templateData.Template != null)
+                {
+                    HOperatorSet.FindNccModel(
                     image, templateData.Template,
                     angleStart, angleExtent,
                     0.5, 1, 0.5,
                     "true", 0,
                     out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
 
-                if (score != null && score.Length > 0 && score.D > 0.6)
-                {
-
-                    recognitionResults.Add(new RecognitionResultModel
+                    if (score != null && score.Length > 0 && score.D > 0.6)
                     {
-                        CenterRow = row.D,
-                        CenterColumn = column.D,
-                        Radian = angle.D,
-                        RecognitionWheelType = templateData.WheelType,
-                        Similarity = Math.Round(score.D, 3),
-                        WheelStyle = templateData.WheelStyle
-                    });
+
+                        recognitionResults.Add(new RecognitionResultModel
+                        {
+                            CenterRow = row.D,
+                            CenterColumn = column.D,
+                            Radian = angle.D,
+                            RecognitionWheelType = templateData.WheelType,
+                            Similarity = Math.Round(score.D, 3),
+                            WheelStyle = templateData.WheelStyle
+                        });
+                    }
+                    SafeHalconDispose(row);
+                    SafeHalconDispose(column);
+                    SafeHalconDispose(angle);
+                    SafeHalconDispose(score);
                 }
-                SafeHalconDispose(row);
-                SafeHalconDispose(column);
-                SafeHalconDispose(angle);
-                SafeHalconDispose(score);
+
 
             }
 
@@ -424,30 +427,34 @@ namespace WheelRecognitionSystem.Public
             //performMatching(false);
             foreach (var templateData in templateDatas.Where(t => t.Use == false))
             {
-                HOperatorSet.FindNccModel(
-                    image, templateData.Template,
-                    angleStart, angleExtent,
-                    0.5, 1, 0.5,
-                    "true", 0,
-                    out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
-
-                if (score != null && score.Length > 0 && score.D > 0.6)
+                if (templateData.Template != null)
                 {
 
-                    recognitionResults.Add(new RecognitionResultModel
+                    HOperatorSet.FindNccModel(image, templateData.Template,angleStart, angleExtent,
+                            0.5, 1, 0.5,"true", 0,out HTuple row, out HTuple column, out HTuple angle, 
+                            out HTuple score);
+
+                    if (score != null && score.Length > 0 && score.D > 0.6)
                     {
-                        CenterRow = row.D,
-                        CenterColumn = column.D,
-                        Radian = angle.D,
-                        RecognitionWheelType = templateData.WheelType,
-                        Similarity = Math.Round(score.D, 3),
-                        WheelStyle = templateData.WheelStyle
-                    });
+
+                        recognitionResults.Add(new RecognitionResultModel
+                        {
+                            CenterRow = row.D,
+                            CenterColumn = column.D,
+                            Radian = angle.D,
+                            RecognitionWheelType = templateData.WheelType,
+                            Similarity = Math.Round(score.D, 3),
+                            WheelStyle = templateData.WheelStyle
+                        });
+                    }
+                    SafeHalconDispose(row);
+                    SafeHalconDispose(column);
+                    SafeHalconDispose(angle);
+                    SafeHalconDispose(score);
+
+
                 }
-                SafeHalconDispose(row);
-                SafeHalconDispose(column);
-                SafeHalconDispose(angle);
-                SafeHalconDispose(score);
+
 
             }
 
