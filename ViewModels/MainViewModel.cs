@@ -1651,6 +1651,10 @@ namespace WheelRecognitionSystem.ViewModels
                 case 1:
                     RecognitionStatus1 = status;
                     Count1 = $"{countInt[index - 1]}_{count}";
+                    if (countInt[index - 1] % 1000 ==0)
+                    {
+                        WriteLogToFile(Count1);
+                    }
                     break;
                 case 2:
                     RecognitionStatus2 = status;
@@ -1670,6 +1674,28 @@ namespace WheelRecognitionSystem.ViewModels
                     break;
             }
         }
+
+        private readonly object _lock = new object(); // 线程同步锁
+
+        private void WriteLogToFile(string _count)
+        {
+            lock (_lock)
+            {
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string line = $"{timestamp} - Current Count: {_count}{Environment.NewLine}";
+
+                try
+                {
+                    File.AppendAllText(@"E:\临时\计数.txt", line);
+                    //Console.WriteLine($"Logged at {timestamp}: {_count}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error writing log: {ex.Message}");
+                }
+            }
+        }
+
         #endregion
 
         private void RecognitionPauseSet(string obj)

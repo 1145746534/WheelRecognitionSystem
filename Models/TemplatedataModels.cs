@@ -29,7 +29,7 @@ namespace WheelRecognitionSystem.Models
         public HTuple Template
         {
             get {
-                Console.WriteLine( $"_isLoaded -- {_isLoaded}" );
+                //Console.WriteLine( $"_isLoaded -- {_isLoaded}" );
                 // 按需加载：访问时若未加载则从硬盘加载
                 if (!_isLoaded)
                 {

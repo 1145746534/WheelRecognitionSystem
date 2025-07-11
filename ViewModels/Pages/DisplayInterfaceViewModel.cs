@@ -663,6 +663,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
             //获取整张图的灰度值 如果小于指定数值 判定为半成品            
             double fullFigureGary = GetIntensity(grayImage);
+            Console.WriteLine($"灰度比较 ： {fullFigureGary} ? {MinFullFigureGary}");
+            //MinFullFigureGary = 80;
+            recognitionResult.RecognitionWheelType = "NG";
             if (fullFigureGary > MinFullFigureGary)
             {
                 //定位轮毂
@@ -677,13 +680,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 recognitionResult = WheelRecognitionAlgorithm(imageRecogn, models, AngleStart, AngleExtent, MinSimilarity, list);
                 recognitionResult.FullFigureGary = (float)fullFigureGary;
                 recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
+                autoRecognitionResult.WheelContour = CloneImageSafely(pResult.WheelContour);
                 if (recognitionResult.RecognitionWheelType != "NG") //
                 {
 
                     templateContour = GetAffineTemplateContour(someService.GetHTupleByName(recognitionResult.RecognitionWheelType),
                         recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
-
-                    autoRecognitionResult.WheelContour = CloneImageSafely(pResult.WheelContour);
+               
                 }
                 SafeHalconDispose(pResult);
 
@@ -709,11 +712,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     recognitionResult.status = "识别成功";
 
                 }
-                for (int i = 0; i < names.Length; i++)
-                {
-                    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
-                }
+                //for (int i = 0; i < names.Length; i++)
+                //{
+                //    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
+                //    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
+                //}
                 SafeHalconDispose(hv_DLResult);
                 SafeHalconDispose(names);
                 SafeHalconDispose(confidences);
