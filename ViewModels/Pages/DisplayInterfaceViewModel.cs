@@ -665,8 +665,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             double fullFigureGary = GetIntensity(grayImage);
             Console.WriteLine($"灰度比较 ： {fullFigureGary} ? {MinFullFigureGary}");
             //MinFullFigureGary = 80;
-            recognitionResult.RecognitionWheelType = "NG";
-            if (fullFigureGary > MinFullFigureGary)
+            //recognitionResult.RecognitionWheelType = "NG";
+            //if (fullFigureGary > MinFullFigureGary)
             {
                 //定位轮毂
                 PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
