@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -219,7 +220,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 IdentificationDataVisibility = Visibility.Hidden;
                 var pDB = new SqlAccess().SystemDataAccess;
                 // 从数据库读取的数据
-                var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();             
+                var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();
                 // 生成统计结果
                 List<StatisticsDataModel> statistics = GenerateStatistics(productionList);
 
@@ -235,7 +236,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 EventMessage.SystemMessageDisplay("数据统计完成", MessageType.Success);
 
             }
-            else 
+            else
                 EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
         }
 
@@ -280,6 +281,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             // 拼接成字符串，格式如：A01(5),B02(3),C03(1)
             return string.Join(", ", ngGroups.Select(g => $"{g.Remark}({g.Count})"));
         }
+        /// <summary>
+        /// 手动导出指定日期数据
+        /// </summary>
         private async void DataExportAsync()
         {
             if (IdentificationDatas.Count == 0 && StatisticsDatas.Count == 0)
@@ -303,21 +307,24 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 workShift = "晚";
             }
-
+            string path = string.Empty;
             await Task.Run(() =>
             {
 
                 List<Tbl_productiondatamodel> list = IdentificationDatas.ToList();
 
                 ExportProducts("半成品", list, workShift);
-                ExportProducts("成品", list, workShift);
+                path = ExportProducts("成品", list, workShift);
 
 
                 //PrintSummaryResults(summaryResults);
 
             });
 
-
+            Console.WriteLine($"数据导出完成");
+            EventMessage.SystemMessageDisplay("数据导出完成", MessageType.Success);
+            await Task.Delay(500);
+            Process.Start("explorer.exe", path);
 
             //SaveFileDialog saveFileDialog = new SaveFileDialog
             //{
@@ -342,8 +349,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
 
             await AsyncExport();
-            EventMessage.SystemMessageDisplay("数据导出完成", MessageType.Success);
 
+            Console.WriteLine($"数据导出完成");
+            EventMessage.SystemMessageDisplay("数据导出完成", MessageType.Success);
         }
 
         public async Task<bool> AsyncExport()
@@ -412,7 +420,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             return true;
         }
 
-        private void ExportProducts(string style, List<Tbl_productiondatamodel> products, string workShift)
+        private string ExportProducts(string style, List<Tbl_productiondatamodel> products, string workShift)
         {
 
             List<Tbl_productiondatamodel> list = products
@@ -475,7 +483,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     double percentage = (double)remarkGroup.Count / modelSummary.TotalCount * 100;
                     Console.WriteLine($"    - 备注: {remarkGroup.Remark}, 数量: {remarkGroup.Count} ({percentage:F1}%)");
 
-                   
+
 
                     if (string.IsNullOrEmpty(remarkGroup.Remark) || remarkGroup.Remark == "-1") //为空或者-1就是OK的产品
                     {
@@ -515,10 +523,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                             }
                             if (reportWayGroup.ReportWay == "平板")
                             {
-                                
+
                                 macthStartCol = 129; //DY 
                                 macthEndCol = 242; //IH
-                                
+
                             }
                             setValue = reportWayGroup.Count;
 
@@ -532,13 +540,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                                 SettingValue = setValue
                             });
                         }
-                      
+
 
                     }
 
                     setRow = 765 + appendIndex;  //行增加
 
-                   
+
 
                 }
 
@@ -546,9 +554,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 appendIndex = appendIndex + 1;
             }
             ExcelHelper excelHelper = new ExcelHelper();
-            excelHelper.ModifyExcelFile(exportDatas, "D:\\ZS\\数据导出.xlsx", $"D:\\{style}\\");
+            string subDir = $"D:\\数据导出\\";
+            string targetDir = $"{subDir}{style}\\";
+            excelHelper.ModifyExcelFile(exportDatas, "D:\\ZS\\数据导出.xlsx", targetDir);
             exportDatas.Clear();
             exportDatas = null;
+            return subDir;
         }
 
 

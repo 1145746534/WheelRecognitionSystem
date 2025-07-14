@@ -57,7 +57,7 @@ namespace WheelRecognitionSystem.Public
                     //插入项
                     int setR = data.SettingRow;
                     object setV = data.SettingValue;
-                    Console.WriteLine($"{startCol} -> {endCol} - {setR} - {setV}");
+                    //Console.WriteLine($"{startCol} -> {endCol} - {setR} - {setV}");
 
                     //循环这个行下所有的列
                     for (int i = startCol; i <= endCol; i++)
@@ -153,7 +153,7 @@ namespace WheelRecognitionSystem.Public
             Directory.CreateDirectory(targetDir);
 
             // 3. 生成新文件名（格式：年月日）
-            string dateStr = DateTime.Now.ToString("yyyyMMdd"); // 格式示例：20250618[3,7](@ref)
+            string dateStr = DateTime.Now.ToString("yyyyMMdd HH-mm-ss"); // 格式示例：20250618[3,7](@ref)
             string originalName = Path.GetFileNameWithoutExtension(sourceFile);
             string extension = Path.GetExtension(sourceFile);
             string newFileName = $"{dateStr}{extension}"; // 保留原名+日期后缀[3](@ref)
