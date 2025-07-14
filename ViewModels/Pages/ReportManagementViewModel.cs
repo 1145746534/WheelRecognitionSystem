@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using Mysqlx.Session;
 using MySqlX.XDevAPI.Common;
+using NPOI.SS.Formula.Functions;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
@@ -207,6 +208,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
         }
+        /// <summary>
+        /// 数据统计
+        /// </summary>
         private void DataStatistics()
         {
             bool r = JudgmentInputsDateTime(StartDate, StartHour, StartMinute, EndDate, EndHour, EndMinute, out GetDateTimeModel result);
@@ -214,56 +218,67 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 IdentificationDataVisibility = Visibility.Hidden;
                 var pDB = new SqlAccess().SystemDataAccess;
-                var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();
-                List<StatisticsDataModel> statisticsDatas = new List<StatisticsDataModel>();
-                pDB.Close(); pDB.Dispose();
-                for (int i = 0; i < productionList.Count; i++)
+                // 从数据库读取的数据
+                var productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(it => SqlFunc.Between(it.RecognitionTime, result.StartDateTime, result.EndDateTime)).ToList();             
+                // 生成统计结果
+                List<StatisticsDataModel> statistics = GenerateStatistics(productionList);
+
+                // 输出结果
+                foreach (var stat in statistics)
                 {
-                    int index = statisticsDatas.FindIndex(x => x.WheelType == productionList[i].Model);
-                    if (index < 0)
-                    {
-                        StatisticsDataModel statisticsDataModel = new StatisticsDataModel
-                        {
-                            Index = statisticsDatas.Count + 1,
-                            WheelType = productionList[i].Model,
-                            WheelCount = 1
-                        };
-                        statisticsDatas.Add(statisticsDataModel);
-                    }
-                    else
-                    {
-                        statisticsDatas[index].WheelCount += 1;
-                    }
+                    Console.WriteLine($"序号: {stat.Index}, 轮型: {stat.Model}, 样式: {stat.WheelStyle}, " +
+                                      $"数量: {stat.WheelCount}, 合格数: {stat.PassCount}, 主要NG: {stat.MostOfNG}");
                 }
-                //按轮型排序
-                statisticsDatas.Sort((p1, p2) =>//排序
-                {
-                    if (p1.WheelType != p2.WheelType)
-                    {
-                        return p1.WheelType.CompareTo(p2.WheelType);
-                    }
-                    else return 0;
-                });
-                //调整序号
-                for (int i = 0; i < statisticsDatas.Count; i++)//整理序号
-                {
-                    statisticsDatas[i].Index = i + 1;
-                }
-                //计算总数
-                StatisticsDataModel statisticsData = new StatisticsDataModel();
-                statisticsData.Index = statisticsDatas.Count + 1;
-                statisticsData.WheelType = "总计";
-                for (int i = 0; i < statisticsDatas.Count; i++)
-                {
-                    statisticsData.WheelCount = statisticsData.WheelCount + statisticsDatas[i].WheelCount;
-                }
-                statisticsDatas.Add(statisticsData);
-                IdentificationDatas?.Clear();
                 StatisticsDatas?.Clear();
-                StatisticsDatas = new ObservableCollection<StatisticsDataModel>(statisticsDatas);
+                StatisticsDatas = new ObservableCollection<StatisticsDataModel>(statistics);
                 StatisticsDataVisibility = Visibility.Visible;
+                EventMessage.SystemMessageDisplay("数据统计完成", MessageType.Success);
+
             }
-            else EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
+            else 
+                EventMessage.SystemMessageDisplay(result.Result, MessageType.Warning);
+        }
+
+        public List<StatisticsDataModel> GenerateStatistics(List<Tbl_productiondatamodel> productionData)
+        {
+            // 按Model和WheelStyle分组
+            var groupedData = productionData
+                .GroupBy(p => new { p.Model, p.WheelStyle })
+                .Select((group, index) => new StatisticsDataModel
+                {
+                    Index = index + 1,
+                    Model = group.Key.Model,
+                    WheelStyle = group.Key.WheelStyle,
+                    WheelCount = group.Count(),
+                    PassCount = group.Count(p => p.Remark == "-1"),
+                    MostOfNG = GetTopThreeNGs(group)
+                })
+                .ToList();
+
+            return groupedData;
+        }
+        private string GetTopThreeNGs(IGrouping<dynamic, Tbl_productiondatamodel> group)
+        {
+            // 排除Remark为-1的记录（合格品）
+            var ngGroups = group
+                .Where(p => p.Remark != "-1")
+                .GroupBy(p => p.Remark)
+                .Select(g => new
+                {
+                    Remark = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(g => g.Count)
+                .Take(3) // 取前3
+                .ToList();
+
+            if (!ngGroups.Any())
+            {
+                return "无NG记录";
+            }
+
+            // 拼接成字符串，格式如：A01(5),B02(3),C03(1)
+            return string.Join(", ", ngGroups.Select(g => $"{g.Remark}({g.Count})"));
         }
         private async void DataExportAsync()
         {
@@ -327,6 +342,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
 
             await AsyncExport();
+            EventMessage.SystemMessageDisplay("数据导出完成", MessageType.Success);
+
         }
 
         public async Task<bool> AsyncExport()

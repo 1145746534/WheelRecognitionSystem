@@ -197,9 +197,12 @@
                     <DataGrid ItemsSource="{Binding StatisticsDatas}" Visibility="{Binding StatisticsDataVisibility}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
                       FontSize="14" FontWeight="Bold" Foreground="#333">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.2*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
-                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding WheelType}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="轮毂型号" Binding="{Binding Model}" Width="0.4*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="样式" Binding="{Binding WheelStyle}" Width="0.6*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂数量" Binding="{Binding WheelCount}" Width="0.8*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="合格数" Binding="{Binding PassCount}" Width="0.8*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
+                            <DataGridTextColumn Header="主要NG" Binding="{Binding MostOfNG}" Width="0.8*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

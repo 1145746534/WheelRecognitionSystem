@@ -249,13 +249,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     List<StatisticsDataModel> statisticsDatas = new List<StatisticsDataModel>();
                     for (int i = 0; i < productionList.Count; i++)
                     {
-                        int index = statisticsDatas.FindIndex(x => x.WheelType == productionList[i].WheelType.Trim('_'));
+                        int index = statisticsDatas.FindIndex(x => x.Model == productionList[i].WheelType.Trim('_'));
                         if (index < 0)
                         {
                             StatisticsDataModel statisticsDataModel = new StatisticsDataModel
                             {
                                 Index = statisticsDatas.Count + 1,
-                                WheelType = productionList[i].WheelType.Trim('_'),
+                                Model = productionList[i].WheelType.Trim('_'),
                                 WheelCount = 1
                             };
                             statisticsDatas.Add(statisticsDataModel);
@@ -268,14 +268,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     //按轮型排序
                     statisticsDatas.Sort((p1, p2) =>
                     {
-                        if (p1.WheelType != p2.WheelType)
+                        if (p1.Model != p2.Model)
                         {
-                            return p1.WheelType.CompareTo(p2.WheelType);
+                            return p1.Model.CompareTo(p2.Model);
                         }
                         else return 0;
                     });
                     WheelTypes.Clear();
-                    WheelTypes = statisticsDatas.Select(x => x.WheelType).ToList();
+                    WheelTypes = statisticsDatas.Select(x => x.Model).ToList();
                     List<int> counts = statisticsDatas.Select(x => x.WheelCount).ToList();
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {

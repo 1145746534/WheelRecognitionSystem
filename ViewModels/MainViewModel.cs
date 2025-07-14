@@ -922,11 +922,12 @@ namespace WheelRecognitionSystem.ViewModels
                             {
 
                                 //轮毂温度 3条线
+                                //Console.WriteLine( $"轮毂温度：{S7.GetRealAt(_readBuffer, 124)}");
                                 readPLCSignals[0].WheelTemperature = S7.GetRealAt(_readBuffer, 124);
                                 temperature = S7.GetRealAt(_readBuffer, 128);
-                                readPLCSignals[1].WheelTemperature = temperature;
-                                readPLCSignals[2].WheelTemperature = temperature;
-                                readPLCSignals[3].WheelTemperature = S7.GetRealAt(_readBuffer, 132);
+                                readPLCSignals[1].WheelTemperature = temperature; //1检2A 1检2B
+                                //readPLCSignals[2].WheelTemperature = temperature; 
+                                readPLCSignals[2].WheelTemperature = S7.GetRealAt(_readBuffer, 132); //1检3
                                 //计数
                                 count = S7.GetIntAt(_readBuffer, 156);
 
@@ -1194,7 +1195,7 @@ namespace WheelRecognitionSystem.ViewModels
             EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
 
 
-            //插入数据库
+            //插入数据库  -跟着相机工位走的数据
             SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
             Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
             dataModel.GUID = Guid.NewGuid().ToString("N");
@@ -1202,15 +1203,17 @@ namespace WheelRecognitionSystem.ViewModels
             dataModel.TimeConsumed = model.Interval.TotalMilliseconds.ToString();
             dataModel.Similarity = model.resultModel.Similarity.ToString();
             dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
+            dataModel.WheelTemperature = model.readPLCSignal.WheelTemperature;
             dataModel.WheelStyle = model.resultModel.WheelStyle;
             dataModel.RecognitionTime = model.endTime;
             dataModel.TransmissionCoding = text;
             dataModel.Model = wheelType;
-            dataModel.Station = "";
+            dataModel.Station = model.readPLCSignal.Name;
             dataModel.ImagePath = model.imagePath;
             dataModel.ReportWay = "线上";
             dataModel.ResultBool = model.resultModel.ResultBol;
             dataModel.Remark = "-1";
+            dataModel.RecognitionDay = model.endTime;
             pDB.Insertable(dataModel).ExecuteCommand();
 
             pDB.Close();

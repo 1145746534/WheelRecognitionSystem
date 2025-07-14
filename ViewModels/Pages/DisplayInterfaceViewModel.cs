@@ -521,13 +521,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
 
                 //Halcon路径
-                hv_PreprocessParamFileName = "D:/ZS/终检/DLT/model_preprocess_params.hdict";
+                hv_PreprocessParamFileName = "D:/VisualDatas/大模型文件/model_preprocess_params.hdict";
                 HOperatorSet.ReadDict(hv_PreprocessParamFileName, new HTuple(), new HTuple(),
                     out hv_DLPreprocessParam);
 
                 //HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
 
-                hv_RetrainedModelFileName = "D:/ZS/终检/DLT/model_opt.hdl";
+                hv_RetrainedModelFileName = "D:/VisualDatas/大模型文件/model_opt.hdl";
                 HOperatorSet.ReadDlModel(hv_RetrainedModelFileName, out hv_DLModelHandle);
                 //SafeHalconDispose(hv_PreprocessParamFileName);
                 //SafeHalconDispose(hv_RetrainedModelFileName);
