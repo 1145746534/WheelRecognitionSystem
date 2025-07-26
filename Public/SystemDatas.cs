@@ -40,9 +40,9 @@ namespace WheelRecognitionSystem.Public
         public static string HandImagesPath { get; set; }
 
         /// <summary>
-        /// 深度学习图片路径
+        /// 深度学习大模型文件路径
         /// </summary>
-        public static string DeepImagesPath { get; set; }
+        public static string DeepParaPath { get; set; } 
 
 
         /// <summary>
@@ -81,12 +81,12 @@ namespace WheelRecognitionSystem.Public
         public static double RemoveMixArea { get; set;}
 
         /// <summary>
-        /// 制作与匹配模板的起始角度
+        /// 匹配模板的起始角度
         /// </summary>
         public static double AngleStart { get; set;}
 
         /// <summary>
-        /// 制作与匹配模板的角度范围
+        /// 匹配模板的角度范围
         /// </summary>
         public static double AngleExtent { get; set;}
 
@@ -96,34 +96,43 @@ namespace WheelRecognitionSystem.Public
         public static double MinSimilarity { get; set;}
 
         /// <summary>
-        /// 图像中定位浇口区域的半径
+        /// PLC的IP地址
         /// </summary>
-        public static double PositioningGateRadius {  get; set;}
+        public static string PlcIP { get; set; }
+        /// <summary>
+        /// 读取PLC数据的DB块
+        /// </summary>
+        public static int ReadDB { get; set; }
+        /// <summary>
+        /// 读取PLC数据的DB块
+        /// </summary>
+        public static int ReadStartAddress { get; set; }
+        /// <summary>
+        /// 读取PLC数据的长度
+        /// </summary>
+        public static int ReadLenght { get; set; }
 
         /// <summary>
-        /// 浇口区域轮毂最小阈值
+        /// 写入PLC数据的DB块
         /// </summary>
-        public static int GateOutMinThreshold { get; set; }
-
+        public static int WriteDB { get; set; }
         /// <summary>
-        /// 判断浇口存在的最小面积
+        /// 写入PLC数据的起始地址
         /// </summary>
-        public static int GateMinArea { get; set;}
-
+        public static int WriteStartAddress { get; set; }
         /// <summary>
-        /// 判断浇口存在的最小半径
+        /// 写入PLC数据的长度
         /// </summary>
-        public static double GateMinRadius { get; set;}
-
+        public static int WriteLenght { get; set; }
         /// <summary>
-        /// 浇口检测开关
+        /// 轮毂到位延时
         /// </summary>
-        public static bool GateDetectionSwitch { get; set;}
+        public static int ArrivalDelay { get; set; }
 
-        /// <summary>
-        /// 采集图像的缩放系数，控制图像大小
-        /// </summary>
-        public static double ScalingCoefficient { get; set;}
+
+
+
+
 
         /// <summary>
         /// 模板数据集合
@@ -137,6 +146,11 @@ namespace WheelRecognitionSystem.Public
         public static bool SystemModel { get; set; } = false;
 
         /// <summary>
+        /// 上传地址
+        /// </summary>
+        public static string UpMesUri { get; set; }
+
+        /// <summary>
         /// 自动模式模板数据更新控制
         /// </summary>
         public static bool TemplateDataUpdataControl {  get; set; } = false;
@@ -146,18 +160,12 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static bool AutoTemplateDataLoadControl { get; set; } = false;
 
+       
         /// <summary>
-        /// 保存图片的天数
-        /// </summary>
-        public static int SaveImageDays { get; set; }
-        /// <summary>
-        /// 保存识别数据的月数
+        /// 保存识别数据的月数 -数据在信息化那边删除 这边不做处理
         /// </summary>
         public static int SaveDataMonths { get; set; }
-        /// <summary>
-        /// 识别暂停设置的次数
-        /// </summary>
-        public static int RecognitionPauseSetting { get; set; }
+
         /// <summary>
         /// 模板动态调整天数
         /// </summary>
@@ -176,10 +184,22 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static double ConfidenceMatch { get; set; }
         /// <summary>
-        /// 判断是否使用传统识别的最小全图灰度值
+        /// 全图灰度值 - 如果小于它 直接用大模型识别 -TODO 改成从数据库中读写
         /// </summary>
         public static double MinFullFigureGary { get; set; }
 
+        // --- 文件管理参数
 
+        /// <summary>
+        /// 保存图片的天数
+        /// </summary>
+        public static int SaveImageDays { get; set; }
+        /// <summary>
+        /// 常驻内存的模板数量
+        /// </summary>
+        public static int MaintainQuantity { get; set; }
+
+
+        // -- 
     }
 }

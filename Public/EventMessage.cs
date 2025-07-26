@@ -1,14 +1,9 @@
-﻿using HalconDotNet;
-using Prism.Events;
-using SqlSugar;
+﻿using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using WheelRecognitionSystem.Models;
+using HalconDotNet;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -27,13 +22,13 @@ namespace WheelRecognitionSystem.Public
         /// <param name="message">信息</param>
         /// <param name="isDisplay">是否在信息框显示信息</param>
         /// <param name="isLog">是否将信息存储到Log</param>
-        public static void MessageDisplay(string message,bool isDisplay, bool isToLog)
+        public static void MessageDisplay(string message, bool isDisplay, bool isToLog)
         {
-            if(isDisplay)
+            if (isDisplay)
             {
                 MessageHelper.GetEvent<SystemMessageEvent>().Publish(message);
             }
-            if(isToLog)
+            if (isToLog)
             {
                 try
                 {
@@ -65,7 +60,7 @@ namespace WheelRecognitionSystem.Public
         /// <param name="Type"></param>
         public static void SystemMessageDisplay(string message, MessageType Type)
         {
-            
+
             //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} {message}");
             MessageModel model = new MessageModel
             {
@@ -73,11 +68,13 @@ namespace WheelRecognitionSystem.Public
                 Type = Type
             };
             MessageHelper.GetEvent<SystemMessageDisplayEvent>().Publish(model);
-            
+
         }
     }
 
-    public class TemplateClearEvent : PubSubEvent<HObject> { }
+
+
+    public class TemplateClearEvent : PubSubEvent<string> { }
     /// <summary>
     /// 模板表格数据编辑事件，用于编辑数据时将表格显示滚动到编辑的项
     /// </summary>
@@ -86,63 +83,40 @@ namespace WheelRecognitionSystem.Public
     /// 系统消息框信息事件的发布和订阅
     /// </summary>
     public class SystemMessageEvent : PubSubEvent<string> { }
-    /// <summary>
-    /// 匹配结果数据显示事件
-    /// </summary>
-    public class MatchResultDatasDisplayEvent : PubSubEvent<List<MatchResultModel>> { }
-    /// <summary>
-    /// 自动识别结果显示事件
-    /// </summary>
-    public class AutoRecognitionResultDisplayEvent : PubSubEvent<AutoRecognitionResultDisplayModel> { }
 
-    public class InplaceEvent: PubSubEvent<KeyValuePair<bool,int>> { }
     /// <summary>
-    /// 信号交互-处理事件
+    /// 系统信息显示事件
     /// </summary>
-    public class InteractHandleEvent : PubSubEvent<InteractS7PLCModel> { }
+    public class SystemMessageDisplayEvent : PubSubEvent<MessageModel> { }
 
     /// <summary>
     /// 信号交互-回复事件
     /// </summary>
     public class InteractCallEvent : PubSubEvent<InteractS7PLCModel> { }
 
-    /// <summary>
-    /// 清除事件
-    /// </summary>
-    public class ClearEvent: PubSubEvent<string> { }
 
     /// <summary>
-    /// 分选数据显示事件
+    /// 相机参数修改反馈事件
     /// </summary>
-    public class ScreenedDataDisplayEvent : PubSubEvent<List<ScreenedDataModel>> { }
-    /// <summary>
-    /// 系统信息显示事件
-    /// </summary>
-    public class SystemMessageDisplayEvent : PubSubEvent<MessageModel> { }
-    /// <summary>
-    /// 模板参数设置数据改变事件
-    /// </summary>
-    public class ParameterSettingChangedEvent : PubSubEvent<string> { }
-    /// <summary>
-    /// 设置跳转页面事件
-    /// </summary>
-    public class ServletInfoEvent : PubSubEvent<ServletInfoModel> { }
+    public class CameraParameterChangedEvent : PubSubEvent<object> { }
 
     /// <summary>
-    /// 模板图片更新事件
+    /// 根据视图名称采集对应相机图像
     /// </summary>
-    public class TemplatePicUpdateEvent: PubSubEvent<ServletInfoModel> { }
+    public class GetGrabimageByViewEvent : PubSubEvent<InteractS7PLCModel> { }
 
     /// <summary>
-    /// 模板表格数据更新事件，用于执行模板动态调整时的数据更新
+    /// 图片推送处理事件
     /// </summary>
-    public class TemplateDataUpdataEvent : PubSubEvent<string> { }
+    public class ImagePushHandleEvent : PubSubEvent<Dictionary<InteractS7PLCModel,HObject>> { }
     /// <summary>
-    /// 识别暂停设置事件
+    /// 识别结果推送显示事件
     /// </summary>
-    public class RecognitionPauseSettingEvent : PubSubEvent<string> { }
+    public class RecognitionDisplayEvent : PubSubEvent<AutoRecognitionResultDisplayModel> { }
+
     /// <summary>
-    /// 当天识别数据8点更新事件
+    /// 模板参数刷新事件
     /// </summary>
-    public class CurrentDayDataUpdataEvent : PubSubEvent<string> { }
+    public class RefreshNCCParaEvent : PubSubEvent { }
+
 }

@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WheelRecognitionSystem.Views.Dialogs
+namespace WheelRecognitionSystem.Views.Pages
 {
     /// <summary>
-    /// MatchResultDialog.xaml 的交互逻辑
+    /// CameraControl.xaml 的交互逻辑
     /// </summary>
-    public partial class MatchResultDialog : UserControl
+    public partial class CameraControl : UserControl
     {
-        public MatchResultDialog()
+        public CameraControl()
         {
             InitializeComponent();
         }

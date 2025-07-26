@@ -21,7 +21,7 @@ namespace WheelRecognitionSystem.Models
 
         private int _index;
         /// <summary>
-        /// 下标
+        /// 下标 从0开始
         /// </summary>
         public int Index
         {
@@ -38,18 +38,7 @@ namespace WheelRecognitionSystem.Models
             get { return _name; }
             set { SetProperty(ref _name, value); }
         }
-
-        private string _wheelCoding;
-        /// <summary>
-        /// 轮型编码
-        /// </summary>
-        public string WheelCoding
-        {
-            get { return _wheelCoding; }
-            set { SetProperty(ref _wheelCoding, value); }
-        }
-
-        
+     
 
         public bool _arrivalSignal;
         /// <summary>
@@ -69,16 +58,6 @@ namespace WheelRecognitionSystem.Models
                 }
             }
 
-        }
-
-        public int _ngCode;
-        /// <summary>
-        /// NG编码
-        /// </summary>
-        public int NGCode
-        {
-            get { return _ngCode; }
-            set { SetProperty(ref _ngCode, value); }
         }
 
 

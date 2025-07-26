@@ -12,8 +12,9 @@ using WheelRecognitionSystem.Models;
 
 namespace WheelRecognitionSystem.ViewModels.Dialogs
 {
-    public class CameraSetDialogViewModel : BindableBase, IDialogAware
+    public class CameraSetDialogViewModel : BindableBase, IDialogAware, IDisposable
     {
+        private bool _disposed = false;
         /// <summary>
         /// 对话框标题
         /// </summary>
@@ -65,6 +66,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             OkCommand = new DelegateCommand(Ok);
             CancelCommand = new DelegateCommand(Cancel);
+
         }
         private void Ok()
         {
@@ -78,7 +80,24 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             RequestClose?.Invoke(new DialogResult(ButtonResult.No));
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Unsubscribe from events and release managed resources
+                }
 
+                // Free unmanaged resources (if any) and set large fields to null
+                _disposed = true;
+            }
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         /// 弹窗是否可以关闭
@@ -93,8 +112,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         /// </summary>
         public void OnDialogClosed()
         {
-           
-
+            Dispose();
         }
 
         /// <summary>
@@ -119,7 +137,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 CameraExposure = parameters.GetValue<string>("Exposure");
             }
 
-
+            
 
 
         }

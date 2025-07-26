@@ -12,6 +12,7 @@ namespace WheelRecognitionSystem.Models
     /// </summary>
     public class RecognitionResultModel
     {
+
         /// <summary>
         /// 识别状态
         /// </summary>
@@ -35,6 +36,11 @@ namespace WheelRecognitionSystem.Models
         /// 标签颜色
         /// </summary>
         public string Colour { get; set; }
+
+        /// <summary>
+        /// 识别方式
+        /// </summary>
+        public string Way { get; set; }
 
         /// <summary>
         /// 样式
@@ -72,6 +78,7 @@ namespace WheelRecognitionSystem.Models
         ///识别的弧度
         /// </summary>
         public double Radian { get; set; }
+
 
 
     }

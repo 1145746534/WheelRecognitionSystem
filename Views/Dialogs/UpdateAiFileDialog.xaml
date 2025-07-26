@@ -1,0 +1,62 @@
+﻿<UserControl x:Class="WheelRecognitionSystem.Views.Dialogs.UpdateAiFileDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Dialogs"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             Background="#FFFFFFFF"
+             mah:DialogParticipation.Register="{Binding}"
+             mc:Ignorable="d" 
+             Height="200" Width="400">
+    <Grid>
+        <mah:MetroHeader  mah:HeaderedControlHelper.HeaderFontSize="22" Header="大模型文件选择">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="80"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="8*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="7*"></RowDefinition>
+                        <RowDefinition Height="3*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0"  Content="选择已训练好的大模型参数" VerticalAlignment ="Center" HorizontalAlignment="Left" FontWeight="Bold" Foreground ="Black"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="6,0,0,0" Text="选择《hdl》和《hdict》结尾的模型文件"   FontSize="10" VerticalAlignment ="Center" HorizontalAlignment="Left" Foreground="#AAA"/>
+                    <Button Grid.Column="1" Margin="3,0,3,0" Command="{Binding ChooseFileCommand}" Content="选择文件" />
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="8*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="7*"></RowDefinition>
+                        <RowDefinition Height="4*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <RichTextBox Grid.Row ="0"  Grid.RowSpan="2" Margin="6,2,0,2"  
+                                 mah:TextBoxHelper.UseFloatingWatermark="True"
+                                 mah:TextBoxHelper.Watermark="被选中文件..."
+                                 IsDocumentEnabled="True"
+                                 SpellCheck.IsEnabled="True" 
+                                 >
+                        <FlowDocument>
+                            <Paragraph>
+                                <Run Text="{Binding FilePath_Hdl}"></Run>
+                                <LineBreak />
+                                <Run Text="{Binding FilePath_Hdict}"></Run>
+                            </Paragraph>
+                        </FlowDocument>
+                    </RichTextBox>
+                    <Button Grid.Row="1" Grid.Column="1" Command="{Binding ConfirmCommand}" Margin="3,0,3,3" Content="确认" />
+                </Grid>
+              
+            </Grid>
+            
+        </mah:MetroHeader>
+    </Grid>
+</UserControl>

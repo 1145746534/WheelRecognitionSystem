@@ -34,7 +34,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -42,6 +42,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -83,12 +84,14 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>wheel.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
       <HintPath>packages\BouncyCastle.Cryptography.2.3.1\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="ControlzEx, Version=4.0.0.0, Culture=neutral, PublicKeyToken=69f1c32f803d307e, processorArchitecture=MSIL">
+      <HintPath>packages\ControlzEx.4.4.0\lib\net462\ControlzEx.dll</HintPath>
     </Reference>
     <Reference Include="Google.Protobuf, Version=3.26.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>packages\Google.Protobuf.3.26.1\lib\net45\Google.Protobuf.dll</HintPath>
@@ -111,6 +114,9 @@
     </Reference>
     <Reference Include="LiveCharts.Wpf, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=2.0.0.0, Culture=neutral, PublicKeyToken=51482d6f650b2b3f, processorArchitecture=MSIL">
+      <HintPath>packages\MahApps.Metro.2.4.10\lib\net47\MahApps.Metro.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.6, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.9.0.6\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -211,6 +217,7 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -245,6 +252,7 @@
     </Compile>
     <Compile Include="DataAccess\ExcelDataAccess.cs" />
     <Compile Include="DataAccess\SqlAccess.cs" />
+    <Compile Include="Models\DisplayData.cs" />
     <Compile Include="Models\ExportDataModel.cs" />
     <Compile Include="Models\IModels\IMyCamera.cs" />
     <Compile Include="Models\MyCameraHK_SDK.cs" />
@@ -268,11 +276,10 @@
     <Compile Include="Models\ReadPLCSignal.cs" />
     <Compile Include="Models\RecognitionResultModel.cs" />
     <Compile Include="Models\ScreenedDataModel.cs" />
-    <Compile Include="Models\ServletInfoModel.cs" />
     <Compile Include="Models\StatisticsDataModel.cs" />
     <Compile Include="Models\sys_bd_systemsettingsdatamodel.cs" />
     <Compile Include="Models\sys_bd_Templatedatamodel.cs" />
-    <Compile Include="Models\TemplatedataModels.cs" />
+    <Compile Include="Models\TemplatedataModel.cs" />
     <Compile Include="Models\TemplateDatasModel.cs" />
     <Compile Include="Public\ApiClient.cs" />
     <Compile Include="Public\CameraHelper.cs" />
@@ -289,35 +296,31 @@
     <Compile Include="Public\Style\AduTabItem.cs" />
     <Compile Include="Public\Style\ElementBase.cs" />
     <Compile Include="Public\SystemDatas.cs" />
+    <Compile Include="Public\ViewNameWithImage.cs" />
     <Compile Include="ViewModels\Dialogs\CameraSetDialogViewModel.cs" />
-    <Compile Include="ViewModels\Dialogs\MatchResultDialogViewModel.cs" />
-    <Compile Include="ViewModels\Dialogs\ParameterSettingDialogViewModel.cs" />
-    <Compile Include="ViewModels\Dialogs\TemplateDataEditDialogViewModel.cs" />
-    <Compile Include="ViewModels\Dialogs\WheelTypeSettingDialogViewModel.cs" />
+    <Compile Include="ViewModels\Dialogs\FileManageDialogViewModel.cs" />
+    <Compile Include="ViewModels\Dialogs\UpdateAiFileDialogViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\Pages\DateSupplementViewModel.cs" />
+    <Compile Include="ViewModels\Pages\CameraControlViewModel.cs" />
     <Compile Include="ViewModels\Pages\DisplayInterfaceViewModel.cs" />
-    <Compile Include="ViewModels\Pages\MonitoringViewModel.cs" />
     <Compile Include="ViewModels\Pages\ReportManagementViewModel.cs" />
     <Compile Include="ViewModels\Pages\SystemSettingsViewModel.cs" />
     <Compile Include="ViewModels\Pages\TemplateManagementViewModel.cs" />
+    <Compile Include="ViewModels\WorkingPicture.cs" />
     <Compile Include="Views\Dialogs\CameraSetDialog.xaml.cs">
       <DependentUpon>CameraSetDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Dialogs\DialogParent.xaml.cs">
       <DependentUpon>DialogParent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Dialogs\MatchResultDialog.xaml.cs">
-      <DependentUpon>MatchResultDialog.xaml</DependentUpon>
+    <Compile Include="Views\Dialogs\FileManageDialog.xaml.cs">
+      <DependentUpon>FileManageDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Dialogs\ParameterSettingDialog.xaml.cs">
-      <DependentUpon>ParameterSettingDialog.xaml</DependentUpon>
+    <Compile Include="Views\Dialogs\MetroDialog.xaml.cs">
+      <DependentUpon>MetroDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Dialogs\TemplateDataEditDialog.xaml.cs">
-      <DependentUpon>TemplateDataEditDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Dialogs\WheelTypeSettingDialog.xaml.cs">
-      <DependentUpon>WheelTypeSettingDialog.xaml</DependentUpon>
+    <Compile Include="Views\Dialogs\UpdateAiFileDialog.xaml.cs">
+      <DependentUpon>UpdateAiFileDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Dialogs\WMessageBox.xaml.cs">
       <DependentUpon>WMessageBox.xaml</DependentUpon>
@@ -325,14 +328,11 @@
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Pages\DateSupplementView.xaml.cs">
-      <DependentUpon>DateSupplementView.xaml</DependentUpon>
+    <Compile Include="Views\Pages\CameraControl.xaml.cs">
+      <DependentUpon>CameraControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Pages\DisplayInterfaceView.xaml.cs">
       <DependentUpon>DisplayInterfaceView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Pages\MonitoringView.xaml.cs">
-      <DependentUpon>MonitoringView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Pages\ReportManagementView.xaml.cs">
       <DependentUpon>ReportManagementView.xaml</DependentUpon>
@@ -342,9 +342,6 @@
     </Compile>
     <Compile Include="Views\Pages\TemplateManagementView.xaml.cs">
       <DependentUpon>TemplateManagementView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Pages\UserControl1.xaml.cs">
-      <DependentUpon>UserControl1.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -417,21 +414,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Dialogs\MatchResultDialog.xaml">
+    <Page Include="Views\Dialogs\FileManageDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Dialogs\ParameterSettingDialog.xaml">
+    <Page Include="Views\Dialogs\MetroDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Dialogs\TemplateDataEditDialog.xaml">
+    <Page Include="Views\Dialogs\UpdateAiFileDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Dialogs\WheelTypeSettingDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Dialogs\WMessageBox.xaml">
       <SubType>Designer</SubType>
@@ -441,15 +434,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Pages\DateSupplementView.xaml">
+    <Page Include="Views\Pages\CameraControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Pages\DisplayInterfaceView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Pages\MonitoringView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -462,10 +451,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Pages\TemplateManagementView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Pages\UserControl1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -499,6 +484,9 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="wheel.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

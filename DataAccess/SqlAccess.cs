@@ -46,19 +46,57 @@ namespace WheelRecognitionSystem.DataAccess
 
         }
         /// <summary>
-        /// 系统数据写入
+        /// 系统数据
         /// </summary>
         /// <param name="dataName">数据名</param>
         /// <param name="dataValue">数据值</param>
-        public static void SystemDatasWrite(string name, string value)
+        public static void SystemDatasUpdateable(string name, string value)
         {
-            var sDB = new SqlAccess().SystemDataAccess;
+            //var sDB = new SqlAccess().SystemDataAccess;
+            //sys_bd_systemsettingsdatamodel data = new sys_bd_systemsettingsdatamodel();
+            //data.Name = name;
+            //data.Value = value;
+            //sDB.Updateable(data).Where(x => x.Name == name).ExecuteCommand();
+            //sDB.Close();
+            //sDB.Dispose();
             sys_bd_systemsettingsdatamodel data = new sys_bd_systemsettingsdatamodel();
             data.Name = name;
             data.Value = value;
-            sDB.Updateable(data).Where(x => x.Name == name).ExecuteCommand();
-            sDB.Close();
-            sDB.Dispose();
+
+            using (var sDB = new SqlAccess().SystemDataAccess)
+            {
+                // 更新操作
+                sDB.Updateable<sys_bd_systemsettingsdatamodel>()
+                   .SetColumns(x => x.Value == value)
+                   .Where(x => x.Name == name)
+                   .ExecuteCommand();
+
+            } // 自动释放连接
+        }
+
+        /// <summary>
+        /// 系统数据插入
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        public static void SystemDatasInsertable(string name, string value)
+        {
+            sys_bd_systemsettingsdatamodel data = new sys_bd_systemsettingsdatamodel();
+            data.Name = name;
+            data.Value = value;
+
+
+            using (var sDB = new SqlAccess().SystemDataAccess)
+            {
+                // 新增操作
+                sys_bd_systemsettingsdatamodel newData = new sys_bd_systemsettingsdatamodel
+                {
+                    Name = name,
+                    Value = value
+                };
+                sDB.Insertable(newData).ExecuteCommand();
+
+            } // 自动释放连接
         }
 
         /// <summary>

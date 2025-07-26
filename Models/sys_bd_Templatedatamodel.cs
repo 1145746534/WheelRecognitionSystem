@@ -86,6 +86,16 @@ namespace WheelRecognitionSystem.Models
             get { return _creationTime; }
             set { SetProperty(ref _creationTime, value); }
         }
+        private DateTime _updateTime;
+        /// <summary>
+        /// 更新数据时间
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true, ColumnDataType = "datetime")]
+        public DateTime UpdateTime
+        {
+            get { return _updateTime; }
+            set { SetProperty(ref _updateTime, value); }
+        }
 
 
         private DateTime _lastUsedTime;

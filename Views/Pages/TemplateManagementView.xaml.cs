@@ -21,6 +21,7 @@ using Prism.Ioc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using WheelRecognitionSystem.ViewModels.Pages;
 using System.Diagnostics;
+using Prism.Regions;
 
 namespace WheelRecognitionSystem.Views.Pages
 {
@@ -30,6 +31,7 @@ namespace WheelRecognitionSystem.Views.Pages
     public partial class TemplateManagementView : UserControl
     {
 
+
         public TemplateManagementView()
         {
             InitializeComponent();
@@ -37,12 +39,16 @@ namespace WheelRecognitionSystem.Views.Pages
             EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Subscribe(Edit);
             EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Subscribe(ClearHalconWPF);
             Loaded += TemplateManagementView_Loaded;
-
+            
         }
+
+
+
+
 
         private void TemplateManagementView_Loaded(object sender, RoutedEventArgs e)
         {
-            cmb.ItemsSource = new List<string>() { "成品", "半成品" };
+           // cmb.ItemsSource = new List<string>() { "成品", "半成品" };
         }
 
         //将模板数据窗口的显示滚动到model项
@@ -51,16 +57,14 @@ namespace WheelRecognitionSystem.Views.Pages
             TemplateDataGrid.ScrollIntoView(model);
         }
 
-        private void ClearHalconWPF(HObject sourceImage)
+        private void ClearHalconWPF(string value)
         {
             halconWPF.HalconWindow.ClearWindow();
-            if (sourceImage != null && sourceImage.IsInitialized())
-                halconWPF.HalconWindow.DispObj(sourceImage);            
            
-           
+
         }
 
-        
+
 
         private void TemplateDataGrid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {

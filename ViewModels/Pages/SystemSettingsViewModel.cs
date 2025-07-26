@@ -30,7 +30,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 PropertyInfo pi = this.GetType().GetProperty(propName);
 
-                if(pi.IsDefined(typeof(RangeAttribute)))
+                if (pi.IsDefined(typeof(RangeAttribute)))
                 {
                     RangeAttribute ra = (RangeAttribute)pi.GetCustomAttributes(typeof(RangeAttribute), false)[0];
                     if (!ra.IsValid(pi.GetValue(this)))
@@ -62,7 +62,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         private int _wheelMinThreshold;
         //使用特性限制范围，并指定对应的错误信息
-        [Range(0,200,ErrorMessage = "轮毂最小阈值必须大于等于0或小于等于200")]
+        [Range(0, 200, ErrorMessage = "轮毂最小阈值必须大于等于0或小于等于200")]
         [Required(ErrorMessage = "轮毂最小阈值不能为空")]
         /// <summary>
         /// 轮毂最小阈值
@@ -70,7 +70,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public int WheelMinThreshold
         {
             get { return _wheelMinThreshold; }
-            set {SetProperty(ref _wheelMinThreshold, value); }
+            set { SetProperty(ref _wheelMinThreshold, value); }
         }
 
         private int _windowMaxThreshold;
@@ -151,11 +151,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public bool GateDetectionSwitch
         {
             get { return _gateDetectionSwitch; }
-            set 
+            set
             {
                 SetProperty(ref _gateDetectionSwitch, value);
-                SqlAccess.SystemDatasWrite("GateDetectionSwitch", value.ToString());
-                SystemDatas.GateDetectionSwitch = value;
+                
             }
         }
 
@@ -206,12 +205,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         public bool ConfirmChangesButtonEnable
         {
             get { return _confirmChangesButtonEnable; }
-            set {SetProperty(ref _confirmChangesButtonEnable, value); }
+            set { SetProperty(ref _confirmChangesButtonEnable, value); }
         }
         /// <summary>
         /// 确认修改按钮命令
         /// </summary>
-        public DelegateCommand ConfirmChangesCommand {  get; set; }
+        public DelegateCommand ConfirmChangesCommand { get; set; }
 
         public SystemSettingsViewModel(IRegionManager regionManager)
         {
@@ -219,23 +218,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             WindowMaxThreshold = SystemDatas.WindowMaxThreshold;
             RemoveMixArea = SystemDatas.RemoveMixArea;
             MinSimilarity = SystemDatas.MinSimilarity;
-            PositioningGateRadius = SystemDatas.PositioningGateRadius;
-            GateOutMinThreshold = SystemDatas.GateOutMinThreshold;
-            GateMinArea = SystemDatas.GateMinArea;
-            GateMinRadius = SystemDatas.GateMinRadius;
             SaveImageDays = SystemDatas.SaveImageDays;
-            SaveDataMonths = SystemDatas.SaveDataMonths;
             var sDB = new SqlAccess().SystemDataAccess;
             var datas = sDB.Queryable<sys_bd_systemsettingsdatamodel>().First(x => x.Name == "RecognitionPauseSetting");
-            sDB.Close();    sDB.Dispose();
-            SystemDatas.RecognitionPauseSetting = int.Parse(datas.Value);
-            RecognitionPauseSetting = SystemDatas.RecognitionPauseSetting;
-            TemplateAdjustDays = SystemDatas.TemplateAdjustDays;
-            GateDetectionSwitch = SystemDatas.GateDetectionSwitch;
+            sDB.Close(); sDB.Dispose();
+           
             ConfirmChangesCommand = new DelegateCommand(ConfirmChanges);
 
-            EventMessage.MessageHelper.GetEvent<ParameterSettingChangedEvent>().Subscribe(ParameterSettingChanged);
+            //EventMessage.MessageHelper.GetEvent<ParameterSettingChangedEvent>().Subscribe(ParameterSettingChanged);
         }
+
+
 
         private void ParameterSettingChanged(string obj)
         {
@@ -258,7 +251,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (SystemDatas.WheelMinThreshold != WheelMinThreshold)
                 {
                     SystemDatas.WheelMinThreshold = WheelMinThreshold;
-                    SqlAccess.SystemDatasWrite("WheelMinThreshold", WheelMinThreshold.ToString());
+                    SqlAccess.SystemDatasUpdateable("WheelMinThreshold", WheelMinThreshold.ToString());
                     changed = true;
                 }
             }
@@ -270,10 +263,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else
             {
-                if(SystemDatas.WindowMaxThreshold != WindowMaxThreshold)
+                if (SystemDatas.WindowMaxThreshold != WindowMaxThreshold)
                 {
                     SystemDatas.WindowMaxThreshold = WindowMaxThreshold;
-                    SqlAccess.SystemDatasWrite("WindowMaxThreshold", WindowMaxThreshold.ToString());
+                    SqlAccess.SystemDatasUpdateable("WindowMaxThreshold", WindowMaxThreshold.ToString());
                     changed = true;
                 }
             }
@@ -285,10 +278,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else
             {
-                if(SystemDatas.RemoveMixArea != RemoveMixArea)
+                if (SystemDatas.RemoveMixArea != RemoveMixArea)
                 {
                     SystemDatas.RemoveMixArea = RemoveMixArea;
-                    SqlAccess.SystemDatasWrite("RemoveMixArea", RemoveMixArea.ToString());
+                    SqlAccess.SystemDatasUpdateable("RemoveMixArea", RemoveMixArea.ToString());
                     changed = true;
                 }
             }
@@ -300,73 +293,17 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else
             {
-                if(SystemDatas.MinSimilarity != MinSimilarity)
+                if (SystemDatas.MinSimilarity != MinSimilarity)
                 {
                     SystemDatas.MinSimilarity = MinSimilarity;
-                    SqlAccess.SystemDatasWrite("MinSimilarity", MinSimilarity.ToString());
+                    SqlAccess.SystemDatasUpdateable("MinSimilarity", MinSimilarity.ToString());
                     changed = true;
                 }
             }
-            if (PositioningGateRadius < 10 || PositioningGateRadius > 60)
-            {
-                PositioningGateRadius = SystemDatas.PositioningGateRadius;
-                EventMessage.SystemMessageDisplay("浇口区域最小半径值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.PositioningGateRadius != PositioningGateRadius)
-                {
-                    SystemDatas.PositioningGateRadius = PositioningGateRadius;
-                    SqlAccess.SystemDatasWrite("PositioningGateRadius", PositioningGateRadius.ToString());
-                    changed = true;
-                }
-            }
-            if (GateOutMinThreshold < 30 || GateOutMinThreshold > 200)
-            {
-                GateOutMinThreshold = SystemDatas.GateOutMinThreshold;
-                EventMessage.SystemMessageDisplay("浇口区域轮毂最小阈值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.GateOutMinThreshold != GateOutMinThreshold)
-                {
-                    SystemDatas.GateOutMinThreshold = GateOutMinThreshold;
-                    SqlAccess.SystemDatasWrite("GateOutMinThreshold", GateOutMinThreshold.ToString());
-                    changed = true;
-                }
-            }
-            if (GateMinArea <= 300 || GateMinArea >= 2000)
-            {
-                GateMinArea = SystemDatas.GateMinArea;
-                EventMessage.SystemMessageDisplay("浇口最小面积值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.GateMinArea != GateMinArea)
-                {
-                    SystemDatas.GateMinArea = GateMinArea;
-                    SqlAccess.SystemDatasWrite("GateMinArea", GateMinArea.ToString());
-                    changed = true;
-                }
-            }
-            if (GateMinRadius < 8 || GateMinRadius > 20)
-            {
-                GateMinRadius = SystemDatas.GateMinRadius;
-                EventMessage.SystemMessageDisplay("浇口最小半径值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if (SystemDatas.GateMinRadius != GateMinRadius)
-                {
-                    SystemDatas.GateMinRadius = GateMinRadius;
-                    SqlAccess.SystemDatasWrite("GateMinRadius", GateMinRadius.ToString());
-                    changed = true;
-                }
-            }
+            
+           
+            
+            
             if (SaveImageDays < 0)
             {
                 SaveImageDays = SystemDatas.SaveImageDays;
@@ -375,61 +312,14 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
             else
             {
-                if(SystemDatas.SaveImageDays != SaveImageDays)
+                if (SystemDatas.SaveImageDays != SaveImageDays)
                 {
                     SystemDatas.SaveImageDays = SaveImageDays;
-                    SqlAccess.SystemDatasWrite("SaveImageDays", SaveImageDays.ToString());
+                    SqlAccess.SystemDatasUpdateable("SaveImageDays", SaveImageDays.ToString());
                     changed = true;
                 }
             }
-            if (SaveDataMonths < 0)
-            {
-                SaveDataMonths = SystemDatas.SaveDataMonths;
-                EventMessage.SystemMessageDisplay("数据保存的月数值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.SaveDataMonths != SaveDataMonths)
-                {
-                    SystemDatas.SaveDataMonths = SaveDataMonths;
-                    SqlAccess.SystemDatasWrite("SaveDataMonths", SaveDataMonths.ToString());
-                    changed = true;
-                }
-            }
-            if (RecognitionPauseSetting < 0)
-            {
-                RecognitionPauseSetting = SystemDatas.RecognitionPauseSetting;
-                EventMessage.SystemMessageDisplay("识别暂停值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.RecognitionPauseSetting != RecognitionPauseSetting)
-                {
-                    SystemDatas.RecognitionPauseSetting = RecognitionPauseSetting;
-                    SqlAccess.SystemDatasWrite("RecognitionPauseSetting", RecognitionPauseSetting.ToString());
-                    EventMessage.MessageHelper.GetEvent<RecognitionPauseSettingEvent>().Publish(RecognitionPauseSetting.ToString());
-                    changed = true;
-                }
-            }
-            if (TemplateAdjustDays < 0)
-            {
-                TemplateAdjustDays = SystemDatas.TemplateAdjustDays;
-                EventMessage.SystemMessageDisplay("模板动态调整值输入错误，请重新输入!", Models.MessageType.Error);
-                return;
-            }
-            else
-            {
-                if(SystemDatas.TemplateAdjustDays != TemplateAdjustDays)
-                {
-                    SystemDatas.TemplateAdjustDays = TemplateAdjustDays;
-                    SqlAccess.SystemDatasWrite("TemplateAdjustDays", TemplateAdjustDays.ToString());
-                    changed = true;
-                }
-            }
-            if (changed)
-                EventMessage.SystemMessageDisplay("修改成功！", Models.MessageType.Success);
+            
         }
     }
 }

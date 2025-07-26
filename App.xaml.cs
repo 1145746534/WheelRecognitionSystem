@@ -1,5 +1,8 @@
-﻿using Prism.Events;
+﻿using ControlzEx.Theming;
+using MahApps.Metro.Controls.Dialogs;
+using Prism.Events;
 using Prism.Ioc;
+using Prism.Regions;
 using Prism.Unity;
 using System;
 using System.Diagnostics;
@@ -24,6 +27,16 @@ namespace WheelRecognitionSystem
     /// </summary>
     public partial class App : PrismApplication
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncAll;
+
+            ThemeManager.Current.SyncTheme();
+
+
+        }
         private static Mutex mutex;
         protected override Window CreateShell()
         {
@@ -53,9 +66,7 @@ namespace WheelRecognitionSystem
             //手动图片保存路径
             ConfigEdit.ReadAppSettings("HandImageFolder", out string handImageFolder);
             HandImagesPath = RootDirectory + @"\" + handImageFolder; 
-            //深度学习图片保存路径
-            ConfigEdit.ReadAppSettings("DeepImageFolder", out string deepImageFolder);
-            DeepImagesPath = RootDirectory + @"\" + deepImageFolder;
+            
             //存储Log文件路径
             string logDirectory = AppDomain.CurrentDomain.BaseDirectory + "Logs";
             //创建系统所需文件夹
@@ -64,8 +75,8 @@ namespace WheelRecognitionSystem
             if (!Directory.Exists(ActiveTemplatesPath)) Directory.CreateDirectory(ActiveTemplatesPath);
             //if (!Directory.Exists(NotActiveTemplatesPath)) 
             //    Directory.CreateDirectory(NotActiveTemplatesPath);
-            if (!Directory.Exists(DeepImagesPath)) 
-                Directory.CreateDirectory(DeepImagesPath);
+            //if (!Directory.Exists(DeepParaPath)) 
+            //    Directory.CreateDirectory(DeepParaPath);
             if (!Directory.Exists(HistoricalImagesPath)) Directory.CreateDirectory(HistoricalImagesPath);
             if (!Directory.Exists(logDirectory)) Directory.CreateDirectory(logDirectory);
             //创建当月Log文件
@@ -80,29 +91,38 @@ namespace WheelRecognitionSystem
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             //注册功能页面
-            containerRegistry.RegisterForNavigation<DisplayInterfaceView>();
-            containerRegistry.RegisterForNavigation<MonitoringView>();
-            containerRegistry.RegisterForNavigation<ReportManagementView>();
+            //containerRegistry.RegisterForNavigation<MonitoringView>();
             //containerRegistry.RegisterForNavigation<DateSupplementView>();
+
+            containerRegistry.RegisterForNavigation<DisplayInterfaceView>();          
+            containerRegistry.RegisterForNavigation<ReportManagementView>();
             containerRegistry.RegisterForNavigation<SystemSettingsView>();
-            containerRegistry.RegisterForNavigation<TemplateManagementView>();
+            //containerRegistry.RegisterForNavigation<TemplateManagementView>();
+            containerRegistry.RegisterForNavigation<CameraControl>();
 
 
             //注册轮型设置弹窗内容
-            containerRegistry.RegisterDialog<WheelTypeSettingDialog>("WheelTypeSetting");
-            containerRegistry.RegisterDialog<ParameterSettingDialog>("ParameterSetting");
-            containerRegistry.RegisterDialog<MatchResultDialog>("MatchResult");
-            containerRegistry.RegisterDialog<CameraSetDialog>("CameraSet");
             //containerRegistry.RegisterDialog<DateSupplementView>("DateSupplement");
-            containerRegistry.RegisterDialog<TemplateDataEditDialog>("TemplateDataEdit");
+            //containerRegistry.RegisterDialogWindow<DialogParent>();
+
+            containerRegistry.RegisterDialog<TemplateManagementView>("TemplateManagement");
+            
+            containerRegistry.RegisterDialog<CameraSetDialog>("CameraSet");
+            containerRegistry.RegisterDialog<FileManageDialog>("FileManage");
+            containerRegistry.RegisterDialog<UpdateAiFileDialog>("UpdateAiFile");
             //注册弹窗窗口，这句代码会将框架内的默认弹窗窗口替换掉
-            containerRegistry.RegisterDialogWindow<DialogParent>();
+            containerRegistry.RegisterDialogWindow<MetroDialog>();
+
+            containerRegistry.RegisterInstance<IDialogCoordinator>(DialogCoordinator.Instance);
 
             //注册viewModel 跨视图模型使用
-            containerRegistry.RegisterSingleton<TemplateManagementViewModel>();
+            //containerRegistry.RegisterSingleton<TemplateManagementViewModel>();
 
         }
 
-       
+        public void OnInitialized(IContainerProvider containerProvider)
+        {
+
+        }
     }
 }

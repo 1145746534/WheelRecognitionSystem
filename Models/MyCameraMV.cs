@@ -18,10 +18,11 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 相机
         /// </summary>
-        public HTuple acqHandle;
-        public bool IsConnected { get; set; } = false;
+        private HTuple acqHandle;
 
-        public Sys_bd_camerainformation info;
+
+        private bool IsConnected { get; set; }
+
         /// <summary>
         /// 用于实时采集
         /// </summary>
@@ -29,30 +30,39 @@ namespace WheelRecognitionSystem.Models
 
         public MyCameraMV()
         {
+            IsConnected = false;
         }
 
-        public bool Connect( string camerID  )
-        {
-            IsConnected = false;
-            acqHandle?.Dispose();
-            if (info != null && !IsConnected)
+        public bool Connect(string camerID)
+        { 
+            if (string.IsNullOrEmpty(camerID))
             {
-                try
-                {
-                    HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0, "progressive",
-                      8, "default", -1, "false", "auto", camerID,
-                      0, -1, out acqHandle);
-                    HOperatorSet.SetFramegrabberParam(acqHandle, "TriggerMode", "Off");
-                    //开始采集图像
-                    HOperatorSet.GrabImageStart(acqHandle, -1);
-                    Console.WriteLine( $"ConnectConnect {camerID} ");
-                    IsConnected = acqHandle == null ? false : true;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine( $"Connect: {ex.Message}" );
-                }
+                return false;
             }
+            if (IsConnected)
+            {
+                return true;
+            }
+
+            acqHandle?.Dispose();
+            acqHandle = null;
+
+            try
+            {
+                HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0, "progressive",
+                  8, "default", -1, "false", "auto", camerID,
+                  0, -1, out acqHandle);
+                HOperatorSet.SetFramegrabberParam(acqHandle, "TriggerMode", "Off");
+                //开始采集图像
+                HOperatorSet.GrabImageStart(acqHandle, -1);
+                //Console.WriteLine($"ConnectConnect {camerID} ");
+                IsConnected = acqHandle == null ? false : true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Connect: {ex.Message}");
+            }
+
             return IsConnected;
         }
 
@@ -65,25 +75,48 @@ namespace WheelRecognitionSystem.Models
             {
 
                 if (acqHandle != null)
+                {
                     HOperatorSet.CloseFramegrabber(acqHandle);
+                    acqHandle.Dispose();
+                    IsConnected = false;
+
+                }
             }
             catch (Exception ex)
             {
-                //throw ex;
+                IsConnected = false;
             }
+            finally
+            {
+                acqHandle = null;
+            }
+
         }
 
+        /// <summary>
+        /// 采集图像
+        /// </summary>
+        /// <returns></returns>
         public HObject Grabimage()
         {
-            if (acqHandle == null)
+            if (!IsConnected)
             {
                 return null;
             }
-            HObject ho_Image;//定义图片变量
-            HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
-            //采集图像
-            HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
-            return ho_Image;
+
+            try
+            {
+                HObject ho_Image;//定义图片变量
+                HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
+                //采集图像
+                HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
+                return ho_Image;
+            }
+            catch (Exception ex)
+            {
+                Disconnect(); //采集错误断开连接
+            }
+            return null;
         }
 
         /// <summary>
@@ -92,6 +125,10 @@ namespace WheelRecognitionSystem.Models
         /// <param name="value"></param>
         public void SetExposureTime(float value)
         {
+            if (!IsConnected) //相机未连接
+            {
+                return;
+            }
             try
             {
                 HOperatorSet.SetFramegrabberParam(acqHandle, "ExposureTime", value);
@@ -99,7 +136,8 @@ namespace WheelRecognitionSystem.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine( $"设置曝光时间:{ex.ToString()}" );
+                Console.WriteLine($"设置曝光时间识别:{ex.ToString()}");
+                
             }
         }
 

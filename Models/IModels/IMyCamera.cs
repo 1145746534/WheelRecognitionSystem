@@ -14,6 +14,10 @@ namespace WheelRecognitionSystem.Models.IModels
 
         void Disconnect();
 
+        /// <summary>
+        /// 设置曝光
+        /// </summary>
+        /// <param name="value"></param>
         void SetExposureTime( float value);
 
         HObject Grabimage();

@@ -24,41 +24,90 @@ using WheelRecognitionSystem.Public;
 using WheelRecognitionSystem.Views.Dialogs;
 using static WheelRecognitionSystem.Public.SystemDatas;
 using static WheelRecognitionSystem.Public.ImageProcessingHelper;
-using System.Threading;
-using static System.Net.Mime.MediaTypeNames;
-using System.Windows.Media.Media3D;
-using System.Drawing;
-using MvCameraControl;
-using MySqlX.XDevAPI.Common;
-using System.Collections;
 using System.Windows.Threading;
 using Prism.Regions;
-using System.Diagnostics;
 using System.Timers;
 
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
-    public class TemplateManagementViewModel : BindableBase
+    public class TemplateManagementViewModel : BindableBase, IDialogAware, IDisposable
     {
+        private bool _disposed = false;
+
         #region======属性字段定义======
         public string Title { get; set; } = "模板管理";
 
         private readonly object _locker = new object();
 
-        private List<TemplatedataModels> _models;
+
+        private const int KEEP_ALIVE_COUNT = 3;
+        private readonly object _lock = new object();
+
+
+        public event Action<IDialogResult> RequestClose;
+        public DelegateCommand ConfirmCommand { get; }
+        public DelegateCommand CancelCommand { get; }
+
+
+        public void OnDialogOpened(IDialogParameters parameters)
+        {
+
+        }
+        /// <summary>
+        /// 确定
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void OnConfirm()
+        {
+            DialogParameters parameters = new DialogParameters();
+            parameters.Add("saveImageDays", SaveImageDays);
+            parameters.Add("maintainQuantity", 8);
+            RequestClose?.Invoke(new DialogResult(ButtonResult.OK, parameters));
+        }
 
         /// <summary>
-        /// 模板数据源 - 供外部使用
+        /// 取消
         /// </summary>
-        public List<TemplatedataModels> TemplateModels
+        private void OnCancel()
         {
-            get { return _models; }
-            set
+            RequestClose?.Invoke(new DialogResult(ButtonResult.No));
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
             {
-                SetProperty(ref _models, value);
+                if (disposing)
+                {
+                    // Unsubscribe from events and release managed resources
+                }
+
+                // Free unmanaged resources (if any) and set large fields to null
+                _disposed = true;
             }
         }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        /// <summary>
+        /// 弹窗是否可以关闭
+        /// </summary>
+        /// <returns></returns>
+        public bool CanCloseDialog()
+        {
+            return true;
+        }
+        /// <summary>
+        /// 弹窗关闭时
+        /// </summary>
+        public void OnDialogClosed()
+        {
+            Dispose();
+        }
+
 
         private ObservableCollection<sys_bd_Templatedatamodel> _templateDatas;
         /// <summary>
@@ -73,87 +122,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
         }
 
-        private HObject _displayTemplateImage;
-        /// <summary>
-        /// 用于显示的模板原始图像
-        /// </summary>
-        public HObject DisplayTemplateImage
-        {
-            get { return _displayTemplateImage; }
-            set
-            {
-                // 释放旧对象
-                if (_displayTemplateImage != null && _displayTemplateImage.IsInitialized())
-                {
-                    _displayTemplateImage.Dispose();
-                }
-                SetProperty<HObject>(ref _displayTemplateImage, value);
-            }
-        }
 
-        private HObject _displayTemplate;
-        /// <summary>
-        /// 用于显示的制作模板的图像
-        /// </summary>
-        public HObject DisplayTemplate
-        {
-            get { return _displayTemplate; }
-            set
-            {
-                // 释放旧对象
-                if (DisplayTemplate != null && DisplayTemplate.IsInitialized())
-                {
-                    DisplayTemplate.Dispose();
-                }
-                SetProperty<HObject>(ref _displayTemplate, value);
-            }
-        }
-
-        private HObject _displayTemplateContour;
-        /// <summary>
-        /// 用于显示的模板轮廓
-        /// </summary>
-        public HObject DisplayTemplateContour
-        {
-            get { return _displayTemplateContour; }
-            set
-            {
-                // 释放旧对象
-                if (_displayTemplateContour != null && _displayTemplateContour.IsInitialized())
-                {
-                    _displayTemplateContour.Dispose();
-                }
-                SetProperty<HObject>(ref _displayTemplateContour, value);
-            }
-        }
-
-        private HObject _displayWheelContour;
-        /// <summary>
-        /// 用于显示轮毂的轮廓
-        /// </summary>
-        public HObject DisplayWheelContour
-        {
-            get { return _displayWheelContour; }
-            set
-            {
-                // 释放旧对象
-                if (_displayWheelContour != null && _displayWheelContour.IsInitialized())
-                {
-                    _displayWheelContour.Dispose();
-                }
-                SetProperty(ref _displayWheelContour, value);
-            }
-        }
-
-        private HObject _displayInGateContour;
-        /// <summary>
-        /// 用于显示的浇口轮廓
-        /// </summary>
-        public HObject DisplayInGateContour
-        {
-            get { return _displayInGateContour; }
-            set { SetProperty<HObject>(ref _displayInGateContour, value); }
-        }
 
         private double _lineWidth = 1.0;
         /// <summary>
@@ -337,33 +306,181 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             get { return _gateContourColor; }
             set { SetProperty(ref _gateContourColor, value); }
         }
+        private string _maskContent;
+        /// <summary>
+        /// 掩膜显示内容
+        /// </summary>
+        public string MASKContent
+        {
+            get { return _maskContent; }
+            set { SetProperty(ref _maskContent, value); }
+        }
+        /// <summary>
+        /// 是否掩膜中
+        /// </summary>
+        public bool isMask = false;
+        /// <summary>
+        /// 是否正在擦除
+        /// </summary>
+        private bool _isErasing = false;
+        /// <summary>
+        /// 橡皮擦大小
+        /// </summary>
+        private double _eraserSize;
+        /// <summary>
+        /// 掩膜大小
+        /// </summary>
+        public double EraserSize
+        {
+            get { return _eraserSize; }
+            set { SetProperty(ref _eraserSize, value); }
+        }
 
         /// <summary>
         /// 弹窗服务
         /// </summary>
         readonly IDialogService _dialogService;
 
-        /// <summary>
-        /// 读取或采集的原始模板图像
-        /// </summary>
-        private HObject SourceTemplateImage = new HObject();
 
-
-        /// <summary>
-        /// 定位轮毂获取到的轮毂图像
-        /// </summary>
-        private HObject InPoseWheelImage = new HObject();
-        /// <summary>
-        ///用于制作和保存的模板图像
-        /// </summary>
-        private HObject TemplateImage = new HObject();
         /// <summary>
         /// 匹配结果弹窗是否打开
         /// </summary>
         private bool IsMatchResultDialog = false;
 
-        private static  System.Timers.Timer _cleanupTimer;
+        private static System.Timers.Timer _cleanupTimer;
 
+        #endregion
+
+        #region 非托管内存
+        // ----- 用于显示
+
+        private HObject _displayTemplateImage;
+        /// <summary>
+        /// 用于显示的模板原始图像
+        /// </summary>
+        public HObject DisplayTemplateImage
+        {
+            get { return _displayTemplateImage; }
+            set
+            {
+                // 释放旧对象
+                SafeHalconDispose(_displayTemplateImage);
+                SetProperty<HObject>(ref _displayTemplateImage, value);
+            }
+        }
+
+        private HObject _displayTemplate;
+        /// <summary>
+        /// 用于显示的制作模板的图像
+        /// </summary>
+        public HObject DisplayTemplate
+        {
+            get { return _displayTemplate; }
+            set
+            {
+                // 释放旧对象
+                SafeHalconDispose(_displayTemplate);
+                SetProperty<HObject>(ref _displayTemplate, value);
+            }
+        }
+
+        private HObject _displayTemplateContour;
+        /// <summary>
+        /// 用于显示的模板轮廓
+        /// </summary>
+        public HObject DisplayTemplateContour
+        {
+            get { return _displayTemplateContour; }
+            set
+            {
+                // 释放旧对象
+                SafeHalconDispose(_displayTemplateContour);
+                SetProperty<HObject>(ref _displayTemplateContour, value);
+            }
+        }
+
+        private HObject _displayWheelContour;
+        /// <summary>
+        /// 用于显示轮毂的轮廓
+        /// </summary>
+        public HObject DisplayWheelContour
+        {
+            get { return _displayWheelContour; }
+            set
+            {
+                // 释放旧对象
+                SafeHalconDispose(_displayWheelContour);
+                SetProperty(ref _displayWheelContour, value);
+            }
+        }
+
+        //private HObject _displayInGateContour;
+        ///// <summary>
+        ///// 用于显示的浇口轮廓
+        ///// </summary>
+        //public HObject DisplayInGateContour
+        //{
+        //    get { return _displayInGateContour; }
+        //    set { SetProperty<HObject>(ref _displayInGateContour, value); }
+        //}
+
+        // ----- 用于操作
+        private HObject _sourceTemplateImage;
+
+        /// <summary>
+        /// 读取或采集的原始模板图像
+        /// </summary>
+        private HObject SourceTemplateImage
+        {
+            get { return _sourceTemplateImage; }
+            set
+            {
+                SafeHalconDispose(_sourceTemplateImage);
+                SetProperty(ref _sourceTemplateImage, value);
+            }
+        }
+
+        private HObject _ho_Region_Removeds;
+        /// <summary>
+        /// 掩膜区域
+        /// </summary>
+        private HObject ho_Region_Removeds
+        {
+            get { return _ho_Region_Removeds; }
+            set
+            {
+                SafeHalconDispose(_ho_Region_Removeds);
+                SetProperty(ref _ho_Region_Removeds, value);
+            }
+        }
+
+        private HObject _InPoseWheelImage;
+        /// <summary>
+        /// 定位轮毂获取到的轮毂图像
+        /// </summary>
+        private HObject InPoseWheelImage
+        {
+            get { return _InPoseWheelImage; }
+            set
+            {
+                SafeHalconDispose(_InPoseWheelImage);
+                SetProperty(ref _InPoseWheelImage, value);
+            }
+        }
+
+        private HObject _templateImage = new HObject();
+        /// <summary>
+        ///用于制作和保存的模板图像
+        /// </summary>
+        private HObject TemplateImage
+        {
+            get { return _templateImage; }
+            set
+            {
+                SafeHalconDispose(_templateImage);
+                SetProperty(ref _templateImage, value);
+            }
+        }
         #endregion
 
         #region======命令定义======
@@ -380,6 +497,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 模板窗口鼠标移动命令
         /// </summary>
         public ICommand HWindowMouseMoveCommand { get; set; }
+        /// <summary>
+        /// 模板窗口鼠标按下命令
+        /// </summary>
+        public ICommand OnHalconMouseDownCommand { get; set; }
+        /// <summary>
+        /// 模板窗口鼠标抬起命令
+        /// </summary>
+        public ICommand OnHalconMouseUpCommand { get; set; }
+
         #endregion
 
         #region  待补录数据属性
@@ -490,232 +616,35 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             _dialogService = dialogService;
             _regionManager = regionManager;
-            UnrMouseLeftButtonDownCommand = new DelegateCommand<object>(UnrMouseLeftButtonDown);
             TemplateBtnCommand = new DelegateCommand<string>(TemplateButtonCommand);
             MouseLeftButtonDownCommand = new DelegateCommand<object>(MouseLeftButtonDown);
             HWindowMouseMoveCommand = new DelegateCommand<object>(HWindowMouseMove);
-            HubChangesCommand = new DelegateCommand(HubChanges);
-            OneClickAddCommand = new DelegateCommand(OneClickAdd);
+            OnHalconMouseDownCommand = new DelegateCommand<object>(OnHalconMouseDown);
+            OnHalconMouseUpCommand = new DelegateCommand<object>(OnHalconMouseUp);
+
+            // 初始化命令（带 Halcon 事件参数）
+
             UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>();
             DisplayTemplateImage = new HObject();
             DisplayTemplate = new HObject();
             DisplayWheelContour = new HObject();
             DisplayTemplateContour = new HObject();
-            DisplayInGateContour = new HObject();
+            //DisplayInGateContour = new HObject();
             TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>();
             LoadedTemplateDatas();
             RecognitionResultDisplay = Visibility.Collapsed;
             GateDetectionVisibility = Visibility.Collapsed;
             GrayDisplay = Visibility.Collapsed;
             ImageDisVisibility = Visibility.Collapsed;
-            //订阅事件
-            //EventMessage.MessageHelper.GetEvent<TemplateDataUpdataEvent>().Subscribe(TemplateDataUpdata);
-            EventMessage.MessageHelper.GetEvent<TemplatePicUpdateEvent>().Subscribe(PicUpdate);
-            _dispatcherTimer = new DispatcherTimer();
-            _dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);//设置时间间隔为2000ms
-            _dispatcherTimer.Start();//启动定时器
-            _cleanupTimer = new System.Timers.Timer(TimeSpan.FromHours(1).TotalMilliseconds);
-            _cleanupTimer.Elapsed += CleanupHandler;
-            _cleanupTimer.Start();
+            MASKContent = "图像掩膜";
+           
 
         }
 
 
-        #region 数据补录
 
-        /// <summary>
-        /// 单击未识别数据表格
-        /// </summary>
-        /// <param name="obj"></param>
-        private void UnrMouseLeftButtonDown(object obj)
-        {
-            DataGrid dataGrid = (DataGrid)obj;
-            if (dataGrid != null && dataGrid.Items.Count > 0 && dataGrid.CurrentItem != null)
-            {
-                //获取选中的行索引
-                int rowIndex = dataGrid.Items.IndexOf(dataGrid.CurrentItem);
-                //获取选中的列索引
-                int columnIndex = dataGrid.CurrentCell.Column.DisplayIndex;
+        #region  模板窗口显示
 
-                UnrDataGridSelectedItem = UnrecognizedDatas[UnrDataGridSelectedIndex];
-                UnrIndex = UnrDataGridSelectedItem.ID.ToString();
-                UnrWheelType = UnrDataGridSelectedItem.WheelType;
-                string path = UnrDataGridSelectedItem.ImagePath;
-                //CurrentImage?.Dispose();
-                if (File.Exists(path))
-                {
-
-                    SourceTemplateImage?.Dispose();
-                    HObject image = new HObject();
-                    HOperatorSet.ReadImage(out image, path);
-                    SourceTemplateImage = image;
-
-
-                    TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
-                    ImageDisVisibility = Visibility.Visible;
-                    ImageDisName = "待补录轮毂";
-
-                }
-
-                //var sDB = new SqlAccess().SystemDataAccess;
-                //sDB.Updateable(DataGridSelectedItem).ExecuteCommand();
-            }
-        }
-
-        /// <summary>
-        /// 确认修改
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private void HubChanges()
-        {
-            //图片移出去
-            string source = UnrDataGridSelectedItem.ImagePath;
-            string fileName = Path.GetFileName(source);
-            string target = Path.Combine(DeepImagesPath, RecWheelType, fileName);
-            FileHelper.MoveFile(source, target, true);
-            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
-            var result = pDB.Updateable<Tbl_productiondatamodel>()
-                .SetColumns(it => new Tbl_productiondatamodel()
-                {
-                    Model = RecWheelType,
-                    WheelType = RecWheelType,
-                    WheelStyle = RecWheelStyle
-                }).Where(it => it.ID == Convert.ToInt32(UnrIndex)).ExecuteCommand();
-            pDB.Close(); pDB.Dispose();
-            DataInquireProduct();
-            RecWheelType = "";
-            RecWheelStyle = "";
-            UnrIndex = "";
-            UnrWheelType = "";
-            HandInput = true;
-
-        }
-
-        /// <summary>
-        /// 一键添加模板
-        /// </summary>
-        private void OneClickAdd()
-        {
-            string wheelType = RecWheelType;
-            for (int i = 0; i < 20; i++)
-            {
-                if (i != 0)
-                    wheelType = wheelType + "_";
-                //查无此模板名称 则添加
-                var filteredData = TemplateDatas.Where(item => item.WheelType == wheelType).ToList();
-                if (filteredData == null || filteredData.Count == 0)
-                {
-                    break;
-                }
-            }
-
-            sys_bd_Templatedatamodel data = new sys_bd_Templatedatamodel
-            {
-                Index = TemplateDatas.Count + 1,
-                WheelType = wheelType,
-                UnusedDays = 0,
-                WheelHeight = UnrDataGridSelectedItem.WheelHeight,
-                WheelStyle = RecWheelStyle,
-                CreationTime = DateTime.Now.ToString("yy-MM-dd"),
-                LastUsedTime = DateTime.Now
-            };
-
-            TemplateDatas.Add(data);
-            OrganizeTemplateDatas();
-
-            //光标定位到添加的模板名称
-            int selectIndex = TemplateDatas.FirstOrDefault(item => item.WheelType == wheelType).Index - 1;
-            DataGridSelectedItem = TemplateDatas[selectIndex];
-            DataGridSelectedIndex = selectIndex;
-
-            EventMessage.MessageHelper.GetEvent<TemplateDataEditEvent>().Publish(DataGridSelectedItem);
-
-            //定位轮毂
-            PositionHub();
-            //制作模板
-            PreviewTemplate();
-            //保存模板
-            SaveTemplate();
-
-
-        }
-
-        private void dispatcherTimer_Tick(object sender, EventArgs e)
-        {
-            IRegion region = _regionManager.Regions["ViewRegion"];
-
-            if (region.ActiveViews.Count() > 0)
-            {
-                // activeView 就是当前焦点页面（视图）
-                string activeViewName = region.ActiveViews.First().ToString();
-                if (activeViewName.Contains("TemplateManagementView"))
-                {
-                    DataInquireProduct();
-                    //DataInquireTemplate();
-                }
-            }
-        }
-        /// <summary>
-        /// 数据查询未识别的产品
-        /// </summary>
-        private void DataInquireProduct()
-        {
-            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
-            var exp = Expressionable.Create<Tbl_productiondatamodel>()
-                .And(it => it.Model == "error").Or(it => it.Model == null).ToExpression();
-            List<Tbl_productiondatamodel> productionList = pDB.Queryable<Tbl_productiondatamodel>().Where(exp).ToList();
-            pDB.Close(); pDB.Dispose();
-            //List<ProductionDataModel> productionList = pDB.Queryable<ProductionDataModel>()
-            //    .Where(it => SqlFunc.EqualsNull(it.Reserve1, "")).OrderBy((sc) => sc.Index).ToList();
-            if (productionList.Count != UnrecognizedDatas.Count)
-            {
-                UnrecognizedDatas?.Clear();
-                UnrecognizedDatas = new ObservableCollection<Tbl_productiondatamodel>(productionList);
-            }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// 设置转过来图片更新
-        /// </summary>
-        /// <param name="model"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private void PicUpdate(ServletInfoModel model)
-        {
-            if (model.image != null && model.camera != null)
-            {
-                SourceTemplateImage?.Dispose();
-                SourceTemplateImage = model.image.Clone();
-
-
-                TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
-                ImageDisVisibility = Visibility.Visible;
-                ImageDisName = model.DisplayName;
-            }
-        }
-
-        #region  模板窗口灰度显示
-        /// <summary>
-        /// 模板窗口鼠标移动
-        /// </summary>
-        /// <param name="obj"></param>
-        private void HWindowMouseMove(object obj)
-        {
-            var data = obj as HSmartWindowControlWPF.HMouseEventArgsWPF;
-            if (SourceTemplateImage.IsInitialized())
-            {
-                try
-                {
-                    int row = (int)data.Row;
-                    int column = (int)data.Column;
-                    HOperatorSet.GetGrayval(SourceTemplateImage, row, column, out HTuple grayval);
-                    ImageGrayval = "行: " + row.ToString() + " 列: " + column.ToString() + " 灰度值: " + grayval;
-                }
-                catch { }
-            }
-        }
         /// <summary>
         /// 模板数据窗口鼠标左键按下
         /// </summary>
@@ -748,17 +677,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="inGateContour">浇口轮廓</param>
         private void TemplateWindowDisplay(HObject sourceImage, HObject templateImage, HObject wheelContour, HObject templateContour, HObject gateContour)
         {
-
-            //DisplayTemplateImage.Dispose();
-            //DisplayTemplate.Dispose();
-            //DisplayWheelContour.Dispose();
-            //DisplayTemplateContour.Dispose();
-            //DisplayInGateContour.Dispose();
-            SafeHalconDispose(DisplayTemplateImage);
-            SafeHalconDispose(DisplayTemplate);
-            SafeHalconDispose(DisplayWheelContour);
-            SafeHalconDispose(DisplayTemplateContour);
-            SafeHalconDispose(DisplayInGateContour);
+            EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Publish(string.Empty);
             if (sourceImage != null)
                 DisplayTemplateImage = CloneImageSafely(sourceImage);
             if (templateImage != null)
@@ -776,71 +695,31 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (gateContour != null)
             {
                 LineWidth = 3.0;
-                DisplayInGateContour = CloneImageSafely(gateContour);
+                //DisplayInGateContour = gateContour;
             }
+            //显示完后可以立即清除内存
+            SafeHalconDispose(DisplayTemplateImage);
+            SafeHalconDispose(DisplayTemplate);
+            SafeHalconDispose(DisplayWheelContour);
+            SafeHalconDispose(DisplayTemplateContour);
         }
 
         #endregion
 
         #region 加载 增加 删除 插入 修改 查找 模板参数 显示 整理数据
+
+
+
+
         /// <summary>
-        /// 加载模板数据到使用区
+        /// 软件启动时加载模板数据到使用区
         /// </summary>
         private void LoadedTemplateDatas()
         {
             var db = new SqlAccess().SystemDataAccess;
             List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
             DisplayTemplateDatas(Datas);
-            db.Close(); db.Dispose();
-            TemplateModels = new List<TemplatedataModels>();
-            Task.Run(() =>
-            {
-                for (int i = 0; i < Datas.Count; i++)
-                {
-                    TemplatedataModels templatedata = new TemplatedataModels();
-                    templatedata.CopyPropertiesFrom(Datas[i]);
-                    TemplateModels.Add(templatedata);                   
-                }
-                Console.WriteLine($"模板加载完成");
-            });
-        }
-
-        /// <summary>
-        /// 获取模板数据 供生成模板区域使用
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public HTuple GetHTupleByName(string name)
-        {
-            TemplatedataModels templatedata = TemplateModels.Find((x) => x.WheelType == name);
-
-            return templatedata.Template;
-        }
-
-        
-        /// <summary>
-        /// 添加或修改数据到使用区
-        /// </summary>
-        /// <param name="tuple"></param>
-        /// <param name="name"></param>
-        /// <param name="time"></param>
-        private void addModel(sys_bd_Templatedatamodel _Bd_Templatedatamodel)
-        {
-
-            int index = TemplateModels.FindIndex(x => x.WheelType == _Bd_Templatedatamodel.WheelType);
-            TemplatedataModels model = new TemplatedataModels();
-            model.CopyPropertiesFrom(_Bd_Templatedatamodel);
-            if (index == -1) //不存在 新增
-            {
-                     
-                TemplateModels.Add(model);
-            }
-            else
-            {
-                //手动释放，加载
-                TemplateModels[index].UnloadTemplate();
-                TemplateModels[index] = model;
-            }
+            db.Close(); db.Dispose();           
         }
 
         /// <summary>
@@ -850,13 +729,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="name"></param>
         private void DeleteModel(string path, string name)
         {
-            //先删除使用区内存
-            int index = TemplateModels.FindIndex(x => x.WheelType == name);
-            if (index != -1)
-            {
-                TemplateModels[index].UnloadTemplate();
-                TemplateModels.RemoveAt(index);
-            }
             if (File.Exists(path)) //文件存在
             {
                 File.Delete(path);
@@ -869,19 +741,19 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private void CleanupHandler(object sender, ElapsedEventArgs e)
-        {
-            for (int i = 0; i < TemplateModels.Count; i++)
-            {
-                string _type = TemplateModels[i].WheelType;
-                var result = TemplateDatas.FirstOrDefault(item =>string.Equals(item.WheelType, _type, StringComparison.OrdinalIgnoreCase));
-                if (result != null)
-                {
-                    result.LastUsedTime = TemplateModels[i].LastUsedTime;
-                }
-            }
-            InsertTemplateDatas(TemplateDatas.ToList());
-        }
+        //private void CleanupHandler(object sender, ElapsedEventArgs e)
+        //{
+        //    for (int i = 0; i < TemplateModels.Count; i++)
+        //    {
+        //        string _type = TemplateModels[i].WheelType;
+        //        sys_bd_Templatedatamodel result = TemplateDatas.FirstOrDefault(item => string.Equals(item.WheelType, _type, StringComparison.OrdinalIgnoreCase));
+        //        if (result != null)
+        //        {
+        //            result.LastUsedTime = TemplateModels[i].LastUsedTime;
+        //        }
+        //    }
+        //    InsertTemplateDatas(TemplateDatas.ToList());
+        //}
 
 
 
@@ -906,7 +778,6 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             var db = new SqlAccess().SystemDataAccess;
             db.Updateable(newModel).ExecuteCommand();
             db.Close(); db.Dispose();
-            addModel(DataGridSelectedItem);
         }
 
         /// <summary>
@@ -963,6 +834,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             InsertTemplateDatas(datas);
         }
 
+
+
         #endregion
 
         #region   操作模板
@@ -980,12 +853,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             else if (obj == "删除模板") DelTemplate();
             else if (obj == "参数设置") ParameterSetting();
             else if (obj == "预览模板") PreviewTemplate();
+            else if (obj == "图像掩膜") MASKClick(obj);
+            else if (obj == "关闭掩膜") MASKClick(obj);
             else if (obj == "匹配结果") MatchResult();
             else if (obj == "识别测试") RecognitionTest();
             else if (obj == "保存模板") SaveTemplate();
             //else if (obj == "模板检查") TemplateExamine();
             else return;
         }
+
 
         /// <summary>
         /// 添加轮型 *
@@ -1002,7 +878,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 { "templateDatas", TemplateDatas }
             };
-            _dialogService.ShowDialog("WheelTypeSetting", parameters, new Action<IDialogResult>((IDialogResult result) =>
+            _dialogService.ShowDialog("WheelTypeSetting", parameters,
+                new Action<IDialogResult>((IDialogResult result) =>
             {
                 if (result.Parameters.Count != 0)
                 {
@@ -1010,7 +887,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     {
                         //插入数据库
                         InsertTemplateDatas(TemplateDatas.ToList());
+                        int index = Convert.ToInt32(result.Parameters.GetValue<string>("Index"));
+                        DataGridSelectedItem = TemplateDatas[index];
+                        DataGridSelectedIndex = index;
                     }
+
                     //LoadedTemplateDatas();
                     //DataGridSelectedItem = result.Parameters.GetValue<sys_bd_Templatedatamodel>("set");
                     //DataGridSelectedIndex = DataGridSelectedItem.Index - 1;
@@ -1020,6 +901,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }));
             //弹出窗口不带返回结果写法
             //_dialogService.ShowDialog("WheelTypeSetting");
+            //定位到添加的位置
+
         }
         /// <summary>
         /// 读取图像
@@ -1041,10 +924,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 try
                 {
                     var File_Name = openFileDialog.FileName;
-                    SourceTemplateImage?.Dispose();
+                    SafeHalconDispose(SourceTemplateImage);
                     HOperatorSet.ReadImage(out HObject image, File_Name);
                     SourceTemplateImage = image;
-                    //image.Dispose();
+
                     ImageDisVisibility = Visibility.Visible;
                     ImageDisName = "手动读取图片";
                     TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
@@ -1060,34 +943,34 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void AcquireImage()
         {
-            RecognitionResultDisplay = Visibility.Collapsed;
-            GateDetectionVisibility = Visibility.Collapsed;
-            GrayDisplay = Visibility.Collapsed;
-            if (SystemModel)
-            {
-                EventMessage.SystemMessageDisplay("请在手动模式下采集图像!", MessageType.Default);
-                return;
-            }
-            try
-            {
-                HOperatorSet.GrabImageAsync(out HObject image, ExternalConnections.CameraHandle, -1);
-                HOperatorSet.Rgb1ToGray(image, out HObject grayImage);
-                SourceTemplateImage.Dispose();
-                if (CroppingOrNot)
-                {
-                    Cropping(grayImage, out HObject SourceImage);
-                    HOperatorSet.ZoomImageFactor(SourceImage, out SourceTemplateImage, ScalingCoefficient, ScalingCoefficient, "constant");
-                }
-                else
-                {
-                    HOperatorSet.ZoomImageFactor(grayImage, out SourceTemplateImage, ScalingCoefficient, ScalingCoefficient, "constant");
-                }
-                TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
-            }
-            catch
-            {
-                EventMessage.SystemMessageDisplay("采集异常，请检查相机连接!", MessageType.Error);
-            }
+            //RecognitionResultDisplay = Visibility.Collapsed;
+            //GateDetectionVisibility = Visibility.Collapsed;
+            //GrayDisplay = Visibility.Collapsed;
+            //if (SystemModel)
+            //{
+            //    EventMessage.SystemMessageDisplay("请在手动模式下采集图像!", MessageType.Default);
+            //    return;
+            //}
+            //try
+            //{
+            //    HOperatorSet.GrabImageAsync(out HObject image, ExternalConnections.CameraHandle, -1);
+            //    HOperatorSet.Rgb1ToGray(image, out HObject grayImage);
+            //    SourceTemplateImage.Dispose();
+            //    if (CroppingOrNot)
+            //    {
+            //        Cropping(grayImage, out HObject SourceImage);
+            //        HOperatorSet.ZoomImageFactor(SourceImage, out SourceTemplateImage, ScalingCoefficient, ScalingCoefficient, "constant");
+            //    }
+            //    else
+            //    {
+            //        HOperatorSet.ZoomImageFactor(grayImage, out SourceTemplateImage, ScalingCoefficient, ScalingCoefficient, "constant");
+            //    }
+            //    TemplateWindowDisplay(SourceTemplateImage, null, null, null, null);
+            //}
+            //catch
+            //{
+            //    EventMessage.SystemMessageDisplay("采集异常，请检查相机连接!", MessageType.Error);
+            //}
         }
         /// <summary>
         /// 定位轮毂
@@ -1114,7 +997,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     pResult.CenterColumn?.Dispose();
                     pResult.CenterRow?.Dispose();
                     pResult.Radius?.Dispose();
-                    InPoseWheelImage.Dispose();
+
                     InPoseWheelImage = pResult.WheelImage;
                     //EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Publish(SourceTemplateImage);
 
@@ -1155,13 +1038,209 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             HOperatorSet.Union1(selectedRegions, out HObject regionUnion);
             HOperatorSet.Difference(reduced, regionUnion, out HObject regionDifference);
             TemplateImage.Dispose();
-            HOperatorSet.ReduceDomain(reduced, regionDifference, out TemplateImage);
-
+            HOperatorSet.ReduceDomain(reduced, regionDifference, out HObject _tImage);
+            TemplateImage = _tImage.Clone();
+            SafeHalconDispose(_tImage);
             TemplateWindowDisplay(null, TemplateImage, null, null, null);
             row.Dispose(); column.Dispose(); radius.Dispose(); circleSector.Dispose();
             reduced.Dispose(); region.Dispose(); connectedRegions.Dispose(); regionClosing.Dispose();
             RegionOpening.Dispose(); selectedRegions.Dispose(); regionUnion.Dispose();
             regionDifference.Dispose();
+        }
+        /// <summary>
+        /// 掩膜
+        /// </summary>
+        /// <param name="obj"></param>
+        private void MASKClick(string obj)
+        {
+            if ("图像掩膜" == obj)
+            {
+                if (TemplateImage != null && TemplateImage.IsInitialized())
+                {
+                    HObject temp = null; // 创建一个临时变量
+                    HOperatorSet.GenEmptyObj(out temp);
+                    ho_Region_Removeds = temp; // 然后将临时变量赋值给属性
+                    isMask = true;
+                    MASKContent = "关闭掩膜";
+                }
+                else
+                    EventMessage.SystemMessageDisplay("无模板图像", MessageType.Error);
+
+
+            }
+            else
+            {
+                isMask = false;
+                MASKContent = "图像掩膜";
+                if (TemplateImage != null && ho_Region_Removeds != null
+                    && TemplateImage.IsInitialized() && ho_Region_Removeds.IsInitialized())
+                {
+                    //HOperatorSet.Difference(TemplateImage, ho_Region_Removeds, out HObject regionDifference); //差集操作（获取未被选中的区域）
+                    //HOperatorSet.ReduceDomain(TemplateImage, regionDifference, out HObject TemplateImage1);
+                    //SafeHalconDispose(TemplateImage);
+                    //SafeHalconDispose(regionDifference);
+                    //SafeHalconDispose(ho_Region_Removeds);
+
+                    //TemplateImage = TemplateImage1;
+                }
+
+            }
+        }
+
+        private void OnHalconMouseDown(object obj)
+        {
+            var data = obj as HSmartWindowControlWPF.HMouseEventArgsWPF;
+            if (data != null && data.Button.ToString() == "Right")
+            {
+                Console.WriteLine($"按钮：{data.Button}");
+                if (isMask) //掩膜模式
+                {
+                    _isErasing = true;
+                }
+            }
+        }
+
+        private void OnHalconMouseUp(object obj)
+        {
+            var data = obj as HSmartWindowControlWPF.HMouseEventArgsWPF;
+            if (data != null && data.Button.ToString() == "Right")
+                _isErasing = false;
+        }
+
+        /// <summary>
+        /// 模板窗口鼠标移动
+        /// </summary>
+        /// <param name="obj"></param>
+        private void HWindowMouseMove(object obj)
+        {
+            var data = obj as HSmartWindowControlWPF.HMouseEventArgsWPF;
+            if (data.Button.ToString() == "Right" && _isErasing)
+            {
+                if (TemplateImage != null && TemplateImage.IsInitialized())
+                {
+
+                    CoverUp1(TemplateImage, data.Row, data.Column);
+                    TemplateWindowDisplay(null, TemplateImage, null, null, null);
+
+
+                }
+            }
+            else
+            {
+
+                if (SourceTemplateImage != null && SourceTemplateImage.IsInitialized())
+                {
+                    try
+                    {
+                        int row = (int)data.Row;
+                        int column = (int)data.Column;
+                        HOperatorSet.GetGrayval(SourceTemplateImage, row, column, out HTuple grayval);
+                        ImageGrayval = "行: " + row.ToString() + " 列: " + column.ToString() + " 灰度值: " + grayval;
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public void CoverUp1(HObject image, double row, double column)
+        {
+            HObject ho_EraserRegion = null;
+            HObject regionDifference = null;
+            HObject TemplateImage1 = null;
+            HTuple hRow = null;
+            HTuple hColumn = null;
+            HTuple hEraserSize = null;
+
+            try
+            {
+                // 创建临时对象
+                hRow = new HTuple(row);
+                hColumn = new HTuple(column);
+                hEraserSize = new HTuple(EraserSize);
+
+                // 生成橡皮擦区域
+                HOperatorSet.GenCircle(out ho_EraserRegion, hRow, hColumn, hEraserSize);
+
+                // 执行图像处理
+                HOperatorSet.Difference(image, ho_EraserRegion, out regionDifference);
+                HOperatorSet.ReduceDomain(image, regionDifference, out TemplateImage1);
+
+                // 先保存旧图像引用
+                HObject oldImage = TemplateImage;
+
+                // 更新模板图像
+                TemplateImage = TemplateImage1.Clone();
+
+                // 安全释放旧图像
+                SafeDisposeHObject(ref oldImage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CoverUp:{ex}");
+            }
+            finally
+            {
+                // 确保所有临时对象都被释放
+                SafeDisposeHObject(ref ho_EraserRegion);
+                SafeDisposeHObject(ref regionDifference);
+                SafeDisposeHObject(ref TemplateImage1);
+                SafeDisposeHTuple(ref hRow);
+                SafeDisposeHTuple(ref hColumn);
+                SafeDisposeHTuple(ref hEraserSize);
+            }
+        }
+        public void CoverUp(HObject image, double row, double column)
+        {
+            try
+            {
+                //生成橡皮擦擦过的区域 根据鼠标位置和橡皮擦尺寸生成圆形区域
+                HOperatorSet.GenCircle(out HObject ho_EraserRegion, row, column, EraserSize);
+                // 将新擦过的区域添加到已移除区域集合中
+                HObject ExpTmpOutVar_0;
+                HOperatorSet.Union2(ho_Region_Removeds, ho_EraserRegion, out ExpTmpOutVar_0
+                    );
+
+                SafeHalconDispose(ho_EraserRegion);
+                SafeHalconDispose(ho_Region_Removeds);
+                ho_Region_Removeds = ExpTmpOutVar_0;
+                //*获取绘制了感兴趣区域、屏蔽区域的图像（透明色）
+
+                HTuple hv_color = new HTuple();
+                hv_color[0] = 0;
+                hv_color[1] = 0;
+                hv_color[2] = 0;
+                //HOperatorSet.SetColor(hWindowControlWPF.HalconWindow, "red"); // 更改颜色为红色。
+                //HOperatorSet.OverpaintRegion(ImageRGB4, ho_Region_Removeds, hv_color, "fill"); // 填充移除区域。
+                //HOperatorSet.AddImage(srcImageRGB2, ImageRGB4, out HObject ImageResult3, 0.5, 0); // 更新显示效果。
+                HOperatorSet.OverpaintRegion(image, ho_Region_Removeds, hv_color, "fill"); // 填充移除区域。
+                hv_color.Dispose();                                                                 //hv_color.Dispose();
+                                                                                                    //HOperatorSet.AddImage(TemplateImageRGB1, TemplateImageRGB2, out HObject ImageResult3, 0.5, 0); // 更新显示效果。                    
+                                                                                                    //HOperatorSet.DispObj(ImageResult3, hWindowControlWPF.HalconWindow);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CoverUp:{ex.ToString()}");
+            }
+        }
+
+        // 专门处理 HObject 的释放
+        public static void SafeDisposeHObject(ref HObject obj)
+        {
+            if (obj != null && obj.IsInitialized())
+            {
+                obj.Dispose();
+                obj = null;
+            }
+        }
+
+        // 专门处理 HTuple 的释放
+        public static void SafeDisposeHTuple(ref HTuple tuple)
+        {
+            if (tuple != null)
+            {
+                tuple.Dispose();
+                tuple = null;
+            }
         }
         /// <summary>
         /// 保存模板
@@ -1181,6 +1260,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             bool result = WMessageBox.Show("保存确认", "您选择的轮型是：《" + DataGridSelectedItem.WheelType + "》，请确定轮型选择正确后，再点击确认！");
             if (result)
             {
+                if (MASKContent == "关闭掩膜")
+                {
+                    MASKClick("关闭掩膜");
+                }
+
                 ////生成NCC模板
                 //HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out HTuple nccTemplate);
                 ////模板图像保存路径
@@ -1211,15 +1295,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     // 在后台线程执行耗时操作
                     await Task.Run(async () =>
                     {
-                        
-                        HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out nccTemplate);                       
+
+                        HOperatorSet.CreateNccModel(TemplateImage, "auto", AngleStart, AngleExtent, 0.05, "use_polarity", out nccTemplate);
                         // 异步保存模板文件
                         await Task.WhenAll(
                             Task.Run(() => HOperatorSet.WriteNccModel(nccTemplate, aPath)),
                             Task.Run(() => HOperatorSet.WriteImage(TemplateImage, "tiff", 0, tPath))
                         );
                     });
-
+                    SafeHalconDispose(nccTemplate);
                     // 在UI线程更新数据 (确保线程安全)
                     DataGridSelectedItem.CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm");
                     DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
@@ -1234,18 +1318,19 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     SafeHalconDispose(SourceTemplateImage);
                     SafeHalconDispose(InPoseWheelImage);
                     SafeHalconDispose(TemplateImage);
+                    SafeHalconDispose(ho_Region_Removeds);
 
-                    
                 }
 
-
+                EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Publish(string.Empty);
                 EventMessage.SystemMessageDisplay("模板保存成功，型号是：" + DataGridSelectedItem.WheelType, MessageType.Success);
                 EventMessage.MessageDisplay("模板保存成功，型号是：" + DataGridSelectedItem.WheelType, true, true);
+
             }
         }
 
 
-       
+
         /// <summary>
         /// 删除模板
         /// </summary>
@@ -1365,7 +1450,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //sDB.Insertable(datas).ExecuteCommand();
                 //修改自动模式匹配用模板数据
                 if (!TemplateDataUpdataControl) TemplateDataUpdataControl = true;
-                if (!AutoTemplateDataLoadControl) AutoTemplateDataLoadControl = true;
+               
                 EventMessage.SystemMessageDisplay("模板删除成功，轮型是：" + wheelType, MessageType.Success);
                 EventMessage.MessageDisplay("模板删除成功，轮型是：" + wheelType, true, true);
             }
@@ -1397,8 +1482,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (File.Exists(strPath))
             {
                 HOperatorSet.ReadImage(out HObject Image, strPath);
+                TemplateImage = Image.Clone();
+                InnerCircleGary = DataGridSelectedItem.InnerCircleGary.ToString();
                 TemplateWindowDisplay(Image, null, null, null, null);
-                Image.Dispose();
+                SafeHalconDispose(Image);
             }
             else
             {
@@ -1424,117 +1511,118 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         private void RecognitionTest()
         {
-            if (TemplateModels.Count == 0)
-            {
-                EventMessage.SystemMessageDisplay("无模板数据，请先录入模板!", MessageType.Warning);
-                return;
-            }
-            //if (TemplateDataCollection.ActiveTemplateNames.Count == 0 && TemplateDataCollection.NotActiveTemplateNames.Count == 0)
+            //if (TemplateModels.Count == 0)
             //{
             //    EventMessage.SystemMessageDisplay("无模板数据，请先录入模板!", MessageType.Warning);
             //    return;
             //}
-            if (!SourceTemplateImage.IsInitialized())
-            {
-                EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
-                return;
-            }
+            ////if (TemplateDataCollection.ActiveTemplateNames.Count == 0 && TemplateDataCollection.NotActiveTemplateNames.Count == 0)
+            ////{
+            ////    EventMessage.SystemMessageDisplay("无模板数据，请先录入模板!", MessageType.Warning);
+            ////    return;
+            ////}
+            //if (!SourceTemplateImage.IsInitialized())
+            //{
+            //    EventMessage.SystemMessageDisplay("无图像数据，请先执行采集图像或读取图片!", MessageType.Warning);
+            //    return;
+            //}
 
-            RecognitionWay = " 传统视觉";
+            //RecognitionWay = " 传统视觉";
 
-            DateTime startTime = DateTime.Now;
-            //定位轮毂
-            PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius);
-            //存储识别结果
-            RecognitionResultModel recognitionResult = new RecognitionResultModel();
-            HObject imageRecogn = new HObject();
-            //如果定位到轮毂
-            if (pResult.WheelImage != null)
-                imageRecogn = pResult.WheelImage;
-            else
-                imageRecogn = SourceTemplateImage;
+            //DateTime startTime = DateTime.Now;
+            ////定位轮毂
+            //PositioningWheelResultModel pResult = PositioningWheel(SourceTemplateImage, WheelMinThreshold, 255, WheelMinRadius);
+            ////存储识别结果
+            //RecognitionResultModel recognitionResult = new RecognitionResultModel();
+            //HObject imageRecogn = new HObject();
+            ////如果定位到轮毂
+            //if (pResult.WheelImage != null)
+            //    imageRecogn = pResult.WheelImage;
+            //else
+            //    imageRecogn = SourceTemplateImage;
 
-            //没有定位到轮毂            
-            //recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            ////没有定位到轮毂            
+            ////recognitionResult = WheelRecognitionAlgorithm(image, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
 
-            //轮毂识别 传统视觉
-            //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
-            List<RecognitionResultModel> list = new List<RecognitionResultModel>();
-            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateModels, AngleStart, AngleExtent, MinSimilarity, list);
-            InnerCircleGary = pResult.InnerCircleMean.ToString();
-            recognitionResult.FullFigureGary = pResult.FullFigureGary;
-            recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
-            DateTime endTime = DateTime.Now;
+            ////轮毂识别 传统视觉
+            ////recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateDataCollection, AngleStart, AngleExtent, MinSimilarity);
+            //List<RecognitionResultModel> list = new List<RecognitionResultModel>();
+            //recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateModels, AngleStart, AngleExtent, MinSimilarity,out list);
+            //InnerCircleGary = pResult.InnerCircleMean.ToString();
+            //recognitionResult.FullFigureGary = pResult.FullFigureGary;
+            //recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
+            //DateTime endTime = DateTime.Now;
+            //HObject templateContour = null;
+            //if (recognitionResult.RecognitionWheelType != "NG")
+            //{
+            //    templateContour = GetAffineTemplateContour(GetHTupleByName(recognitionResult.RecognitionWheelType), recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
+            //    RecognitionWheelType = recognitionResult.RecognitionWheelType;
+            //    RecognitionSimilarity = recognitionResult.Similarity.ToString();
+            //    ReleaseUnusedTemplates();
 
-            HObject templateContour = null;
-            if (recognitionResult.RecognitionWheelType != "NG")
-            {
-                templateContour = GetAffineTemplateContour(GetHTupleByName(recognitionResult.RecognitionWheelType), recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
-                RecognitionWheelType = recognitionResult.RecognitionWheelType;
-                RecognitionSimilarity = recognitionResult.Similarity.ToString();
-            }
-            else
-            {
-                RecognitionWheelType = "NG";
-                RecognitionSimilarity = "0";
-                RecognitionWay = " 大模型";
-                //大模型推算
-                HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage, DisplayInterfaceViewModel.hv_DLModelHandle, DisplayInterfaceViewModel.hv_DLPreprocessParam);
-                HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
-                HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                if (names.Length > 0 && confidences[0].D > 0.85) //识别结果
-                {
-                    recognitionResult.RecognitionWheelType = names[0].S;
-                    recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
-                    RecognitionWheelType = names[0].S;
-                    RecognitionSimilarity = confidences[0].D.ToString("0.0000");
-                }
-                list = new List<RecognitionResultModel>();
-                for (int i = 0; i < names.Length; i++)
-                {
-                    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                    string name = names[i].S;
-                    list.Add(new RecognitionResultModel() { Similarity = similar, RecognitionWheelType = name });
-                    Console.WriteLine($"数据：{name} 结果：{similar}");
-                }
-                hv_DLResult.Dispose();
-            }
+            //}
+            //else
+            //{
+            //    //RecognitionWheelType = "NG";
+            //    //RecognitionSimilarity = "0";
+            //    //RecognitionWay = " 大模型";
+            //    ////大模型推算
+            //    //HTuple hv_DLResult = WheelDeepLearning(SourceTemplateImage, hv_DLModelHandle, DisplayInterfaceViewModel.hv_DLPreprocessParam);
+            //    //HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
+            //    //HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
+            //    //if (names.Length > 0 && confidences[0].D > 0.85) //识别结果
+            //    //{
+            //    //    recognitionResult.RecognitionWheelType = names[0].S;
+            //    //    recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.0000"));
+            //    //    RecognitionWheelType = names[0].S;
+            //    //    RecognitionSimilarity = confidences[0].D.ToString("0.0000");
+            //    //}
+            //    //list = new List<RecognitionResultModel>();
+            //    //for (int i = 0; i < names.Length; i++)
+            //    //{
+            //    //    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
+            //    //    string name = names[i].S;
+            //    //    list.Add(new RecognitionResultModel() { Similarity = similar, RecognitionWheelType = name });
+            //    //    Console.WriteLine($"数据：{name} 结果：{similar}");
+            //    //}
+            //    //hv_DLResult.Dispose();
+            //}
 
 
-            TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, templateContour, null);
-            SafeHalconDispose(templateContour);
-            //匹配相似度结果显示
-            List<MatchResultModel> matchResultModels = new List<MatchResultModel>();
-            for (int i = 0; i < list.Count; i++)
-            {
-                //最后识别时间更新
-                MatchResultModel data = new MatchResultModel
-                {
-                    Index = i + 1,
-                    WheelType = list[i].RecognitionWheelType,
-                    Similarity = list[i].Similarity.ToString(),
-                    FullFigureGary = list[i].FullFigureGary.ToString(),
-                    InnerCircleGary = list[i].InnerCircleGary.ToString()
-                };
-                matchResultModels.Add(data);
-            }
-            EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Publish(matchResultModels);
+            //TemplateWindowDisplay(SourceTemplateImage, null, pResult.WheelContour, templateContour, null);
+            //SafeHalconDispose(templateContour);
+            ////匹配相似度结果显示
+            //List<MatchResultModel> matchResultModels = new List<MatchResultModel>();
+            //for (int i = 0; i < list.Count; i++)
+            //{
+            //    //最后识别时间更新
+            //    MatchResultModel data = new MatchResultModel
+            //    {
+            //        Index = i + 1,
+            //        WheelType = list[i].RecognitionWheelType,
+            //        Similarity = list[i].Similarity.ToString(),
+            //        FullFigureGary = list[i].FullFigureGary.ToString(),
+            //        InnerCircleGary = list[i].InnerCircleGary.ToString()
+            //    };
+            //    matchResultModels.Add(data);
+            //}
+            //EventMessage.MessageHelper.GetEvent<MatchResultDatasDisplayEvent>().Publish(matchResultModels);
 
-            if (recognitionResult.RecognitionWheelType != "NG" && ImageDisName == "待补录轮毂"
-                && RecognitionWay != " 大模型")
-            {
-                string type = recognitionResult.RecognitionWheelType;
+            //if (recognitionResult.RecognitionWheelType != "NG" && ImageDisName == "待补录轮毂"
+            //    && RecognitionWay != " 大模型")
+            //{
+            //    string type = recognitionResult.RecognitionWheelType;
 
-                sys_bd_Templatedatamodel data = GetTemplatedataForType(type);
-                RecWheelType = data.WheelType.Replace("_", "");
-                RecWheelStyle = data.WheelStyle;
-                HandInput = true;
-            }
+            //    sys_bd_Templatedatamodel data = GetTemplatedataForType(type);
+            //    RecWheelType = data.WheelType.Replace("_", "");
+            //    RecWheelStyle = data.WheelStyle;
+            //    HandInput = true;
+            //}
 
-            TimeSpan consumeTime = endTime.Subtract(startTime);
-            RecognitionConsumptionTime = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms"; ;
-            RecognitionResultDisplay = Visibility.Visible;
-            GrayDisplay = Visibility.Visible;
+            //TimeSpan consumeTime = endTime.Subtract(startTime);
+            //RecognitionConsumptionTime = Convert.ToString(Convert.ToInt32(consumeTime.TotalMilliseconds)) + " ms"; ;
+            //RecognitionResultDisplay = Visibility.Visible;
+            //GrayDisplay = Visibility.Visible;
         }
         /// <summary>
         /// 模板检查
@@ -1616,7 +1704,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //整理Index
                 for (int i = 0; i < newTemplateDatas.Count; i++) newTemplateDatas[i].Index = i + 1;
                 //修改显示数据与匹配数据
-                AutoTemplateDataLoadControl = true;
+                
                 TemplateDatas.Clear();
                 TemplateDatas = new ObservableCollection<sys_bd_Templatedatamodel>(newTemplateDatas);
                 //修改数据库

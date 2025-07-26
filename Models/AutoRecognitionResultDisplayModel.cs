@@ -8,18 +8,15 @@ using System.Threading.Tasks;
 namespace WheelRecognitionSystem.Models
 {
     /// <summary>
-    /// 自动模式识别结果显示模型
+    /// 结果显示模型
     /// </summary>
     public class AutoRecognitionResultDisplayModel : IDisposable
     {
         /// <summary>
-        /// 显示索引 下标从1开始
+        /// 标签 / DisplayRegion+ID
         /// </summary>
-        public int index { get; set; }
-        /// <summary>
-        /// 轮型
-        /// </summary>
-        public string WheelType { get; set; }
+        public string Tag { get; set; }
+
         /// <summary>
         /// 当前图像
         /// </summary>
@@ -39,14 +36,6 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public float FullFigureGary { get; set; }
 
-        ///// <summary>
-        /////  浇口轮廓
-        ///// </summary>
-        //public HObject GateContour { get; set; }
-        ///// <summary>
-        ///// 是否存在浇口轮廓
-        ///// </summary>
-        //public bool IsGate { get; set; }
 
         public void Dispose()
         {

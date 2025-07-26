@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WheelRecognitionSystem.Views.Pages
+namespace WheelRecognitionSystem.Views.Dialogs
 {
     /// <summary>
-    /// MonitoringViewModel.xaml 的交互逻辑
+    /// UpdateAiFile.xaml 的交互逻辑
     /// </summary>
-    public partial class MonitoringView : UserControl
+    public partial class UpdateAiFileDialog : UserControl
     {
-        public MonitoringView()
+        public UpdateAiFileDialog()
         {
             InitializeComponent();
         }

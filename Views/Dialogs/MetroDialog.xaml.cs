@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MahApps.Metro.Controls;
+using Prism.Services.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,19 +12,20 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WheelRecognitionSystem.Views.Pages
+namespace WheelRecognitionSystem.Views.Dialogs
 {
     /// <summary>
-    /// UserControl1.xaml 的交互逻辑
+    /// MetroDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class UserControl1 : UserControl
+    public partial class MetroDialog : MetroWindow, IDialogWindow
     {
-        public UserControl1()
+        public MetroDialog()
         {
             InitializeComponent();
         }
+        public IDialogResult Result { get; set; }
+
     }
 }

@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace WheelRecognitionSystem.Views.Dialogs
 {
     /// <summary>
-    /// ParameterSettingDialog.xaml 的交互逻辑
+    /// FIleManageDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class ParameterSettingDialog : UserControl
+    public partial class FileManageDialog : UserControl
     {
-        public ParameterSettingDialog()
+        public FileManageDialog()
         {
             InitializeComponent();
         }
