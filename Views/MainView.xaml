@@ -28,16 +28,16 @@
                 <RowDefinition Height="200"/>
             </Grid.RowDefinitions>
             <Menu Grid.Row="0" Margin="1" HorizontalAlignment="Left" VerticalAlignment="Stretch">
-                <MenuItem Header="数据查询" FontSize="12">
-                </MenuItem>
+               
                 <MenuItem Header="系统设置" FontSize="12">
                     <MenuItem Header="文件管理" Command="{Binding ClickCommand}"  CommandParameter="文件管理" FontSize="11" />
                     <MenuItem Header="数据库设置" FontSize="11"/>
-
                 </MenuItem>
-                <MenuItem Header="大模型更新" Command="{Binding ClickCommand}"  CommandParameter="大模型更新" FontSize="12" >
+                <MenuItem Header="数据查询" Command="{Binding ClickCommand}" CommandParameter="数据查询"   FontSize="12"/>
+                <MenuItem Header="大模型更新" Command="{Binding ClickCommand}"  CommandParameter="大模型更新" FontSize="12" />
+                <MenuItem Header="图片查看" Command="{Binding ClickCommand}"  CommandParameter="图片查看" FontSize="12" />
+                <MenuItem Header="模板制作" Command="{Binding ClickCommand}"  CommandParameter="模板制作" FontSize="12" />
 
-                </MenuItem>
             </Menu>
             <mah:MetroAnimatedSingleRowTabControl  x:Name="MainTabControl"  Grid.Row="1">
                 <TabItem Header="显示界面" Tag="DisplayInterfaceView">
@@ -90,10 +90,10 @@
                         <Grid.RowDefinitions>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Label Content="PLC连接状态" FontSize="14" Style="{StaticResource NormalLabelStyle}" Margin="0,2,64,146" Background="{Binding PlcStatus, Converter={StaticResource BackgroundConverter}}" Width="120"/>
+                        <Label Content="PLC连接状态" FontSize="14" Style="{StaticResource NormalLabelStyle}" Margin="1,10,94,146" Background="{Binding PlcStatus, Converter={StaticResource BackgroundConverter}}"/>
                         <Button Content="测试" FontSize="14"  Margin="0,54,94,101" Command="{Binding TestCommand}"/>
-                        <Button Content="参数刷新" FontSize="14"  Margin="94,54,0,101" Command="{Binding RefreshParaCommand}"/>
-                        <Button Content="模板刷新" FontSize="14"  Margin="94,94,0,61" Command="{Binding RefreshNCCCommand}"/>
+                        <Button Content="参数刷新" FontSize="14"  Margin="97,10,-3,145" Command="{Binding RefreshParaCommand}"/>
+                        <Button Content="模板刷新" FontSize="14"  Margin="97,54,-3,101" Command="{Binding RefreshNCCCommand}"/>
                     </Grid>
                     <GroupBox Grid.Column="3" Style="{StaticResource NewGroupBoxStyle}" Header="信息显示" Margin="5">
                         <TextBox VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingStackPanel.IsVirtualizing="True" Style="{StaticResource NewTextBoxStyle}" Name="SystemMessage" Margin="5,28,5,5" IsReadOnly="True" FontSize="14" VerticalContentAlignment="Top"
