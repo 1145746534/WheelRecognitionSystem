@@ -30,6 +30,8 @@ using static NPOI.HSSF.Util.HSSFColor;
 using System.Collections.ObjectModel;
 using WheelRecognitionSystem.Views.Pages;
 using Prism.Events;
+using System.Diagnostics;
+using NPOI.OpenXmlFormats.Vml;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -157,7 +159,7 @@ namespace WheelRecognitionSystem.ViewModels
 
         private IRegionManager _regionManager;
 
-       
+
 
         readonly IDialogService _dialogService;
 
@@ -197,7 +199,7 @@ namespace WheelRecognitionSystem.ViewModels
         private void ViewInitialization()
         {
             _regionManager.RegisterViewWithRegion("ViewRegion", typeof(DisplayInterfaceView));
-            //_regionManager.RegisterViewWithRegion("ViewRegion1", typeof(TemplateManagementView));
+            _regionManager.RegisterViewWithRegion("ViewRegion1", typeof(ReportManagementView));
             //_regionManager.RegisterViewWithRegion("ViewRegion2", typeof(ReportManagementView));
         }
 
@@ -241,7 +243,7 @@ namespace WheelRecognitionSystem.ViewModels
             pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
             pictrueDeleteTimer.Start();//启动定时器
 
-            
+
         }
         /// <summary>
         /// 事件绑定
@@ -320,7 +322,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             //订阅消息
             EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
-            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow ,ThreadOption.UIThread, // 确保在UI线程执行
+            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow, ThreadOption.UIThread, // 确保在UI线程执行
                             keepSubscriberReferenceAlive: true);
         }
 
@@ -333,57 +335,33 @@ namespace WheelRecognitionSystem.ViewModels
         {
             try
             {
-                InitialPara();
-                //ReadAppSettings("UpdateTime", out string updateTime);
-                //UpdateTime = int.Parse(updateTime);
+                var sDB = new SqlAccess().SystemDataAccess;
+                List<sys_bd_systemsettingsdatamodel> systemDatas = sDB.Queryable<sys_bd_systemsettingsdatamodel>().ToList();
+                sDB.Close(); sDB.Dispose();
+                //PLC参数
+                PlcIP = GetPara(systemDatas, "PlcIP", "192.168.0.188");
+                ReadDB = int.Parse(GetPara(systemDatas, "ReadDB", "100"));
+                ReadStartAddress = int.Parse(GetPara(systemDatas, "ReadStartAddress", "0"));
+                ReadLenght = int.Parse(GetPara(systemDatas, "ReadLenght", "394"));
+                WriteDB = int.Parse(GetPara(systemDatas, "WriteDB", "101"));
+                WriteStartAddress = int.Parse(GetPara(systemDatas, "WriteStartAddress", "0"));
+                WriteLenght = int.Parse(GetPara(systemDatas, "WriteLenght", "146"));
 
-                //======图像处理数据======
-                //ReadAppSettings("CameraIdentifier", out string cameraIdentifier);
-                //CameraIdentifier = cameraIdentifier;
-                //ReadAppSettings("TemplateStartAngle", out string templateStartAngle);
-                //TemplateStartAngle = double.Parse(templateStartAngle);
-                //ReadAppSettings("TemplateEndAngle", out string templateEndAngle);
-                //TemplateEndAngle = double.Parse(templateEndAngle);
-                //ReadAppSettings("AngleStart", out string angleStart);
-                //AngleStart = double.Parse(angleStart);
-                //ReadAppSettings("AngleExtent", out string angleExtent);
-                //AngleExtent = double.Parse(angleExtent);
-                //ReadAppSettings("ScalingCoefficient", out string scalingCoefficient);
-                //ScalingCoefficient = double.Parse(scalingCoefficient);
-                //---
-                //ReadAppSettings("MinFullFigureGary", out string _minFullFigureGary);
-                //MinFullFigureGary = double.Parse(_minFullFigureGary);
-                //ReadAppSettings("ConfidenceMatch", out string _confidenceMatch);
-                //ConfidenceMatch = double.Parse(_confidenceMatch);
+                //图像参数
+                SaveImageDays = int.Parse(systemDatas.First(x => x.Name == "SaveImageDays").Value);
+                TemplateSoftwarePath = GetPara(systemDatas, "TemplateSoftwarePath", "D:\\My\\Software");
+                //不需要修改
+                TemplateImagesPath = GetPara(systemDatas, "TemplateImagesPath", "D:\\VisualDatas\\TemplateImages");
+                ActiveTemplatesPath = GetPara(systemDatas, "ActiveTemplatesPath", "D:\\VisualDatas\\ActiveTemplate");
+                HistoricalImagesPath = GetPara(systemDatas, "HistoricalImagesPath", "D:\\VisualDatas\\HistoricalImages");
+                DeepParaPath = GetPara(systemDatas, "DeepParaPath", @"D:\VisualDatas\大模型文件");
 
-                //
-                #region======外部连接数据======
-                //ReadAppSettings("PlcIP", out string plcIP);
-                //PlcIP = plcIP;
-                //ReadAppSettings("ReadDB", out string readDB);
-                //ReadDB = int.Parse(readDB);
-                //ReadAppSettings("ReadStartAddress", out string readStartAddress);
-                //ReadStartAddress = int.Parse(readStartAddress);
-                //ReadAppSettings("ReadLenght", out string readLenght);
-                //ReadLenght = int.Parse(readLenght);
-                //ReadAppSettings("WriteDB", out string writeDB);
-                //WriteDB = int.Parse(writeDB);
-                //ReadAppSettings("WriteStartAddress", out string writeStartAddress);
-                //WriteStartAddress = int.Parse(writeStartAddress);
-                //ReadAppSettings("WriteLenght", out string writeLenght);
-                //WriteLenght = int.Parse(writeLenght);
 
+                //上传参数
+                UpMesUri = GetPara(systemDatas, "UpMesUri", "http://192.168.0.101/vboard/boardGrid");
                 WriteBuffer = new byte[WriteLenght - WriteStartAddress];
 
-                //ReadAppSettings("ArrivalDelay", out string arrivalDelay);
-                //_ArrivalDelay = int.Parse(arrivalDelay);
-               
-               
-               
-          
-
-                #endregion
-                
+                InitialPara();
 
                 EventMessage.MessageDisplay("系统数据加载完成。", true, false);
             }
@@ -394,20 +372,14 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
         /// <summary>
-        /// 初始化参数
+        /// 初始化外部控制参数
         /// </summary>
         private void InitialPara()
         {
             var sDB = new SqlAccess().SystemDataAccess;
             List<sys_bd_systemsettingsdatamodel> systemDatas = sDB.Queryable<sys_bd_systemsettingsdatamodel>().ToList();
-            //PLC参数
-            PlcIP = GetPara(systemDatas, "PlcIP", "192.168.0.188");
-            ReadDB  = int.Parse(GetPara(systemDatas, "ReadDB", "100"));
-            ReadStartAddress = int.Parse(GetPara(systemDatas, "ReadStartAddress", "0"));
-            ReadLenght = int.Parse(GetPara(systemDatas, "ReadLenght", "394"));
-            WriteDB = int.Parse(GetPara(systemDatas, "WriteDB", "101"));
-            WriteStartAddress = int.Parse(GetPara(systemDatas, "WriteStartAddress", "0"));
-            WriteLenght = int.Parse(GetPara(systemDatas, "WriteLenght", "146"));
+            sDB.Close(); sDB.Dispose();
+
             //延迟参数
             ArrivalDelay = int.Parse(GetPara(systemDatas, "ArrivalDelay", "10"));
 
@@ -423,22 +395,12 @@ namespace WheelRecognitionSystem.ViewModels
             MinFullFigureGary = double.Parse(GetPara(systemDatas, "MinFullFigureGary", "45"));
             ConfidenceMatch = double.Parse(GetPara(systemDatas, "ConfidenceMatch", "0.8"));
             MinSimilarity = double.Parse(systemDatas.First(x => x.Name == "MinSimilarity").Value);
-            
-            //图像参数
-            SaveImageDays = int.Parse(systemDatas.First(x => x.Name == "SaveImageDays").Value);
-            TemplateImagesPath = GetPara(systemDatas, "TemplateImagesPath", "D:\\VisualDatas\\TemplateImages");
-            ActiveTemplatesPath = GetPara(systemDatas, "ActiveTemplatesPath", "D:\\VisualDatas\\ActiveTemplate");
-            HistoricalImagesPath = GetPara(systemDatas, "HistoricalImagesPath", "D:\\VisualDatas\\HistoricalImages");
-            DeepParaPath = GetPara(systemDatas, "DeepParaPath", @"D:\VisualDatas\大模型文件");
-
-            //上传参数
-            UpMesUri = GetPara(systemDatas, "UpMesUri", "http://192.168.0.101/vboard/boardGrid");
 
             //匹配时的参数 一般不需要修改下列参数
             AngleStart = double.Parse(GetPara(systemDatas, "AngleStart", "-1.57"));
             AngleExtent = double.Parse(GetPara(systemDatas, "AngleExtent", "1.57"));
 
-            sDB.Close(); sDB.Dispose();
+
             EventMessage.MessageDisplay($"参数加载成功！", true, true);
 
         }
@@ -741,7 +703,7 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
                 });
-              
+
                 workingPicture.ReceiveS7PLC(new InteractS7PLCModel()
                 {
                     ArrivalDelay = ArrivalDelay,
@@ -1251,7 +1213,7 @@ namespace WheelRecognitionSystem.ViewModels
             if (index < DisplayCollections.Count)
             {
                 DisplayCollections[index] = data;
-               
+
             }
         }
         #region 系统设置 - 文件管理-模板管理
@@ -1263,14 +1225,31 @@ namespace WheelRecognitionSystem.ViewModels
         {
             if (obj == "文件管理") FileDialogOpen();
             if (obj == "大模型更新") UpdateAi();
+            if (obj == "图片查看") ProcessStart(HistoricalImagesPath); 
+            if (obj == "模板制作") ProcessStart(TemplateSoftwarePath); 
 
         }
 
+        private void ProcessStart(string _path)
+        {
+            string path = _path;
+            Task.Run(() =>
+            {
+               
+                if (Directory.Exists(path) || File.Exists(path))
+                {
+                    Process.Start("explorer.exe", path);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 大模型更新
+        /// </summary>
         private void UpdateAi()
         {
             var parameters = new DialogParameters
             {
-               
             };
             _dialogService.ShowDialog("UpdateAiFile", parameters,
                 new Action<IDialogResult>((IDialogResult result) =>
@@ -1283,7 +1262,7 @@ namespace WheelRecognitionSystem.ViewModels
                         {
                             string filePath_Hdict = dialog.GetValue<string>("FilePath_Hdict");
                             string filePath_Hdl = dialog.GetValue<string>("FilePath_Hdl");
-                         
+
                             // 新文件名
                             string newHdlFileName = "model_opt.hdl";
                             string newHdictFileName = "model_preprocess_params.hdict";
@@ -1291,7 +1270,7 @@ namespace WheelRecognitionSystem.ViewModels
                             try
                             {
                                 // 执行复制并重命名
-                                FileHelper.CopyAndRenameFile(filePath_Hdl,DeepParaPath, newHdlFileName, true);
+                                FileHelper.CopyAndRenameFile(filePath_Hdl, DeepParaPath, newHdlFileName, true);
                                 FileHelper.CopyAndRenameFile(filePath_Hdict, DeepParaPath, newHdictFileName, true);
                                 workingPicture._isNeedLoadAI = true;
                             }
@@ -1301,7 +1280,7 @@ namespace WheelRecognitionSystem.ViewModels
                             }
 
                         }
-                        
+
 
                     }
                 }));
@@ -1316,28 +1295,31 @@ namespace WheelRecognitionSystem.ViewModels
             var parameters = new DialogParameters
             {
                 { "saveImageDays", SystemDatas.SaveImageDays },
-                { "maintainQuantity", SystemDatas.MaintainQuantity }
+                { "maintainQuantity", SystemDatas.MaintainQuantity },
+                { "TemplateSoftwarePath", SystemDatas.TemplateSoftwarePath }
             };
             _dialogService.ShowDialog("FileManage", parameters,
                 new Action<IDialogResult>((IDialogResult result) =>
                 {
                     if (result.Parameters.Count != 0)
                     {
-                        if (result.Parameters.ContainsKey("saveImageDays"))
-                        {
-                            string days = result.Parameters.GetValue<string>("saveImageDays");
-                            SystemDatas.SaveImageDays = Convert.ToInt32(days);
-                        }
-                        if (result.Parameters.ContainsKey("maintainQuantity"))
-                        {
-                            string quantity = result.Parameters.GetValue<string>("maintainQuantity");
-                            SystemDatas.MaintainQuantity = Convert.ToInt32(quantity);
-                        }
+                        IDialogParameters dialog = result.Parameters;
 
+                        string days = dialog.GetValue<string>("saveImageDays");
+                        SystemDatas.SaveImageDays = Convert.ToInt32(days);
+
+                        string quantity = dialog.GetValue<string>("maintainQuantity");
+                        SystemDatas.MaintainQuantity = Convert.ToInt32(quantity);
+
+                        TemplateSoftwarePath = dialog.GetValue<string>("OpenTemplateFilePath");
+                        SqlAccess.SystemDatasUpdateable("SaveImageDays", days);
+                        SqlAccess.SystemDatasUpdateable("MaintainQuantity", quantity);
+                        SqlAccess.SystemDatasUpdateable("TemplateSoftwarePath", TemplateSoftwarePath);
                     }
                 }));
 
         }
+
 
         #endregion
 

@@ -62,7 +62,7 @@ namespace WheelRecognitionSystem
             //NotActiveTemplatesPath = RootDirectory + @"\" + notActiveTemplateFolder;
             //历史图片保存路径
             ConfigEdit.ReadAppSettings("HistoricalImageFolder", out string historicalImageFolder);
-            HistoricalImagesPath = RootDirectory + @"\" + historicalImageFolder;
+            //HistoricalImagesPath = RootDirectory + @"\" + historicalImageFolder;
             //手动图片保存路径
             ConfigEdit.ReadAppSettings("HandImageFolder", out string handImageFolder);
             HandImagesPath = RootDirectory + @"\" + handImageFolder; 
@@ -77,7 +77,7 @@ namespace WheelRecognitionSystem
             //    Directory.CreateDirectory(NotActiveTemplatesPath);
             //if (!Directory.Exists(DeepParaPath)) 
             //    Directory.CreateDirectory(DeepParaPath);
-            if (!Directory.Exists(HistoricalImagesPath)) Directory.CreateDirectory(HistoricalImagesPath);
+            //if (!Directory.Exists(HistoricalImagesPath)) Directory.CreateDirectory(HistoricalImagesPath);
             if (!Directory.Exists(logDirectory)) Directory.CreateDirectory(logDirectory);
             //创建当月Log文件
             string currentLogPath = AppDomain.CurrentDomain.BaseDirectory + @"Logs\" + DateTime.Now.ToString("yy-MM") + "_log.txt";

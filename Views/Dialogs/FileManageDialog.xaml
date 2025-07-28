@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:WheelRecognitionSystem.Views.Dialogs"
              xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d" 
-             Height="420" Width="600">
+             Height="520" Width="600">
     <UserControl.Resources>
         <Thickness x:Key="ControlMargin">5 0 250 0</Thickness>
     </UserControl.Resources>
@@ -24,7 +24,7 @@
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="40"/>
-                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="45"/>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="40"/>
@@ -55,6 +55,15 @@
                         <KeyBinding Key="Escape" Command="{x:Static mah:MahAppsCommands.ClearControlCommand}" />
                     </TextBox.InputBindings>
                 </TextBox>
+                <StackPanel Orientation="Vertical" Grid.Row="4">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment ="Left" >
+                        <TextBlock Text="模板制作软件打开路径" FontSize="18" Margin="5,0,0,0" Foreground="#444"/>
+                        <Button Margin="300,0,0,0" Width="60"  Content="更改"  Command="{Binding UpdatePathCommand}"></Button>
+                    </StackPanel>
+                    <TextBlock Text="{Binding OpenTemplateFilePath}" Margin="5,0,0,0" FontSize="12" Grid.Row="1" Foreground="#AAA"/>
+                </StackPanel>
+                <Border Grid.Row="4" BorderThickness="0,0,0,1" BorderBrush="#DDD" SnapsToDevicePixels="True"/>
+
                 <StackPanel Orientation="Horizontal" Grid.Row="8" Margin="300,2,2,2">
                     <Button Width="100" Margin="0,0,5,0" Content="确定" Command="{Binding ConfirmCommand}" FontSize="14" />
                     <Button Width="100" Margin="5,0,5,0" Content="取消" Command="{Binding CancelCommand}"  FontSize="14" />

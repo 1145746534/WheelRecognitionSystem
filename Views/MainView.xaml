@@ -43,9 +43,9 @@
                 <TabItem Header="显示界面" Tag="DisplayInterfaceView">
                     <ContentControl p:RegionManager.RegionName="ViewRegion" />
                 </TabItem>
-                <!--<TabItem Header="系统设置" Tag="SystemSettingsView">
-                    <ContentControl p:RegionManager.RegionName="ViewRegion3" />
-                </TabItem>-->
+                <TabItem Header="报表管理" Tag="SystemSettingsView">
+                    <ContentControl p:RegionManager.RegionName="ViewRegion1" />
+                </TabItem>
             </mah:MetroAnimatedSingleRowTabControl>
 
             <Border Grid.Row="2" Background="#FFE5ECF3">

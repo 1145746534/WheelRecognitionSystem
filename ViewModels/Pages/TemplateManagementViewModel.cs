@@ -1449,7 +1449,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 //sDB.DbMaintenance.TruncateTable<sys_bd_Templatedatamodel>();
                 //sDB.Insertable(datas).ExecuteCommand();
                 //修改自动模式匹配用模板数据
-                if (!TemplateDataUpdataControl) TemplateDataUpdataControl = true;
+               
                
                 EventMessage.SystemMessageDisplay("模板删除成功，轮型是：" + wheelType, MessageType.Success);
                 EventMessage.MessageDisplay("模板删除成功，轮型是：" + wheelType, true, true);

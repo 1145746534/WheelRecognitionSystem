@@ -17,6 +17,7 @@ namespace WheelRecognitionSystem.Public
         /// 数据存储根目录
         /// </summary>
         public static string RootDirectory { get; set; }
+
         /// <summary>
         /// 模板图片保存路径
         /// </summary>
@@ -25,10 +26,8 @@ namespace WheelRecognitionSystem.Public
         /// 活跃模板保存路径
         /// </summary>
         public static string ActiveTemplatesPath { get; set; }
-        /// <summary>
-        /// 不活跃模板保存路径
-        /// </summary>
-        public static string NotActiveTemplatesPath { get; set; }
+        
+
         /// <summary>
         /// 历史图片保存路径
         /// </summary>
@@ -43,6 +42,9 @@ namespace WheelRecognitionSystem.Public
         /// 深度学习大模型文件路径
         /// </summary>
         public static string DeepParaPath { get; set; } 
+
+
+
 
 
         /// <summary>
@@ -94,6 +96,11 @@ namespace WheelRecognitionSystem.Public
         /// 模板匹配的最小相似度
         /// </summary>
         public static double MinSimilarity { get; set;}
+
+
+
+
+
 
         /// <summary>
         /// PLC的IP地址
@@ -150,34 +157,20 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static string UpMesUri { get; set; }
 
-        /// <summary>
-        /// 自动模式模板数据更新控制
-        /// </summary>
-        public static bool TemplateDataUpdataControl {  get; set; } = false;
 
-        /// <summary>
-        /// 自动模式下使用的模板表格数据加载
-        /// </summary>
-        public static bool AutoTemplateDataLoadControl { get; set; } = false;
 
-       
-        /// <summary>
-        /// 保存识别数据的月数 -数据在信息化那边删除 这边不做处理
-        /// </summary>
-        public static int SaveDataMonths { get; set; }
+      
 
         /// <summary>
         /// 模板动态调整天数
         /// </summary>
         public static int TemplateAdjustDays { get;set; }
+
         /// <summary>
-        /// 是否根据分选数据判断分选结果，热工识别机必须True
+        /// 常驻内存的模板数量
         /// </summary>
-        public static bool IsScreenedResult { get; set; }
-        /// <summary>
-        /// 图片是否裁剪
-        /// </summary>
-        public static bool CroppingOrNot { get; set; } = false;
+        public static int MaintainQuantity { get; set; }
+
 
         /// <summary>
         /// 大模型最低匹配相似度
@@ -194,12 +187,12 @@ namespace WheelRecognitionSystem.Public
         /// 保存图片的天数
         /// </summary>
         public static int SaveImageDays { get; set; }
+        
         /// <summary>
-        /// 常驻内存的模板数量
+        /// 模板软件的地址
         /// </summary>
-        public static int MaintainQuantity { get; set; }
+        public static string TemplateSoftwarePath { get; set; }
 
 
-        // -- 
     }
 }

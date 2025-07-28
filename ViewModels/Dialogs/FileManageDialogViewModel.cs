@@ -1,11 +1,14 @@
-﻿using Prism.Commands;
+﻿using Microsoft.Win32;
+using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace WheelRecognitionSystem.ViewModels.Dialogs
 {
@@ -28,6 +31,19 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 SetProperty(ref _saveImageDays, filteredValue);
             }
         }
+
+        private string _openTemplateFilePath;
+        /// <summary>
+        ///  软件路径
+        /// </summary>
+        public string OpenTemplateFilePath
+        {
+            get { return _openTemplateFilePath; }
+            set
+            {
+                SetProperty(ref _openTemplateFilePath, value);
+            }
+        }
         private string _maintainQuantity;
         /// <summary>
         ///  常驻数量
@@ -47,6 +63,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         public event Action<IDialogResult> RequestClose;
         public DelegateCommand ConfirmCommand { get; }
         public DelegateCommand CancelCommand { get; }
+        public DelegateCommand UpdatePathCommand { get; }
 
 
 
@@ -55,6 +72,35 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             ConfirmCommand = new DelegateCommand(OnConfirm);
             CancelCommand = new DelegateCommand(OnCancel);
+            UpdatePathCommand = new DelegateCommand(UpdatePath);
+        }
+
+        private async void UpdatePath()
+        {
+            string directory = @"E:\";
+            if (!Directory.Exists(directory))
+            {
+                directory = @"D:\";
+            }
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog
+                {
+                    Multiselect = false,
+                    Title = "请选择路径",
+                    InitialDirectory = directory,
+                    Filter = "文件(*.exe, *.EXE)|*.exe;*.EXE"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    string value = openFileDialog.FileName;
+                    OpenTemplateFilePath = value;
+
+                }
+
+
+            });
         }
 
         public void OnDialogOpened(IDialogParameters parameters)
@@ -67,6 +113,10 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             {
                 MaintainQuantity = parameters.GetValue<string>("maintainQuantity");
             }
+            if (parameters.ContainsKey("TemplateSoftwarePath"))
+            {
+                OpenTemplateFilePath = parameters.GetValue<string>("TemplateSoftwarePath");
+            }
 
         }
         /// <summary>
@@ -78,6 +128,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             DialogParameters parameters = new DialogParameters();
             parameters.Add("saveImageDays", SaveImageDays);
             parameters.Add("maintainQuantity", 8);
+            parameters.Add("OpenTemplateFilePath", OpenTemplateFilePath);
             RequestClose?.Invoke(new DialogResult(ButtonResult.OK, parameters));
         }
 

@@ -183,7 +183,7 @@
             <Border BorderThickness="1" CornerRadius="5" BorderBrush="#FFD1EDED">
                 <Grid>
                     <DataGrid ItemsSource="{Binding IdentificationDatas}" Visibility="{Binding IdentificationDataVisibility}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
-                      FontSize="14" FontWeight="Bold" Foreground="#333">
+                      FontSize="14" FontWeight="Bold" Foreground="#333" AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="序号" Binding="{Binding ID}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding Model}" Width="0.1*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
@@ -195,7 +195,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <DataGrid ItemsSource="{Binding StatisticsDatas}" Visibility="{Binding StatisticsDataVisibility}" Background="Transparent" BorderThickness="0" IsReadOnly="True"
-                      FontSize="14" FontWeight="Bold" Foreground="#333">
+                      FontSize="14" FontWeight="Bold" Foreground="#333" AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="0.3*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
                             <DataGridTextColumn Header="轮毂型号" Binding="{Binding Model}" Width="0.4*" ElementStyle="{StaticResource CenterAlignmentStyle}"/>
