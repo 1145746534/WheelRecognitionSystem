@@ -63,9 +63,7 @@ namespace WheelRecognitionSystem.ViewModels
         private struct SaveImageRequest
         {
             public HObject Image;
-            public SaveWay SaveWay { get; set; }
             public string Path { get; set; }
-            public string Prefix { get; set; }
         }
 
         // 静态变量保存类的唯一实例
@@ -413,14 +411,16 @@ namespace WheelRecognitionSystem.ViewModels
                                     //保存图片
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
                                     string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}";
-                                    //interact.imagePath = await SaveImageDatasAsync(grayImage, way, HistoricalImagesPath, _prefixName);
+                                    
+                                    string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
+                                    interact.imagePath = savePath;
+
+
 
                                     var saveRequest = new SaveImageRequest
                                     {
                                         Image = grayImage.Clone(),
-                                        SaveWay = way,
-                                        Path = HistoricalImagesPath,
-                                        Prefix = _prefixName
+                                        Path = savePath,
                                     };
 
                                     lock (_saveLock)
@@ -500,11 +500,7 @@ namespace WheelRecognitionSystem.ViewModels
                 var req = request.Value;
                 try
                 {
-                    string path = await SaveImageDatasAsync(
-                        req.Image,
-                        req.SaveWay,
-                        req.Path,
-                        req.Prefix);
+                    SaveImageDatasAsync(req.Image, req.Path);
 
                     // 可在此处记录保存结果
                 }

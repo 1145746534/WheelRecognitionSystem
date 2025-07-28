@@ -745,7 +745,7 @@ namespace WheelRecognitionSystem.Public
             return templateContour;
         }
 
-        public static async Task<string> SaveImageDatasAsync(HObject _image, SaveWay way, string ImagePath, string prefixName = null)
+        public static async Task<string> SaveImageDatasAsync1(HObject _image, SaveWay way, string ImagePath, string prefixName = null)
         {
             HObject saveImage = CloneImageSafely(_image);
 
@@ -776,16 +776,7 @@ namespace WheelRecognitionSystem.Public
                     Directory.CreateDirectory(ngPath);
                 }
 
-                // 异步获取磁盘空间
-                double diskFree = await Task.Run(() => GetHardDiskFreeSpace("D"));
-
-                if (diskFree <= 200)
-                {
-                    // UI 线程安全的消息显示
-                    Application.Current.Dispatcher.Invoke(() =>
-                        EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false));
-                    return savePath;
-                }
+               
 
                 // 根据保存方式构建路径
                 string saveWheelTypePath = "";
@@ -817,6 +808,18 @@ namespace WheelRecognitionSystem.Public
                 {
                     savePath = Path.Combine(handImagesPath, $"Hand&{dateTime:yyMMddHHmmss}.tif");
                 }
+
+                // 异步获取磁盘空间
+                double diskFree = await Task.Run(() => GetHardDiskFreeSpace("D"));
+
+                if (diskFree <= 200)
+                {
+                    // UI 线程安全的消息显示
+                    Application.Current.Dispatcher.Invoke(() =>
+                        EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false));
+                    return savePath;
+                }
+
                 string saveImagePath = string.Empty;
                 // 异步保存图像
                 await Task.Run(() =>
@@ -839,6 +842,122 @@ namespace WheelRecognitionSystem.Public
                 return string.Empty;
             }
         }
+
+        public static async void SaveImageDatasAsync(HObject _image, string savePath)
+        {
+            HObject saveImage = null;
+
+            try
+            {
+
+                saveImage = CloneImageSafely(_image);
+
+                // 异步获取磁盘空间
+                double diskFree = await Task.Run(() => GetHardDiskFreeSpace("D"));
+
+                if (diskFree <= 200)
+                {
+                    // UI 线程安全的消息显示
+                    Application.Current.Dispatcher.Invoke(() =>
+                        EventMessage.MessageDisplay("磁盘存储空间不足，请检查！", true, false));
+
+                    throw new Exception("D盘磁盘存储空间不足");
+                }
+
+                string saveImagePath = string.Empty;
+                // 异步保存图像
+                await Task.Run(() =>
+                {
+                    saveImagePath = savePath.Replace(@"\", "/");
+                    HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
+                   
+                });
+                //if (way == SaveWay.Hand)
+                //    Application.Current.Dispatcher.Invoke(() =>
+                //        EventMessage.MessageDisplay($"图片保存成功：{saveImagePath}", true, false));
+
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("保存失败"+ ex.Message);
+                // 异常处理（可根据需要记录日志）
+                //Application.Current.Dispatcher.Invoke(() =>
+                //    EventMessage.MessageDisplay($"保存失败: {ex.Message}", true, false));
+
+            }
+            finally
+            {
+                SafeDisposeHObject(ref saveImage);
+            }
+        }
+
+
+        public static string GetImageSavePath(SaveWay way, string ImagePath, string prefixName = null)
+        {
+            string savePath = string.Empty;
+            DateTime dateTime = DateTime.Now;
+
+            // 路径定义
+            string handImagesPath = string.Empty;
+
+            string monthPath = string.Empty;
+            string dayPath = string.Empty;
+            string ngPath = string.Empty;
+
+            if (way == SaveWay.Hand)
+            {
+                handImagesPath = ImagePath;
+                Directory.CreateDirectory(handImagesPath);
+
+            }
+            else
+            {
+                monthPath = Path.Combine(ImagePath, $"{dateTime.Month}月");
+                dayPath = Path.Combine(monthPath, $"{dateTime.Day}日");
+                ngPath = Path.Combine(dayPath, "NG");
+                Directory.CreateDirectory(monthPath); // CreateDirectory 自动处理已存在的情况
+                Directory.CreateDirectory(dayPath);
+                Directory.CreateDirectory(ngPath);
+            }
+
+
+
+            // 根据保存方式构建路径
+            string saveWheelTypePath = "";
+            if (way == SaveWay.AutoOK)
+            {
+                // 查找下划线的位置
+                int index = prefixName.IndexOf("_", StringComparison.Ordinal);
+
+                // 如果找到双下划线，返回前面的部分
+                if (index >= 0)
+                {
+                    string value = prefixName.Substring(0, index);
+                    string finallyName = prefixName.Contains("半") ? "半" : "成";
+                    value = $"{value}_{finallyName}";
+                    saveWheelTypePath = Path.Combine(dayPath, value);
+
+                }
+                else
+                    saveWheelTypePath = Path.Combine(dayPath, prefixName);
+
+                Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
+                savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{dateTime:yyMMddHHmmss}.tif");
+            }
+            else if (way == SaveWay.AutoNG)
+            {
+                savePath = Path.Combine(ngPath, $"NG&{dateTime:yyMMddHHmmss}.tif");
+            }
+            else
+            {
+                savePath = Path.Combine(handImagesPath, $"Hand&{dateTime:yyMMddHHmmss}.tif");
+            }
+
+            return savePath;
+        }
+
+
 
         public enum SaveWay
         {

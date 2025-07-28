@@ -16,6 +16,7 @@ using System.Windows.Threading;
 using MvCamCtrl.NET;
 using Prism.Services.Dialogs;
 using WheelRecognitionSystem.Public;
+using System.Windows;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -167,8 +168,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
             RealTimer = new DispatcherTimer();
             RealTimer.Tick += new EventHandler(RealTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            RealTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);//设置时间间隔为1秒
-           
+            RealTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);//设置时间间隔为0.1秒
+
         }
 
 
@@ -180,7 +181,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             camerainformation = _camerainformation.SafeClone();
             DisplayName = camerainformation.Name;
-           
+
             myCamera = new MyCameraMV();
 
             CameraStatus = CameraConnect();
@@ -276,10 +277,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
 
         public HObject GetImage()
         {
-            if(myCamera != null)
+            if (myCamera != null)
             {
                 return myCamera.Grabimage();
-            }else
+            }
+            else
                 return null;
         }
         /// <summary>
@@ -357,12 +359,25 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 保存图片
         /// </summary>
         /// <param name="obj"></param>
-        private async void BtnSave(object obj)
+        private  void BtnSave(object obj)
         {
             if (!CheckInitialize())
                 return;
+            try
+            {
+                string savePath =  GetImageSavePath(SaveWay.Hand, HandImagesPath);
+                SaveImageDatasAsync(CurrentImage, savePath);
+                Application.Current.Dispatcher.Invoke(() =>
+                       EventMessage.MessageDisplay($"图片保存成功：{savePath}", true, false));
+            }
+            catch (Exception ex)
+            {
+                // 异常处理（可根据需要记录日志）
+                Application.Current.Dispatcher.Invoke(() =>
+                   EventMessage.MessageDisplay($"保存失败: {ex.Message}", true, false));
+            }
 
-            await SaveImageDatasAsync(CurrentImage, SaveWay.Hand, HandImagesPath);
+
         }
 
         /// <summary>
