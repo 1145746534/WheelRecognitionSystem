@@ -176,6 +176,11 @@ namespace WheelRecognitionSystem.ViewModels
 
         private WorkingPicture workingPicture;
 
+
+        private int triggerCount = 0;
+
+        private int count = 0;
+
         #endregion
 
         public MainViewModel(IRegionManager regionManager, IDialogService dialogService)
@@ -456,7 +461,7 @@ namespace WheelRecognitionSystem.ViewModels
             });
         }
 
-        int count;
+
 
         /// <summary>
         /// PLC数据交互线程
@@ -696,6 +701,20 @@ namespace WheelRecognitionSystem.ViewModels
         {
             try
             {
+
+                if (triggerCount > 10000)
+                {
+                    triggerCount = 0;
+                }
+
+                triggerCount++;
+
+                if (triggerCount % 100 == 0)
+                {
+                    WriteLogToFile(triggerCount, count);
+                }
+
+
                 ReadPLCSignal plcSignal = sender as ReadPLCSignal;
                 int n = plcSignal.Index;
                 // 在后台线程中修改集合时：
@@ -1225,8 +1244,8 @@ namespace WheelRecognitionSystem.ViewModels
         {
             if (obj == "文件管理") FileDialogOpen();
             if (obj == "大模型更新") UpdateAi();
-            if (obj == "图片查看") ProcessStart(HistoricalImagesPath); 
-            if (obj == "模板制作") ProcessStart(TemplateSoftwarePath); 
+            if (obj == "图片查看") ProcessStart(HistoricalImagesPath);
+            if (obj == "模板制作") ProcessStart(TemplateSoftwarePath);
 
         }
 
@@ -1235,7 +1254,7 @@ namespace WheelRecognitionSystem.ViewModels
             string path = _path;
             Task.Run(() =>
             {
-               
+
                 if (Directory.Exists(path) || File.Exists(path))
                 {
                     Process.Start("explorer.exe", path);
@@ -1325,17 +1344,17 @@ namespace WheelRecognitionSystem.ViewModels
 
         private readonly object _lock = new object(); // 线程同步锁
 
-        private void WriteLogToFile(string _count)
+        private void WriteLogToFile(int count1 ,int count2)
         {
             lock (_lock)
             {
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                string line = $"{timestamp} - Current Count: {_count}{Environment.NewLine}";
+                string line = $"{timestamp} - Computer:{count1} PLC: {count2}{Environment.NewLine}";
 
                 try
                 {
                     File.AppendAllText(@"E:\临时\计数.txt", line);
-                    //Console.WriteLine($"Logged at {timestamp}: {_count}");
+                   
                 }
                 catch (Exception ex)
                 {
