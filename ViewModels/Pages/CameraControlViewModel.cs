@@ -178,9 +178,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         public void Initialize(Sys_bd_camerainformation _camerainformation)
         {
-
-            DisplayName = _camerainformation.Name;
-            camerainformation = _camerainformation;
+            camerainformation = _camerainformation.SafeClone();
+            DisplayName = camerainformation.Name;
+           
             myCamera = new MyCameraMV();
 
             CameraStatus = CameraConnect();
@@ -332,7 +332,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (IsRefreshCam || IsRefreshExp)
             {
                 //1.通知父级模型保存数据
-                EventMessage.MessageHelper.GetEvent<CameraParameterChangedEvent>().Publish(camerainformation);
+                EventMessage.MessageHelper.GetEvent<CameraParameterChangedEvent>().Publish(camerainformation.SafeClone());
             }
             //2.修改相机参数
             if (IsRefreshCam)

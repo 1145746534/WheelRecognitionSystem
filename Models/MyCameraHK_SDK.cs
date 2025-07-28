@@ -18,7 +18,6 @@ namespace WheelRecognitionSystem.Models
             set;
         }
 
-        public Sys_bd_camerainformation info;
         /// <summary>
         /// 用于实时采集
         /// </summary>
@@ -45,13 +44,12 @@ namespace WheelRecognitionSystem.Models
 
             if (deviceInfoList.Count == 0)
                 return false;
-            if (info == null)
-                return false;
-            if (string.IsNullOrEmpty(info.LinkID))
+            
+            if (string.IsNullOrEmpty(camerID))
                 return false;
 
             IDeviceInfo deviceInfo = null;
-            deviceInfo = deviceInfoList.Find(x => x.SerialNumber == info.LinkID);
+            deviceInfo = deviceInfoList.Find(x => x.SerialNumber == camerID);
             if (deviceInfo == null)
             {
                 return false;

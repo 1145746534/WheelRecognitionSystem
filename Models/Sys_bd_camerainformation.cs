@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WheelRecognitionSystem.Models
 {
-    public class Sys_bd_camerainformation
+    public class Sys_bd_camerainformation : ICloneable
     {
         [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
         public int ID { get; set; }
@@ -29,5 +29,27 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         [SugarColumn(IsNullable = false )]
         public bool Grayscale { get; set; }
+
+        /// <summary>
+        /// 实现深拷贝克隆方法
+        /// </summary>
+        public object Clone()
+        {
+            return new Sys_bd_camerainformation
+            {
+                ID = this.ID,
+                Name = this.Name,
+                LinkID = this.LinkID,
+                Exposure = this.Exposure,
+                Grayscale = this.Grayscale
+            };
+        }
+        /// <summary>
+        /// 类型安全的克隆方法（推荐使用）
+        /// </summary>
+        public Sys_bd_camerainformation SafeClone()
+        {
+            return (Sys_bd_camerainformation)this.Clone();
+        }
     }
 }
