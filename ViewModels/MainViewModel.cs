@@ -32,6 +32,7 @@ using WheelRecognitionSystem.Views.Pages;
 using Prism.Events;
 using System.Diagnostics;
 using NPOI.OpenXmlFormats.Vml;
+using System.IO.Pipes;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -97,9 +98,19 @@ namespace WheelRecognitionSystem.ViewModels
             set { SetProperty(ref _messageBackground, value); }
         }
 
+        public ObservableCollection<DisplayData> _displayCollections;
+        /// <summary>
+        /// 显示相机处理结果数据集合
+        /// </summary>
+        public ObservableCollection<DisplayData> DisplayCollections
+        {
+            get { return _displayCollections; }
+            set { SetProperty(ref _displayCollections, value); }
+        }
+
         #endregion
 
-        #region======其他======
+
 
         /// <summary>
         /// 顶部 系统设置命令
@@ -110,35 +121,20 @@ namespace WheelRecognitionSystem.ViewModels
         public DelegateCommand RefreshNCCCommand { get; set; }
 
 
-
-
-
-        /// <summary>
-        /// PLC连接
-        /// </summary>
         private S7Client PlcCilent;
-
-
         /// <summary>
         /// 读缓冲区
         /// </summary>
         private byte[] _readBuffer = new byte[1400];
-
-
         /// <summary>
         /// 写入缓冲区
         /// </summary>
         private byte[] WriteBuffer = new byte[90];
 
-
-
-
         /// <summary>
         /// 读取PLC信号数据信息组
         /// </summary>
         private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[5];
-
-
 
         /// <summary>
         /// 信息显示定时器
@@ -154,34 +150,13 @@ namespace WheelRecognitionSystem.ViewModels
         /// 回流状态上次更新的二维码
         /// </summary>
         private string lastUpdateCodeBack;
-
-
-
         private IRegionManager _regionManager;
-
-
-
         readonly IDialogService _dialogService;
-
-
-        public ObservableCollection<DisplayData> _displayCollections;
-        /// <summary>
-        /// 显示相机处理结果数据集合
-        /// </summary>
-        public ObservableCollection<DisplayData> DisplayCollections
-        {
-            get { return _displayCollections; }
-            set { SetProperty(ref _displayCollections, value); }
-        }
-
         private WorkingPicture workingPicture;
-
-
         private int triggerCount = 0;
-
         private int count = 0;
 
-        #endregion
+
 
         public MainViewModel(IRegionManager regionManager, IDialogService dialogService)
         {
@@ -248,6 +223,13 @@ namespace WheelRecognitionSystem.ViewModels
             pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
             pictrueDeleteTimer.Start();//启动定时器
 
+            // 管道名称（客户端和服务端必须一致）
+            string pipeName = "MyPipe";
+
+            // 在单独的线程中启动服务器，避免阻塞主线程
+            Thread serverThread = new Thread(() => StartServer(pipeName));
+            serverThread.IsBackground = true;
+            serverThread.Start();
 
         }
         /// <summary>
@@ -409,6 +391,40 @@ namespace WheelRecognitionSystem.ViewModels
 
             EventMessage.MessageDisplay($"参数加载成功！", true, true);
 
+        }
+
+
+        void StartServer(string pipeName)
+        {
+            while (true)
+            {
+                try
+                {
+                    using (NamedPipeServerStream pipeServer = new NamedPipeServerStream(
+                        pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous))
+                    {
+                        // 等待客户端连接
+                        Console.WriteLine("等待客户端连接...");
+                        pipeServer.WaitForConnection();
+                        Console.WriteLine("客户端已连接！");
+
+                        // 使用 StreamReader 读取客户端发送的字符串
+                        using (StreamReader reader = new StreamReader(pipeServer))
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                Console.WriteLine("接收到客户端消息: " + line);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("发生错误: " + ex.Message);
+                }
+            }
         }
 
         private void RefreshNCC()
@@ -1187,37 +1203,6 @@ namespace WheelRecognitionSystem.ViewModels
                     catch { /* 错误处理 */ }
                 }
             }
-
-
-            ////获取删除开始的时间
-            //DateTime startDateTime = DateTime.Now.AddDays(-SaveImageDays);
-            ////从开始时间往前删30天
-            //for (int i = 1; i <= 30; i++)
-            //{
-            //    DateTime currentTime = startDateTime.AddDays(-i);
-            //    string path = HistoricalImagesPath + @"\" + currentTime.Month + "月" + @"\" + currentTime.Day + "日";
-            //    if (Directory.Exists(path))
-            //    {
-            //        Directory.Delete(path, true);
-            //        EventMessage.MessageDisplay("已自动删除" + currentTime.Month + "月" + currentTime.Day + "日的图片文件！", true, true);
-            //    }
-            //}
-            ////删除当月以前的月文件夹
-            //if (DateTime.Now.Day >= SaveImageDays)
-            //{
-            //    //从开始时间往前删12个月
-            //    for (int i = 1; i < 12; i++)
-            //    {
-            //        DateTime currentMonth = DateTime.Now.AddMonths(-i);
-            //        string path = HistoricalImagesPath + @"\" + currentMonth.Month + "月";
-            //        if (Directory.Exists(path))
-            //        {
-            //            Directory.Delete(path, true);
-
-            //            EventMessage.MessageDisplay("已自动删除" + currentMonth.Month + "月" + "的图片文件夹！", true, true);
-            //        }
-            //    }
-            //}
         }
 
 
@@ -1350,7 +1335,7 @@ namespace WheelRecognitionSystem.ViewModels
 
         private readonly object _lock = new object(); // 线程同步锁
 
-        private void WriteLogToFile(int count1 ,int count2)
+        private void WriteLogToFile(int count1, int count2)
         {
             lock (_lock)
             {
@@ -1360,7 +1345,7 @@ namespace WheelRecognitionSystem.ViewModels
                 try
                 {
                     File.AppendAllText(@"E:\临时\计数.txt", line);
-                   
+
                 }
                 catch (Exception ex)
                 {
