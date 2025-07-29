@@ -355,6 +355,7 @@ namespace WheelRecognitionSystem.ViewModels
                 //图像参数
                 SaveImageDays = int.Parse(systemDatas.First(x => x.Name == "SaveImageDays").Value);
                 TemplateSoftwarePath = GetPara(systemDatas, "TemplateSoftwarePath", "D:\\My\\Software");
+                SQLManageSoftwarePath = GetPara(systemDatas, "SQLManageSoftwarePath", "D:\\My\\Software");
                 //不需要修改
                 TemplateImagesPath = GetPara(systemDatas, "TemplateImagesPath", "D:\\VisualDatas\\TemplateImages");
                 ActiveTemplatesPath = GetPara(systemDatas, "ActiveTemplatesPath", "D:\\VisualDatas\\ActiveTemplate");
@@ -1246,6 +1247,7 @@ namespace WheelRecognitionSystem.ViewModels
             if (obj == "大模型更新") UpdateAi();
             if (obj == "图片查看") ProcessStart(HistoricalImagesPath);
             if (obj == "模板制作") ProcessStart(TemplateSoftwarePath);
+            if (obj == "报表管理") ProcessStart(SQLManageSoftwarePath);
 
         }
 
@@ -1315,7 +1317,8 @@ namespace WheelRecognitionSystem.ViewModels
             {
                 { "saveImageDays", SystemDatas.SaveImageDays },
                 { "maintainQuantity", SystemDatas.MaintainQuantity },
-                { "TemplateSoftwarePath", SystemDatas.TemplateSoftwarePath }
+                { "TemplateSoftwarePath", SystemDatas.TemplateSoftwarePath },
+                { "SQLManageSoftwarePath", SystemDatas.SQLManageSoftwarePath }
             };
             _dialogService.ShowDialog("FileManage", parameters,
                 new Action<IDialogResult>((IDialogResult result) =>
@@ -1331,9 +1334,12 @@ namespace WheelRecognitionSystem.ViewModels
                         SystemDatas.MaintainQuantity = Convert.ToInt32(quantity);
 
                         TemplateSoftwarePath = dialog.GetValue<string>("OpenTemplateFilePath");
+                        SQLManageSoftwarePath = dialog.GetValue<string>("SQLManageSoftwarePath");
+
                         SqlAccess.SystemDatasUpdateable("SaveImageDays", days);
                         SqlAccess.SystemDatasUpdateable("MaintainQuantity", quantity);
                         SqlAccess.SystemDatasUpdateable("TemplateSoftwarePath", TemplateSoftwarePath);
+                        SqlAccess.SystemDatasUpdateable("SQLManageSoftwarePath", SQLManageSoftwarePath);
                     }
                 }));
 

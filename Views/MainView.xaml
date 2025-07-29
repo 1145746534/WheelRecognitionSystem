@@ -33,7 +33,7 @@
                     <MenuItem Header="文件管理" Command="{Binding ClickCommand}"  CommandParameter="文件管理" FontSize="11" />
                     <MenuItem Header="数据库设置" FontSize="11"/>
                 </MenuItem>
-                <MenuItem Header="数据查询" Command="{Binding ClickCommand}" CommandParameter="数据查询"   FontSize="12"/>
+                <MenuItem Header="报表管理" Command="{Binding ClickCommand}" CommandParameter="报表管理"   FontSize="12"/>
                 <MenuItem Header="大模型更新" Command="{Binding ClickCommand}"  CommandParameter="大模型更新" FontSize="12" />
                 <MenuItem Header="图片查看" Command="{Binding ClickCommand}"  CommandParameter="图片查看" FontSize="12" />
                 <MenuItem Header="模板制作" Command="{Binding ClickCommand}"  CommandParameter="模板制作" FontSize="12" />

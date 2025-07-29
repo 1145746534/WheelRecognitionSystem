@@ -59,6 +59,10 @@ namespace WheelRecognitionSystem.DataAccess
             //sDB.Updateable(data).Where(x => x.Name == name).ExecuteCommand();
             //sDB.Close();
             //sDB.Dispose();
+            if (value==null)
+            {
+                return;
+            }
             sys_bd_systemsettingsdatamodel data = new sys_bd_systemsettingsdatamodel();
             data.Name = name;
             data.Value = value;

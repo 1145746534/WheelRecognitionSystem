@@ -147,10 +147,7 @@ namespace WheelRecognitionSystem.Public
         public static TemplateDatasModel TemplateDataCollection { get; set;} = new TemplateDatasModel();
         
 
-        /// <summary>
-        /// 系统模式 True为自动模式
-        /// </summary>
-        public static bool SystemModel { get; set; } = false;
+
 
         /// <summary>
         /// 上传地址
@@ -177,7 +174,7 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static double ConfidenceMatch { get; set; }
         /// <summary>
-        /// 全图灰度值 - 如果小于它 直接用大模型识别 -TODO 改成从数据库中读写
+        /// 全图灰度值 - 如果小于它 直接用大模型识别 
         /// </summary>
         public static double MinFullFigureGary { get; set; }
 
@@ -192,6 +189,11 @@ namespace WheelRecognitionSystem.Public
         /// 模板软件的地址
         /// </summary>
         public static string TemplateSoftwarePath { get; set; }
+        
+        /// <summary>
+        /// 报表软件的地址
+        /// </summary>
+        public static string SQLManageSoftwarePath { get; set; }
 
 
     }

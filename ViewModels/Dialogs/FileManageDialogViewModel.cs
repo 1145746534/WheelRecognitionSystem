@@ -44,6 +44,18 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 SetProperty(ref _openTemplateFilePath, value);
             }
         }
+        private string _sQLManageSoftwarePath;
+        /// <summary>
+        ///  报表管理软件路径
+        /// </summary>
+        public string SQLManageSoftwarePath
+        {
+            get { return _sQLManageSoftwarePath; }
+            set
+            {
+                SetProperty(ref _sQLManageSoftwarePath, value);
+            }
+        }
         private string _maintainQuantity;
         /// <summary>
         ///  常驻数量
@@ -63,7 +75,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         public event Action<IDialogResult> RequestClose;
         public DelegateCommand ConfirmCommand { get; }
         public DelegateCommand CancelCommand { get; }
-        public DelegateCommand UpdatePathCommand { get; }
+        public DelegateCommand<string> UpdatePathCommand { get; }
 
 
 
@@ -72,10 +84,12 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             ConfirmCommand = new DelegateCommand(OnConfirm);
             CancelCommand = new DelegateCommand(OnCancel);
-            UpdatePathCommand = new DelegateCommand(UpdatePath);
+            UpdatePathCommand = new DelegateCommand<string>(UpdatePath);
         }
 
-        private async void UpdatePath()
+
+
+        private async void UpdatePath(string obj)
         {
             string directory = @"E:\";
             if (!Directory.Exists(directory))
@@ -95,7 +109,15 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 if (openFileDialog.ShowDialog() == true)
                 {
                     string value = openFileDialog.FileName;
-                    OpenTemplateFilePath = value;
+                    if (obj == "模板制作")
+                    {
+                        OpenTemplateFilePath = value;
+                    }
+                    if (obj == "报表管理")
+                    {
+                        SQLManageSoftwarePath = value;
+                    }
+
 
                 }
 
@@ -117,6 +139,10 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             {
                 OpenTemplateFilePath = parameters.GetValue<string>("TemplateSoftwarePath");
             }
+            if (parameters.ContainsKey("SQLManageSoftwarePath"))
+            {
+                SQLManageSoftwarePath = parameters.GetValue<string>("SQLManageSoftwarePath");
+            }
 
         }
         /// <summary>
@@ -129,6 +155,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
             parameters.Add("saveImageDays", SaveImageDays);
             parameters.Add("maintainQuantity", 8);
             parameters.Add("OpenTemplateFilePath", OpenTemplateFilePath);
+            parameters.Add("SQLManageSoftwarePath", SQLManageSoftwarePath);
             RequestClose?.Invoke(new DialogResult(ButtonResult.OK, parameters));
         }
 
