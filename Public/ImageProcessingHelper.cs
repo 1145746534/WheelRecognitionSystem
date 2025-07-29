@@ -170,9 +170,9 @@ namespace WheelRecognitionSystem.Public
 
 
 
-                        resultModel.CenterRow = row.Clone();
-                        resultModel.CenterColumn = column.Clone();
-                        resultModel.Radius = radius.Clone();
+                        resultModel.CenterRow = row?.D;
+                        resultModel.CenterColumn = column?.D;
+                        resultModel.Radius = radius?.D;
 
                         HOperatorSet.GenCircle(out HObject reducedCircle, row, column, radius);
                         HOperatorSet.GenCircleContourXld(out HObject wheelContour, row, column, radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);

@@ -20,15 +20,15 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 轮毂中心行坐标
         /// </summary>
-        public HTuple CenterRow { get; set; }
+        public double? CenterRow { get; set; }
         /// <summary>
         /// 轮毂中心列坐标
         /// </summary>
-        public HTuple CenterColumn { get; set; }
+        public double? CenterColumn { get; set; }
         /// <summary>
         /// 半径
         /// </summary>
-        public HTuple Radius { get; set; }
+        public double? Radius { get; set; }
         /// <summary>
         /// 内圈灰度
         /// </summary>
@@ -43,9 +43,9 @@ namespace WheelRecognitionSystem.Models
         {
             SafeHalconDispose(WheelImage);
             SafeHalconDispose(WheelContour);
-            SafeHalconDispose(CenterRow);
-            SafeHalconDispose(CenterColumn);
-            SafeHalconDispose(Radius);
+            //SafeHalconDispose(CenterRow);
+            //SafeHalconDispose(CenterColumn);
+            //SafeHalconDispose(Radius);
         }
 
         private void SafeHalconDispose<T>(T obj) where T : class, IDisposable

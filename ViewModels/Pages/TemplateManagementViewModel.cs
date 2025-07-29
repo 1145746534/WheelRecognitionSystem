@@ -993,10 +993,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 }
                 else
                 {
-                    EventMessage.SystemMessageDisplay($"轮毂半径：{pResult.Radius.D}。", MessageType.Default);
-                    pResult.CenterColumn?.Dispose();
-                    pResult.CenterRow?.Dispose();
-                    pResult.Radius?.Dispose();
+                    EventMessage.SystemMessageDisplay($"轮毂半径：{pResult.Radius}。", MessageType.Default);
+                    //pResult.CenterColumn?.Dispose();
+                    //pResult.CenterRow?.Dispose();
+                    //pResult.Radius?.Dispose();
 
                     InPoseWheelImage = pResult.WheelImage;
                     //EventMessage.MessageHelper.GetEvent<TemplateClearEvent>().Publish(SourceTemplateImage);
