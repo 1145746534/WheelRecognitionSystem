@@ -321,12 +321,12 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }));
 
             //如果修改了参数值
-            if (newLinkID != camerainformation.LinkID)
+            if (!string.IsNullOrEmpty(newLinkID) && newLinkID != camerainformation.LinkID)
             {
                 camerainformation.LinkID = newLinkID;
                 IsRefreshCam = true;
             }
-            if (newExposure != camerainformation.Exposure)
+            if (newExposure != 0 && newExposure != camerainformation.Exposure)
             {
                 camerainformation.Exposure = newExposure;
                 IsRefreshExp = true;
@@ -359,13 +359,13 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// 保存图片
         /// </summary>
         /// <param name="obj"></param>
-        private  void BtnSave(object obj)
+        private void BtnSave(object obj)
         {
             if (!CheckInitialize())
                 return;
             try
             {
-                string savePath =  GetImageSavePath(SaveWay.Hand, HandImagesPath);
+                string savePath = GetImageSavePath(SaveWay.Hand, HandImagesPath);
                 SaveImageDatasAsync(CurrentImage, savePath);
                 Application.Current.Dispatcher.Invoke(() =>
                        EventMessage.MessageDisplay($"图片保存成功：{savePath}", true, false));

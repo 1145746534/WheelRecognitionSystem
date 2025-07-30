@@ -26,6 +26,7 @@ using System.Windows.Media.Media3D;
 using MvCamCtrl.NET;
 using System.Collections;
 using Prism.Events;
+using Microsoft.Office.Interop.Excel;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -194,17 +195,42 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             Sys_bd_camerainformation _Camerainformation = obj as Sys_bd_camerainformation;
             if (_Camerainformation != null)
             {
-                SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
-                // 更新操作
-                sDB.Updateable<Sys_bd_camerainformation>()
-                    .SetColumns(x => x.LinkID == _Camerainformation.LinkID) // 设置需要更新的字段和值
-                    .SetColumns(x => x.Exposure == _Camerainformation.Exposure)
-                    .Where(x => x.ID == _Camerainformation.ID) // 指定条件
-                    .ExecuteCommand(); // 执行更新命令
+                using (SqlSugarClient sDB = new SqlAccess().SystemDataAccess)
+                {
+                    // 1. 查询数据库中的原始记录
+                    var original = sDB.Queryable<Sys_bd_camerainformation>()
+                                      .Where(x => x.ID == _Camerainformation.ID)
+                                      .First();
 
-                // 关闭并释放资源
-                sDB.Close();
-                sDB.Dispose();
+                    if (original == null) return; // 如果记录不存在则退出
+
+                    // 2. 动态构建更新表达式
+                    var update = sDB.Updateable<Sys_bd_camerainformation>();
+                    bool isChanged = false;
+
+                    // 检查LinkID是否变化
+                    if (original.LinkID != _Camerainformation.LinkID)
+                    {
+                        update = update.SetColumns(x => x.LinkID == _Camerainformation.LinkID);
+                        EventMessage.MessageDisplay($"相机连接ID:{original.LinkID} -> {_Camerainformation.LinkID}", true, true);
+                        isChanged = true;
+                    }
+
+                    // 检查Exposure是否变化
+                    if (original.Exposure != _Camerainformation.Exposure)
+                    {
+                        update = update.SetColumns(x => x.Exposure == _Camerainformation.Exposure);
+                        EventMessage.MessageDisplay($"相机连接曝光:{original.Exposure} -> {_Camerainformation.Exposure}", true, true);
+                        isChanged = true;
+                    }
+
+                    // 3. 如果有变化则执行更新
+                    if (isChanged)
+                    {
+                        update.Where(x => x.ID == _Camerainformation.ID)
+                              .ExecuteCommand();
+                    }
+                } // 使用using自动释放资源
             }
         }
 
