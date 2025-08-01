@@ -1,6 +1,7 @@
 ﻿using HalconDotNet;
 using Microsoft.Office.Interop.Excel;
 using NPOI.Util;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.ApplicationServices;
+using System.Windows.Threading;
 using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
@@ -49,6 +51,8 @@ namespace WheelRecognitionSystem.ViewModels
         //是否需要加载AI参数 启动软件需要 更新了底层文件需要
         public bool _isNeedLoadAI = true;
 
+
+
         private readonly Queue<Dictionary<InteractS7PLCModel, HObject>> _processingQueue = new Queue<Dictionary<InteractS7PLCModel, HObject>>();
         private readonly object _processingLock = new object();
         private readonly Queue<SaveImageRequest> _saveImageQueue = new Queue<SaveImageRequest>();
@@ -56,8 +60,15 @@ namespace WheelRecognitionSystem.ViewModels
         private bool _isProcessing = false;
         private bool _isSaving = false;
 
+
+        /// <summary>
+        /// 定时刷新使用状态到数据库
+        /// </summary>
+        public DispatcherTimer UseStatusTimer;
+
         // 添加停止标志
         private CancellationTokenSource _cts = new CancellationTokenSource();
+
         // 图片保存请求结构
 
         private struct SaveImageRequest
@@ -72,7 +83,48 @@ namespace WheelRecognitionSystem.ViewModels
         // 私有构造函数防止外部实例化
         private WorkingPicture()
         {
+            using (SqlSugarClient sDB = new SqlAccess().SystemDataAccess)
+            {
+                foreach(var item in TemplateModels)
+                {
 
+                }
+                // 1. 查询数据库中的原始记录
+                sys_bd_Templatedatamodel original = sDB.Queryable<sys_bd_Templatedatamodel>()
+                                  .Where(x => x.ID == _Camerainformation.ID)
+                                  .First();
+
+                if (original == null) return; // 如果记录不存在则退出
+
+                //// 2. 动态构建更新表达式
+                //var update = sDB.Updateable<Sys_bd_camerainformation>();
+                //bool isChanged = false;
+
+                //// 检查LinkID是否变化
+                //if (original.LinkID != _Camerainformation.LinkID)
+                //{
+                //    update = update.SetColumns(x => x.LinkID == _Camerainformation.LinkID);
+                //    EventMessage.MessageDisplay($"相机连接ID:{original.LinkID} -> {_Camerainformation.LinkID}", true, true);
+                //    isChanged = true;
+                //}
+
+                //// 检查Exposure是否变化
+                //if (original.Exposure != _Camerainformation.Exposure)
+                //{
+                //    update = update.SetColumns(x => x.Exposure == _Camerainformation.Exposure);
+                //    EventMessage.MessageDisplay($"相机连接曝光:{original.Exposure} -> {_Camerainformation.Exposure}", true, true);
+                //    isChanged = true;
+                //}
+
+                //// 3. 如果有变化则执行更新
+                //if (isChanged)
+                //{
+                //    update.Where(x => x.ID == _Camerainformation.ID)
+                //          .ExecuteCommand();
+                //}
+
+
+            } // 使用using自动释放资源
         }
 
         // 公共静态方法为外部提供获取唯一实例的方法
@@ -108,6 +160,20 @@ namespace WheelRecognitionSystem.ViewModels
                 Task.Run(() => SaveImageWorker());
             }
 
+            UseStatusTimer = new DispatcherTimer();
+            UseStatusTimer.Tick += new EventHandler(UseStatus_Tick);//添加事件(到达时间间隔后会自动调用)
+            UseStatusTimer.Interval = new TimeSpan(0, 4, 0, 0, 0);//设置时间间隔为4小时
+
+        }
+
+        /// <summary>
+        /// 把使用状态刷新到数据库中
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UseStatus_Tick(object sender, EventArgs e)
+        {
+            
         }
 
 
@@ -377,13 +443,14 @@ namespace WheelRecognitionSystem.ViewModels
                                     {
                                         loadAIProcessParam();
                                         recognitionResult = new RecognitionResultModel() { RecognitionWheelType = "NG" };
+                                        recognitionWay = "大模型";
                                         //大模型推算
                                         HTuple hv_DLResult = WheelDeepLearning(grayImage, hv_DLModelHandle, hv_DLPreprocessParam);
                                         HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
                                         HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                                         if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
                                         {
-                                            recognitionWay = "大模型";
+                                            
                                             string[] name = names[0].S.Split('_'); //00619C70_半
                                             string value = string.Empty;
                                             if (name.Length == 2)

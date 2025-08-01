@@ -179,7 +179,7 @@ namespace WheelRecognitionSystem.ViewModels
         private void ViewInitialization()
         {
             _regionManager.RegisterViewWithRegion("ViewRegion", typeof(DisplayInterfaceView));
-            _regionManager.RegisterViewWithRegion("ViewRegion1", typeof(ReportManagementView));
+            //_regionManager.RegisterViewWithRegion("ViewRegion1", typeof(ReportManagementView));
             //_regionManager.RegisterViewWithRegion("ViewRegion2", typeof(ReportManagementView));
         }
 

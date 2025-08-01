@@ -107,14 +107,14 @@ namespace WheelRecognitionSystem.Models
 
             // 直接复制基类属性（非绑定方式避免通知触发）
             this.Index = source.Index;
-            this.WheelType = source.WheelType;
-            this.UnusedDays = source.UnusedDays;
+            this.WheelType = source.WheelType;   //
+            this.UnusedDays = source.UnusedDays; //
             this.WheelHeight = source.WheelHeight;
             this.WheelStyle = source.WheelStyle;
             this.InnerCircleGary = source.InnerCircleGary;
             this.CreationTime = source.CreationTime;
             this.UpdateTime = source.UpdateTime;
-            this.LastUsedTime = source.LastUsedTime;
+            this.LastUsedTime = source.LastUsedTime;  //
             this.TemplatePath = source.TemplatePath;
             this.TemplatePicturePath = source.TemplatePicturePath;        
 

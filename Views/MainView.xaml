@@ -10,7 +10,7 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen" FontFamily="Microsoft YaHei" FontSize="13" Foreground="#333" FontWeight="ExtraLight"
-        Title="终检系统" Icon="{StaticResource icon}" 
+        Title="长沙戴卡-终检系统" Icon="{StaticResource icon}" 
         Height="1000" Width="1580" MinHeight="600" MinWidth="800"
        
                  >
@@ -43,9 +43,9 @@
                 <TabItem Header="显示界面" Tag="DisplayInterfaceView">
                     <ContentControl p:RegionManager.RegionName="ViewRegion" />
                 </TabItem>
-                <TabItem Header="报表管理" Tag="SystemSettingsView">
+                <!--<TabItem Header="报表管理" Tag="SystemSettingsView">
                     <ContentControl p:RegionManager.RegionName="ViewRegion1" />
-                </TabItem>
+                </TabItem>-->
             </mah:MetroAnimatedSingleRowTabControl>
 
             <Border Grid.Row="2" Background="#FFE5ECF3">
