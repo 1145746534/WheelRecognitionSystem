@@ -83,48 +83,7 @@ namespace WheelRecognitionSystem.ViewModels
         // 私有构造函数防止外部实例化
         private WorkingPicture()
         {
-            using (SqlSugarClient sDB = new SqlAccess().SystemDataAccess)
-            {
-                foreach(var item in TemplateModels)
-                {
 
-                }
-                // 1. 查询数据库中的原始记录
-                sys_bd_Templatedatamodel original = sDB.Queryable<sys_bd_Templatedatamodel>()
-                                  .Where(x => x.ID == _Camerainformation.ID)
-                                  .First();
-
-                if (original == null) return; // 如果记录不存在则退出
-
-                //// 2. 动态构建更新表达式
-                //var update = sDB.Updateable<Sys_bd_camerainformation>();
-                //bool isChanged = false;
-
-                //// 检查LinkID是否变化
-                //if (original.LinkID != _Camerainformation.LinkID)
-                //{
-                //    update = update.SetColumns(x => x.LinkID == _Camerainformation.LinkID);
-                //    EventMessage.MessageDisplay($"相机连接ID:{original.LinkID} -> {_Camerainformation.LinkID}", true, true);
-                //    isChanged = true;
-                //}
-
-                //// 检查Exposure是否变化
-                //if (original.Exposure != _Camerainformation.Exposure)
-                //{
-                //    update = update.SetColumns(x => x.Exposure == _Camerainformation.Exposure);
-                //    EventMessage.MessageDisplay($"相机连接曝光:{original.Exposure} -> {_Camerainformation.Exposure}", true, true);
-                //    isChanged = true;
-                //}
-
-                //// 3. 如果有变化则执行更新
-                //if (isChanged)
-                //{
-                //    update.Where(x => x.ID == _Camerainformation.ID)
-                //          .ExecuteCommand();
-                //}
-
-
-            } // 使用using自动释放资源
         }
 
         // 公共静态方法为外部提供获取唯一实例的方法

@@ -1,20 +1,15 @@
 ﻿using HalconDotNet;
-using NPOI.SS.Formula.Functions;
-using NPOI.Util;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using WheelRecognitionSystem.Models;
-using WheelRecognitionSystem.ViewModels.Pages;
-using static WheelRecognitionSystem.ViewModels.Pages.DisplayInterfaceViewModel;
+using Application = System.Windows.Application;
+using Path = System.IO.Path;
 
 namespace WheelRecognitionSystem.Public
 {
@@ -381,14 +376,14 @@ namespace WheelRecognitionSystem.Public
         //}
 
         public static RecognitionResultModel WheelRecognitionAlgorithm(HObject imageSource, List<TemplatedataModel> templateDatas, double angleStart,
-                                                                        double angleExtent, double minSimilarity,out List<RecognitionResultModel> recognitionResults)
+                                                                        double angleExtent, double minSimilarity, out List<RecognitionResultModel> recognitionResults)
         {
 
 
             HObject image = CloneImageSafely(imageSource); //复制图片
             RecognitionResultModel result = null;
             recognitionResults = new List<RecognitionResultModel>();
-           
+
             {
                 foreach (TemplatedataModel templateData in templateDatas)
                 {
@@ -757,7 +752,7 @@ namespace WheelRecognitionSystem.Public
             string monthPath = string.Empty;
             string dayPath = string.Empty;
             string ngPath = string.Empty;
-           
+
             try
             {
                 if (way == SaveWay.Hand)
@@ -776,7 +771,7 @@ namespace WheelRecognitionSystem.Public
                     Directory.CreateDirectory(ngPath);
                 }
 
-               
+
 
                 // 根据保存方式构建路径
                 string saveWheelTypePath = "";
@@ -870,7 +865,7 @@ namespace WheelRecognitionSystem.Public
                 {
                     saveImagePath = savePath.Replace(@"\", "/");
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
-                   
+
                 });
                 //if (way == SaveWay.Hand)
                 //    Application.Current.Dispatcher.Invoke(() =>
@@ -880,7 +875,7 @@ namespace WheelRecognitionSystem.Public
             }
             catch (Exception ex)
             {
-                throw new Exception("保存失败"+ ex.Message);
+                throw new Exception("保存失败" + ex.Message);
                 // 异常处理（可根据需要记录日志）
                 //Application.Current.Dispatcher.Invoke(() =>
                 //    EventMessage.MessageDisplay($"保存失败: {ex.Message}", true, false));
@@ -894,6 +889,105 @@ namespace WheelRecognitionSystem.Public
 
 
         public static string GetImageSavePath(SaveWay way, string ImagePath, string prefixName = null)
+        {   
+            // 路径定义
+            string handImagesPath = string.Empty;
+            string savePath = string.Empty;
+            string path = string.Empty;
+
+            DateTime now = DateTime.Now;
+
+            DateTime today = now.Date;
+            DateTime today8 = today.AddHours(8);
+            DateTime today20 = today.AddHours(20);
+
+            DateTime startTime, endTime;
+
+            string workShift = string.Empty;
+
+
+            if (now >= today8 && now < today20)
+            {
+                // 当前是A班
+                startTime = today8;
+                endTime = today20;
+                workShift = $"{startTime.ToString("MM-dd")}号白班";
+            }
+            else
+            {
+                // 当前是B班
+                if (now >= today20)
+                {
+                    // 今天晚上20:00之后，属于今天的B班
+                    startTime = today20;
+                    endTime = today.AddDays(1).AddHours(8);
+
+                }
+                else
+                {
+                    // 当前时间小于today8，属于今天凌晨（从昨天20:00到今天8:00）
+                    startTime = today.AddDays(-1).AddHours(20);
+                    endTime = today8;
+                }
+                workShift = $"{startTime.ToString("MM-dd")}号晚班";
+
+            }
+
+
+           
+
+            if (way == SaveWay.Hand)
+            {
+                handImagesPath = ImagePath;
+                Directory.CreateDirectory(handImagesPath);
+
+            }
+            else
+            {
+                path = $"{startTime.ToString("yyyyMMddHH")}-{endTime.ToString("MMddHH")}({workShift})";
+                path = Path.Combine(ImagePath, path);
+                Directory.CreateDirectory(path);
+            }
+
+
+
+            // 根据保存方式构建路径
+            string saveWheelTypePath = "";
+            if (way == SaveWay.AutoOK)
+            {
+                // 查找下划线的位置
+                int index = prefixName.IndexOf("_", StringComparison.Ordinal);
+
+                // 如果找到双下划线，返回前面的部分
+                if (index >= 0)
+                {
+                    string value = prefixName.Substring(0, index);
+                    string finallyName = prefixName.Contains("半") ? "半" : "成";
+                    value = $"{value}_{finallyName}";
+                    saveWheelTypePath = Path.Combine(path, value);
+
+                }
+                else
+                    saveWheelTypePath = Path.Combine(path, prefixName);
+
+                Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
+                savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{now:yyMMddHHmmss}.tif");
+            }
+            else if (way == SaveWay.AutoNG)
+            {
+                string  ngPath = Path.Combine(path, "NG");
+                Task.Run(() => Directory.CreateDirectory(ngPath));
+                savePath = Path.Combine(ngPath, $"NG&{now:yyMMddHHmmss}.tif");
+            }
+            else
+            {
+                savePath = Path.Combine(handImagesPath, $"Hand&{now:yyMMddHHmmss}.tif");
+            }
+
+            return savePath;
+        }
+
+        public static string GetImageSavePath1(SaveWay way, string ImagePath, string prefixName = null)
         {
             string savePath = string.Empty;
             DateTime dateTime = DateTime.Now;
@@ -956,7 +1050,6 @@ namespace WheelRecognitionSystem.Public
 
             return savePath;
         }
-
 
 
         public enum SaveWay

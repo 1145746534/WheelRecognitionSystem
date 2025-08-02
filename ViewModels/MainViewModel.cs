@@ -1164,6 +1164,46 @@ namespace WheelRecognitionSystem.ViewModels
             // 计算过期日期（保留当天）
             DateTime expirationDate = DateTime.Now.AddDays(-SaveImageDays).Date;
 
+            // 检查基础目录是否存在
+            if (!Directory.Exists(HistoricalImagesPath))
+            {            
+                return;
+            }
+            try
+            {
+                // 获取所有子目录
+                string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
+                foreach (string dirPath in subDirectories)
+                {
+                    try
+                    {
+                        DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
+
+                        // 检查目录创建时间是否早于阈值日期
+                        if (dirInfo.CreationTime < expirationDate)
+                        {
+                            // 递归删除目录及其所有内容
+                            Directory.Delete(dirPath, recursive: true);
+                            Console.WriteLine($"已删除目录: {dirPath} (创建时间: {dirInfo.CreationTime})");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"处理目录 '{dirPath}' 时出错: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"扫描目录 '{HistoricalImagesPath}' 时出错: {ex.Message}");
+            }
+
+        } 
+        private void PictrueDeleteTimer_Tick1(object sender, EventArgs e)
+        {
+            // 计算过期日期（保留当天）
+            DateTime expirationDate = DateTime.Now.AddDays(-SaveImageDays).Date;
+
             // 删除过期的天文件夹
             for (int i = 0; i <= SaveImageDays + 30; i++) // 覆盖所有可能过期的日期
             {
@@ -1203,6 +1243,7 @@ namespace WheelRecognitionSystem.ViewModels
                     catch { /* 错误处理 */ }
                 }
             }
+      
         }
 
 
