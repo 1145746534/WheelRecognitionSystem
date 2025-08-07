@@ -33,6 +33,7 @@ using Prism.Events;
 using System.Diagnostics;
 using NPOI.OpenXmlFormats.Vml;
 using System.IO.Pipes;
+using Microsoft.Office.Interop.Excel;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -394,6 +395,10 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
 
+        /// <summary>
+        /// 管道通信
+        /// </summary>
+        /// <param name="pipeName"></param>
         void StartServer(string pipeName)
         {
             while (true)
@@ -415,7 +420,22 @@ namespace WheelRecognitionSystem.ViewModels
                             string line;
                             while ((line = reader.ReadLine()) != null)
                             {
-                                Console.WriteLine("接收到客户端消息: " + line);
+                                EventMessage.MessageDisplay($"接收到客户端消息:{line}", true, true);
+
+                                //Console.WriteLine("接收到客户端消息: " + line);
+                                if (line.Equals("参数刷新"))
+                                {
+                                    InitialPara();
+                                }
+                                if(line.Equals("传统视觉模板刷新"))
+                                {
+                                    RefreshNCC();
+                                }
+                                if (line.Equals("大模型刷新"))
+                                {
+                                    workingPicture._isNeedLoadAI = true;
+                                }
+                               
                             }
                         }
                     }
