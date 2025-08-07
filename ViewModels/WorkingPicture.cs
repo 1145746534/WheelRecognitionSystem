@@ -445,7 +445,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                                     //保存图片
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}+{score}";
+                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}{score}";
                                     
                                     string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     interact.imagePath = savePath;
