@@ -369,9 +369,11 @@ namespace WheelRecognitionSystem.ViewModels
                                 }
                                 else
                                 {
+
                                     //处理图像
                                     HObject grayImage = RGBTransGray(image);
                                     string recognitionWay = "传统";
+                                    string score = "0";
 
                                     //获取整张图的灰度值            
                                     double fullFigureGary = GetIntensity(grayImage);
@@ -395,6 +397,7 @@ namespace WheelRecognitionSystem.ViewModels
                                                 templateContour = GetAffineTemplateContour(GetHTupleByName(recognitionResult.RecognitionWheelType),
                                                     recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
                                                 ReleaseUnusedTemplates();
+                                                score = recognitionResult.Similarity.ToString("F3");
                                             }
                                             SafeDisposeHObject(ref imageRecogn);
                                         }
@@ -425,6 +428,7 @@ namespace WheelRecognitionSystem.ViewModels
                                             recognitionResult.WheelStyle = value; //识别样式
                                             recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.000"));
                                             recognitionResult.status = "识别成功";
+                                            score = confidences[0].D.ToString("F3");
 
                                         }
                                         //for (int i = 0; i < names.Length; i++)
@@ -441,7 +445,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                                     //保存图片
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}";
+                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}+{score}";
                                     
                                     string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     interact.imagePath = savePath;
