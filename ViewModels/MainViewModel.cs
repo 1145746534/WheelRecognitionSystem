@@ -755,7 +755,7 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadPLCSignal plcSignal = sender as ReadPLCSignal;
                 int n = plcSignal.Index;
                 // 在后台线程中修改集合时：
-                Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
                 });
@@ -1053,7 +1053,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="model"></param>
         private void SystemMessageDisplay(MessageModel model)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
 
 

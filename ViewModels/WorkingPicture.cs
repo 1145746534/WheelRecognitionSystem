@@ -10,10 +10,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.ApplicationServices;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
 using WheelRecognitionSystem.Public;
+using static NPOI.HSSF.Util.HSSFColor;
 using static WheelRecognitionSystem.Public.ImageProcessingHelper;
 using static WheelRecognitionSystem.Public.SystemDatas;
 
@@ -167,6 +169,8 @@ namespace WheelRecognitionSystem.ViewModels
                     Console.WriteLine($"加载AI参数异常：{ex.ToString()}");
                 }
                 _isNeedLoadAI = false;
+                EventMessage.MessageDisplay($"大模型刷新", true, true);
+
             }
         }
 
@@ -231,6 +235,7 @@ namespace WheelRecognitionSystem.ViewModels
                 }
 
             }
+            EventMessage.MessageDisplay($"刷新传统模板状态", true, true);
 
         }
 
