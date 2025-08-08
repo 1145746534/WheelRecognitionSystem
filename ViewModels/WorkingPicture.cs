@@ -123,7 +123,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             UseStatusTimer = new DispatcherTimer();
             UseStatusTimer.Tick += new EventHandler(UseStatus_Tick);//添加事件(到达时间间隔后会自动调用)
-            UseStatusTimer.Interval = new TimeSpan(0, 4, 0, 0, 0);//设置时间间隔为4小时
+            UseStatusTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);//设置时间间隔为4小时
             UseStatusTimer.Start();
         }
 
@@ -134,14 +134,14 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="e"></param>
         private void UseStatus_Tick(object sender, EventArgs e)
         {
-            TemplateModels.FindLast(d => d.Index == 3).LastUsedTime = DateTime.Now;
+            //TemplateModels.FindLast(d => d.Index == 3).LastUsedTime = DateTime.Now;
             using (var _db = new SqlAccess().SystemDataAccess)
             {
                 // 开启Sql日志输出（调试用）
-                _db.Aop.OnLogExecuting = (sql, pars) =>
-                {
-                    Console.WriteLine("UseStatus_Tick:" + sql);
-                };
+                //_db.Aop.OnLogExecuting = (sql, pars) =>
+                //{
+                //    Console.WriteLine("UseStatus_Tick:" + sql);
+                //};
 
                 // 1. 提取需要检查的WheelType集合
                 List<string> wheelTypes = TemplateModels.Select(d => d.WheelType).Distinct().ToList();
@@ -249,34 +249,75 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void RefreshNCCPara()
         {
-            var db = new SqlAccess().SystemDataAccess;
-            List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
-            db.Close(); db.Dispose();
-
-            foreach (TemplatedataModel item in TemplateModels)
+            // 使用using确保资源释放
+            using (var db = new SqlAccess().SystemDataAccess)
             {
-                //判断 本机校准数据库
-                sys_bd_Templatedatamodel template = Datas.Find((sys_bd_Templatedatamodel x) => x.WheelType == item.WheelType);
-                if (template != null)
+                // 获取所有数据库记录
+                var dbTemplates = db.Queryable<sys_bd_Templatedatamodel>().ToList();
+                // 创建快速查找字典
+                Dictionary<string, sys_bd_Templatedatamodel> dbDict = dbTemplates.ToDictionary(x => x.WheelType);
+                foreach (var item in TemplateModels)
                 {
-
-                    if (template.UpdateTime != item.UpdateTime)
+                    if (dbDict.TryGetValue(item.WheelType, out var template))
                     {
-                        //库里面的更新时间有变化 - 意味着模板更新了
-                        item.Status = TemplateStatus.Update;
-                        //拷贝数据
-                        item.CopyPropertiesFrom(template);
+                        // 存在匹配项
+                        
+                        if (template.UpdateTime != item.UpdateTime)
+                        {
+                            item.Status = TemplateStatus.Update;
+                            item.CopyPropertiesFrom(template);
+                            _isRefreshStatus = true;
+                        }
+                        
+                    }
+                    else
+                    {
+                        // 数据库中已不存在
+                        item.Status = TemplateStatus.Delete;
                         _isRefreshStatus = true;
                     }
                 }
-                else
+
+                // 处理新增项（数据库中有但本地没有的）
+                foreach (var newTemplate in dbTemplates.Where(x => !TemplateModels.Any(local => local.WheelType == x.WheelType)))
                 {
-                    //在数据中未查询到数据 - 意味着未删除
-                    item.Status = TemplateStatus.Delete; //这里只做标记
+                    var newItem = new TemplatedataModel();
+                    newItem.CopyPropertiesFrom(newTemplate);
+                    newItem.Status = TemplateStatus.Exist; // 或其他适当状态
+                    TemplateModels.Add(newItem);
                     _isRefreshStatus = true;
                 }
-
             }
+
+           
+            //var db = new SqlAccess().SystemDataAccess;
+            //List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
+            //db.Close(); db.Dispose();
+
+            //foreach (TemplatedataModel item in TemplateModels)
+            //{
+            //    //判断 本机校准数据库
+            //    sys_bd_Templatedatamodel template = Datas.Find((sys_bd_Templatedatamodel x) => x.WheelType == item.WheelType);
+            //    if (template != null)
+            //    {
+
+            //        if (template.UpdateTime != item.UpdateTime)
+            //        {
+            //            //库里面的更新时间有变化 - 意味着模板更新了
+            //            item.Status = TemplateStatus.Update;
+            //            //拷贝数据
+            //            item.CopyPropertiesFrom(template);
+            //            _isRefreshStatus = true;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        //在数据中未查询到数据 - 意味着未删除
+            //        item.Status = TemplateStatus.Delete; //这里只做标记
+            //        _isRefreshStatus = true;
+            //    }
+
+            //}
             EventMessage.MessageDisplay($"刷新传统模板状态", true, true);
 
         }
@@ -286,6 +327,8 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         public void UpdateTemplates()
         {
+            try
+            { 
             if (!_isRefreshStatus)
             {
                 return;
@@ -318,6 +361,11 @@ namespace WheelRecognitionSystem.ViewModels
                 }
             }
             _isRefreshStatus = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("UpdateTemplates:" + ex);
+            }
         }
 
         /// <summary>
@@ -459,7 +507,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                                         if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
                                         {
-                                            
+
                                             string[] name = names[0].S.Split('_'); //00619C70_半
                                             string value = string.Empty;
                                             if (name.Length == 2)
@@ -488,7 +536,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     //保存图片
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
                                     string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}{score}";
-                                    
+
                                     string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     interact.imagePath = savePath;
 
