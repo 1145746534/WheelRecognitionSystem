@@ -221,7 +221,7 @@ namespace WheelRecognitionSystem.ViewModels
             //启动定时器
             pictrueDeleteTimer = new DispatcherTimer();
             pictrueDeleteTimer.Tick += new EventHandler(PictrueDeleteTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为12小时
+            pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
             pictrueDeleteTimer.Start();//启动定时器
 
             // 管道名称（客户端和服务端必须一致）

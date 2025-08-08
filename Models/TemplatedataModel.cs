@@ -97,7 +97,6 @@ namespace WheelRecognitionSystem.Models
         public void UseTemplate()
         {
             LastUsedTime = DateTime.Now; // 更新使用时间
-            UnusedDays = (DateTime.Now - LastUsedTime).Days;
         }
         /// <summary>
         /// 从另一个基类对象复制所有属性值（包含模板路径）
