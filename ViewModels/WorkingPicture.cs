@@ -1,6 +1,5 @@
 ﻿using HalconDotNet;
 using Microsoft.Office.Interop.Excel;
-using Mysqlx.Crud;
 using NPOI.Util;
 using SqlSugar;
 using System;
@@ -124,8 +123,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             UseStatusTimer = new DispatcherTimer();
             UseStatusTimer.Tick += new EventHandler(UseStatus_Tick);//添加事件(到达时间间隔后会自动调用)
-            UseStatusTimer.Interval = new TimeSpan(0, 4, 0, 0, 30);//设置时间间隔为4小时
-            UseStatusTimer.Start();
+            UseStatusTimer.Interval = new TimeSpan(0, 4, 0, 0, 0);//设置时间间隔为4小时
 
         }
 
@@ -136,50 +134,12 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="e"></param>
         private void UseStatus_Tick(object sender, EventArgs e)
         {
-            TemplateModels.FindLast(d=>d.Index ==3).LastUsedTime = DateTime.Now;
-            using (var _db = new SqlAccess().SystemDataAccess)
-            {
-                // 开启Sql日志输出（调试用）
-                _db.Aop.OnLogExecuting = (sql, pars) =>
-                {
-                    Console.WriteLine("UseStatus_Tick:" + sql);
-                };
-
-                // 1. 提取需要检查的WheelType集合
-                List<string> wheelTypes = TemplateModels.Select(d => d.WheelType).Distinct().ToList();
-
-                // 2. 从数据库查询现有记录
-                Dictionary<string, DateTime> dbRecords = _db.Queryable<sys_bd_Templatedatamodel>()
-                    .Where(d => wheelTypes.Contains(d.WheelType))
-                    .Select(d => new
-                    {
-                        d.WheelType,
-                        d.LastUsedTime
-                    })
-                    .ToList()
-                    .ToDictionary(d => d.WheelType, d => d.LastUsedTime);
-
-                // 3. 筛选需要更新的记录
-                List<TemplatedataModel> updates = TemplateModels
-                    .Where(d => dbRecords.ContainsKey(d.WheelType) &&         // 确保数据库中存在记录
-                                d.LastUsedTime != dbRecords[d.WheelType] &&   // 检查时间变化
-                                d.LastUsedTime != default(DateTime))          // 排除未设置的时间
-                    .ToList();
-
-                if (!updates.Any())
-                    return;
-                List<sys_bd_Templatedatamodel> baseList = updates.Cast<sys_bd_Templatedatamodel>().ToList();                // 4. 批量更新（使用WheelType作为条件）
-                _db.Updateable(baseList)
-                   .UpdateColumns(d => new
-                   {
-                       d.LastUsedTime,  // 只更新LastUsedTime字段
-                       d.UnusedDays
-                   })
-                   .WhereColumns(d => d.WheelType) // 根据WheelType匹配记录
-                   .ExecuteCommand();
-
-            }
+            
         }
+
+
+
+
 
         /// <summary>
         /// 加载AI模型参数
@@ -457,7 +417,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
                                         if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
                                         {
-
+                                            
                                             string[] name = names[0].S.Split('_'); //00619C70_半
                                             string value = string.Empty;
                                             if (name.Length == 2)
@@ -485,8 +445,8 @@ namespace WheelRecognitionSystem.ViewModels
 
                                     //保存图片
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}+{score}";
-
+                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}{score}";
+                                    
                                     string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     interact.imagePath = savePath;
 
