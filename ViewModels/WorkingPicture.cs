@@ -222,7 +222,8 @@ namespace WheelRecognitionSystem.ViewModels
         private void LoadedTemplateDatas()
         {
             var db = new SqlAccess().SystemDataAccess;
-            List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
+            List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>()
+                .Where(t =>t.TemplatePath != null).ToList();
             db.Close(); db.Dispose();
             TemplateModels = new List<TemplatedataModel>();
 
@@ -253,7 +254,8 @@ namespace WheelRecognitionSystem.ViewModels
             using (var db = new SqlAccess().SystemDataAccess)
             {
                 // 获取所有数据库记录
-                var dbTemplates = db.Queryable<sys_bd_Templatedatamodel>().ToList();
+                var dbTemplates = db.Queryable<sys_bd_Templatedatamodel>()
+                     .Where(t => t.TemplatePath != null).ToList();
                 // 创建快速查找字典
                 Dictionary<string, sys_bd_Templatedatamodel> dbDict = dbTemplates.ToDictionary(x => x.WheelType);
                 foreach (var item in TemplateModels)
@@ -325,8 +327,12 @@ namespace WheelRecognitionSystem.ViewModels
                     }
                     if (item.Status == TemplateStatus.Update)
                     {
-                        // 复制文件（覆盖已存在的文件）
-                        File.Copy(item.TemplatePath, item.TemplateUsePath, true);
+                        if (File.Exists(item.TemplatePath))
+                        {
+                            // 复制文件（覆盖已存在的文件）
+                            File.Copy(item.TemplatePath, item.TemplateUsePath, true);
+                        }
+                       
                         item.ReleaseTemplate(); //下一次加载新的文件
                         item.Status = TemplateStatus.Exist;
                     }
