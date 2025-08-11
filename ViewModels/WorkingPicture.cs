@@ -261,14 +261,14 @@ namespace WheelRecognitionSystem.ViewModels
                     if (dbDict.TryGetValue(item.WheelType, out var template))
                     {
                         // 存在匹配项
-                        
+
                         if (template.UpdateTime != item.UpdateTime)
                         {
                             item.Status = TemplateStatus.Update;
                             item.CopyPropertiesFrom(template);
                             _isRefreshStatus = true;
                         }
-                        
+
                     }
                     else
                     {
@@ -283,41 +283,22 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     var newItem = new TemplatedataModel();
                     newItem.CopyPropertiesFrom(newTemplate);
-                    newItem.Status = TemplateStatus.Exist; // 或其他适当状态
+                    newItem.Status = TemplateStatus.Exist; //
+                    string newDir = FileHelper.RenameDirectory(newItem.TemplatePath);
+                    string usePath = FileHelper.CopyFile(newItem.TemplatePath, newDir);
+                    newItem.TemplateUsePath = usePath;
                     TemplateModels.Add(newItem);
                     _isRefreshStatus = true;
                 }
             }
 
-           
-            //var db = new SqlAccess().SystemDataAccess;
-            //List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>().ToList();
-            //db.Close(); db.Dispose();
 
-            //foreach (TemplatedataModel item in TemplateModels)
-            //{
-            //    //判断 本机校准数据库
-            //    sys_bd_Templatedatamodel template = Datas.Find((sys_bd_Templatedatamodel x) => x.WheelType == item.WheelType);
-            //    if (template != null)
-            //    {
+            lock (_processingLock)
+            {
+                UpdateTemplates();
+            }
 
-            //        if (template.UpdateTime != item.UpdateTime)
-            //        {
-            //            //库里面的更新时间有变化 - 意味着模板更新了
-            //            item.Status = TemplateStatus.Update;
-            //            //拷贝数据
-            //            item.CopyPropertiesFrom(template);
-            //            _isRefreshStatus = true;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        //在数据中未查询到数据 - 意味着未删除
-            //        item.Status = TemplateStatus.Delete; //这里只做标记
-            //        _isRefreshStatus = true;
-            //    }
 
-            //}
             EventMessage.MessageDisplay($"刷新传统模板状态", true, true);
 
         }
@@ -328,39 +309,39 @@ namespace WheelRecognitionSystem.ViewModels
         public void UpdateTemplates()
         {
             try
-            { 
-            if (!_isRefreshStatus)
             {
-                return;
-            }
-
-            for (int i = TemplateModels.Count - 1; i >= 0; i--)
-            {
-
-                TemplatedataModel item = TemplateModels[i];
-                if (item.Status == TemplateStatus.Exist)
+                if (!_isRefreshStatus)
                 {
-
+                    return;
                 }
-                if (item.Status == TemplateStatus.Update)
+
+                for (int i = TemplateModels.Count - 1; i >= 0; i--)
                 {
-                    // 复制文件（覆盖已存在的文件）
-                    File.Copy(item.TemplatePath, item.TemplateUsePath, true);
-                    item.ReleaseTemplate(); //下一次加载新的文件
-                    item.Status = TemplateStatus.Exist;
-                }
-                if (item.Status == TemplateStatus.Delete)
-                {
-                    item.ReleaseTemplate();
-                    //删除缓存文件
-                    if (File.Exists(item.TemplateUsePath))
+
+                    TemplatedataModel item = TemplateModels[i];
+                    if (item.Status == TemplateStatus.Exist)
                     {
-                        File.Delete(item.TemplateUsePath);
+
                     }
-                    TemplateModels.RemoveAt(i);
+                    if (item.Status == TemplateStatus.Update)
+                    {
+                        // 复制文件（覆盖已存在的文件）
+                        File.Copy(item.TemplatePath, item.TemplateUsePath, true);
+                        item.ReleaseTemplate(); //下一次加载新的文件
+                        item.Status = TemplateStatus.Exist;
+                    }
+                    if (item.Status == TemplateStatus.Delete)
+                    {
+                        item.ReleaseTemplate();
+                        //删除缓存文件
+                        if (File.Exists(item.TemplateUsePath))
+                        {
+                            File.Delete(item.TemplateUsePath);
+                        }
+                        TemplateModels.RemoveAt(i);
+                    }
                 }
-            }
-            _isRefreshStatus = false;
+                _isRefreshStatus = false;
             }
             catch (Exception ex)
             {
