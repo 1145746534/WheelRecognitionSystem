@@ -1306,7 +1306,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     SafeHalconDispose(nccTemplate);
                     // 在UI线程更新数据 (确保线程安全)
                     DataGridSelectedItem.CreationTime = DateTime.Now.ToString("yy-MM-dd HH:mm");
-                    DataGridSelectedItem.InnerCircleGary = float.Parse(InnerCircleGary);
+                    DataGridSelectedItem.FullGary = float.Parse(InnerCircleGary);
                     DataGridSelectedItem.TemplatePath = aPath;
                     DataGridSelectedItem.TemplatePicturePath = tPath;
                     DataGridSelectedItem.LastUsedTime = DateTime.Now;
@@ -1483,7 +1483,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 HOperatorSet.ReadImage(out HObject Image, strPath);
                 TemplateImage = Image.Clone();
-                InnerCircleGary = DataGridSelectedItem.InnerCircleGary.ToString();
+                InnerCircleGary = DataGridSelectedItem.FullGary.ToString();
                 TemplateWindowDisplay(Image, null, null, null, null);
                 SafeHalconDispose(Image);
             }

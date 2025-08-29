@@ -33,7 +33,8 @@ namespace WheelRecognitionSystem.Models
                     // 同步加载（）
                     Console.WriteLine( $"同步加载文件：{TemplateUsePath}");
                     string strPath = TemplateUsePath.Replace(@"\", "/");
-                    HOperatorSet.ReadNccModel(strPath, out HTuple modelID);
+                    //HOperatorSet.ReadNccModel(strPath, out HTuple modelID);
+                    HOperatorSet.ReadShapeModel(strPath, out HTuple modelID);
                     _template = modelID;
                 }
                 return _template;
@@ -112,7 +113,7 @@ namespace WheelRecognitionSystem.Models
             this.UnusedDays = source.UnusedDays; //
             this.WheelHeight = source.WheelHeight;
             this.WheelStyle = source.WheelStyle;
-            this.InnerCircleGary = source.InnerCircleGary;
+            this.FullGary = source.FullGary;
             this.CreationTime = source.CreationTime;
             this.UpdateTime = source.UpdateTime;
             this.LastUsedTime = source.LastUsedTime;  //

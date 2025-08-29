@@ -223,7 +223,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             var db = new SqlAccess().SystemDataAccess;
             List<sys_bd_Templatedatamodel> Datas = db.Queryable<sys_bd_Templatedatamodel>()
-                .Where(t =>t.TemplatePath != null).ToList();
+                .Where(t => t.TemplatePath != null).ToList();
             db.Close(); db.Dispose();
             TemplateModels = new List<TemplatedataModel>();
 
@@ -332,7 +332,7 @@ namespace WheelRecognitionSystem.ViewModels
                             // 复制文件（覆盖已存在的文件）
                             File.Copy(item.TemplatePath, item.TemplateUsePath, true);
                         }
-                       
+
                         item.ReleaseTemplate(); //下一次加载新的文件
                         item.Status = TemplateStatus.Exist;
                     }
@@ -452,71 +452,34 @@ namespace WheelRecognitionSystem.ViewModels
                                     string recognitionWay = "传统";
                                     string score = "0";
 
-                                    //获取整张图的灰度值            
-                                    double fullFigureGary = GetIntensity(grayImage);
-                                    Console.WriteLine($"灰度比较 ： {fullFigureGary} ? {MinFullFigureGary}");
-                                    if (fullFigureGary > MinFullFigureGary)
+                                    //如果没定位到轮毂 就不要用传统识别 - 直接用大模型
+                                    recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
+                                    recognitionResult.FullFigureGray = recognitionResult.FullFigureGray;
+                                    if (recognitionResult.RecognitionWheelType != "NG") //
                                     {
-                                        //定位轮毂
-                                        PositioningWheelResultModel pResult = PositioningWheel(grayImage, WheelMinThreshold, 255, WheelMinRadius);
-                                        //存储识别结果                    
-                                        if (pResult.WheelImage != null && pResult.WheelImage.IsInitialized())
-                                        {
-                                            HObject imageRecogn = CloneImageSafely(pResult.WheelImage);
-                                            //如果没定位到轮毂 就不要用传统识别 - 直接用大模型
-                                            recognitionResult = WheelRecognitionAlgorithm(imageRecogn, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
-                                            recognitionResult.FullFigureGary = (float)fullFigureGary;
-                                            recognitionResult.InnerCircleGary = pResult.InnerCircleMean;
-                                            wheelContour = CloneImageSafely(pResult.WheelContour);
-                                            if (recognitionResult.RecognitionWheelType != "NG") //
-                                            {
+                                        //显示
+                                        templateContour = recognitionResult.RecognitionContour.Clone();
+                                        //更新使用时间
+                                        string _type = recognitionResult.RecognitionWheelType;
 
-                                                templateContour = GetAffineTemplateContour(GetHTupleByName(recognitionResult.RecognitionWheelType),
-                                                    recognitionResult.CenterRow, recognitionResult.CenterColumn, recognitionResult.Radian);
-                                                ReleaseUnusedTemplates();
-                                                score = recognitionResult.Similarity.ToString("F3");
-                                            }
-                                            SafeDisposeHObject(ref imageRecogn);
+                                        var results = TemplateModels
+                                            .Where(t => t.WheelType != null &&t.WheelType == _type);
+                                        foreach (TemplatedataModel it in results)
+                                        {
+                                            it.UseTemplate();
                                         }
-                                        pResult.Dispose();
+                                        // 原地排序：按照LastUsedTime降序（从最近到最久）
+                                        TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
+                                        score = recognitionResult.Similarity.ToString("F3");
 
                                     }
+                                    
 
-                                    //没定位到轮毂 或 没识别到轮型 启动大模型识别
-                                    if (recognitionResult == null || recognitionResult?.RecognitionWheelType == "NG")
+                                    for (int i = 0; i < list.Count; i++)
                                     {
-                                        loadAIProcessParam();
-                                        recognitionResult = new RecognitionResultModel() { RecognitionWheelType = "NG" };
-                                        recognitionWay = "大模型";
-                                        //大模型推算
-                                        HTuple hv_DLResult = WheelDeepLearning(grayImage, hv_DLModelHandle, hv_DLPreprocessParam);
-                                        HOperatorSet.GetDictTuple(hv_DLResult, "classification_class_names", out HTuple names);
-                                        HOperatorSet.GetDictTuple(hv_DLResult, "classification_confidences", out HTuple confidences);
-                                        if (names.Length > 0 && confidences[0].D > ConfidenceMatch)
-                                        {
-
-                                            string[] name = names[0].S.Split('_'); //00619C70_半
-                                            string value = string.Empty;
-                                            if (name.Length == 2)
-                                                value = name[1] == "半" ? "半成品" : "成品";
-
-
-                                            recognitionResult.RecognitionWheelType = name[0]; //识别结果
-                                            recognitionResult.WheelStyle = value; //识别样式
-                                            recognitionResult.Similarity = double.Parse(confidences[0].D.ToString("0.000"));
-                                            recognitionResult.status = "识别成功";
-                                            score = confidences[0].D.ToString("F3");
-
-                                        }
-                                        //for (int i = 0; i < names.Length; i++)
-                                        //{
-                                        //    double similar = double.Parse(confidences[i].D.ToString("0.0000"));
-                                        //    Console.WriteLine($"数据：{names[i].S} 结果：{similar}");
-                                        //}
-                                        SafeHalconDispose(hv_DLResult);
-                                        SafeHalconDispose(names);
-                                        SafeHalconDispose(confidences);
+                                        list[i].Dispose();
                                     }
+
                                     recognitionResult.Way = recognitionWay;
                                     SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
 
@@ -524,17 +487,14 @@ namespace WheelRecognitionSystem.ViewModels
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
                                     string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}{score}";
 
+
                                     string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     interact.imagePath = savePath;
-
-
-
                                     var saveRequest = new SaveImageRequest
                                     {
                                         Image = grayImage.Clone(),
                                         Path = savePath,
                                     };
-
                                     lock (_saveLock)
                                     {
                                         _saveImageQueue.Enqueue(saveRequest);
@@ -545,7 +505,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     //下发显示
                                     AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
                                     autoRecognitionResult.Tag = $"DisplayRegion{interact.readPLCSignal.Index + 1}";
-                                    autoRecognitionResult.FullFigureGary = (float)fullFigureGary;
+                                    autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
                                     autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
                                     autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
                                     autoRecognitionResult.WheelContour = CloneImageSafely(wheelContour);
@@ -602,6 +562,7 @@ namespace WheelRecognitionSystem.ViewModels
                     if (_saveImageQueue.Count > 0)
                     {
                         request = _saveImageQueue.Dequeue();
+                        Console.WriteLine($"剩余处理图片:{_saveImageQueue.Count}");
                     }
                 }
                 if (!request.HasValue)

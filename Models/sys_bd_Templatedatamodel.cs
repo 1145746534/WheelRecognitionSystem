@@ -67,10 +67,10 @@ namespace WheelRecognitionSystem.Models
         }
 
         /// <summary>
-        /// 内圈灰度
+        /// 全局灰度
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = false)]
-        public float InnerCircleGary
+        public float FullGary
         {
             get { return _innerCircleGary; }
             set { SetProperty(ref _innerCircleGary, value); }

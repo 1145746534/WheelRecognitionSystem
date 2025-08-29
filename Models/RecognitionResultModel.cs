@@ -58,11 +58,12 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 全图灰度
         /// </summary>
-        public float FullFigureGary { get; set; }
+        public float FullFigureGray { get; set; }
+        
         /// <summary>
-        /// 内圆灰度
+        /// 与模板全局灰度的绝对差值
         /// </summary>
-        public float InnerCircleGary { get; set; }
+        public float AbsDifferenceGray { get; set; }
 
         /// <summary>
         /// 识别的中心行坐标
@@ -79,7 +80,19 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public double Radian { get; set; }
 
+        /// <summary>
+        /// 识别结果轮毂
+        /// </summary>
+        public HObject RecognitionContour { get; set; }
 
+
+        public void Dispose()
+        {
+            if (RecognitionContour != null)
+            {
+                RecognitionContour.Dispose();
+            }
+        }
 
     }
 }

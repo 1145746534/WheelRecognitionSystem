@@ -253,54 +253,70 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private async void Test(string obj)
         {
-            string[] files = Directory.GetFiles("D:\\ZS\\终检\\测试图");
-            //5.处理每个文件
-            foreach (string filePath in files)
-            {
-                try
-                {
-                    await Task.Delay(1000);
+            string DirPath = "D:\\ZS\\终检\\测试图";
 
+            await Task.Run(() => {
+                
+                string[] _files = Directory.GetFiles("D:\\ZS\\终检\\测试图");
+                string[] subDirectories = Directory.GetDirectories(DirPath);
+                //文件
+                foreach (string filePath in _files)
+                {
+                    Thread.Sleep(100);
+                    ImageHandle(filePath);
+                }
+                //文件夹
+                foreach (string subDir in subDirectories)
+                {
+                    //文件
+                    string[] files = Directory.GetFiles(subDir);
+                    foreach (string filePath in files)
+                    {
+                        Thread.Sleep(100);
+                        ImageHandle(filePath);
+                    }
+
+                }
+            });
+
+           
+
+
+        }
+
+
+        private void ImageHandle(string filePath)
+        {
+            try
+            {
+                if (filePath.EndsWith(".tif"))
+                {
                     HOperatorSet.ReadImage(out HObject image, filePath);
                     HObject gray = RGBTransGray(image);
-
-                    DisplayDataGrid(0, new DisplayData()); //清空显示
+                    //DisplayDataGrid(0, new DisplayData()); //清空显示
                     InteractS7PLCModel interact = new InteractS7PLCModel()
                     {
                         ArrivalDelay = ArrivalDelay,
                         readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
                     };
+
                     Dictionary<InteractS7PLCModel, HObject> dic = new Dictionary<InteractS7PLCModel, HObject>();
                     dic.Add(interact, gray);
                     workingPicture.ImageHandle(dic);
-
-
+                    SafeHalconDispose(image);
                     //AutoRecognitionResultDisplayModel displayModel = new AutoRecognitionResultDisplayModel();
-
-
                     //displayModel.Tag = $"DisplayRegion1";
                     //displayModel.CurrentImage = CloneImageSafely(image);
-
                     //EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(displayModel);
-
-
                     //SafeHalconDispose(displayModel);
                     //SafeHalconDispose(gray);
-                    SafeHalconDispose(image);
 
-
-
-
-
-
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  !! 处理文件 {filePath} 时出错: {ex.Message}");
                 }
             }
-
-
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  !! 处理文件 {filePath} 时出错: {ex.Message}");
+            }
         }
 
         /// <summary>

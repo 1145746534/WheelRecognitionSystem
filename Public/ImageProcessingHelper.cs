@@ -1,4 +1,5 @@
 ﻿using HalconDotNet;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -375,69 +376,95 @@ namespace WheelRecognitionSystem.Public
         //    }
         //}
 
-        public static RecognitionResultModel WheelRecognitionAlgorithm(HObject imageSource, List<TemplatedataModel> templateDatas, double angleStart,
+        
+
+        public static RecognitionResultModel WheelRecognitionAlgorithm1(HObject imageSource, List<TemplatedataModel> templateDatas, double angleStart,
                                                                         double angleExtent, double minSimilarity, out List<RecognitionResultModel> recognitionResults)
         {
 
 
             HObject image = CloneImageSafely(imageSource); //复制图片
+            float fullGray = (float)GetIntensity(image);
+
             RecognitionResultModel result = null;
             recognitionResults = new List<RecognitionResultModel>();
-
+            lock (_lock)
             {
                 foreach (TemplatedataModel templateData in templateDatas)
                 {
                     if (templateData.Template != null)
                     {
-                        HOperatorSet.FindNccModel(image, templateData.Template,
-                        angleStart, angleExtent, 0.5, 1, 0.5, "true", 0,
-                        out HTuple row, out HTuple column, out HTuple angle, out HTuple score);
-
-                        if (score != null && score.Length > 0 && score.D > 0.6)
+                        using (HDevDisposeHelper dh = new HDevDisposeHelper())
                         {
-                            RecognitionResultModel temp = new RecognitionResultModel();
-                            temp.CenterRow = row.D;
-                            temp.CenterColumn = column.D;
-                            temp.Radian = angle.D;
-                            temp.RecognitionWheelType = templateData.WheelType;
-                            temp.Similarity = Math.Round(score.D, 3);
-                            temp.WheelStyle = templateData.WheelStyle;
-                            recognitionResults.Add(temp);
-                            if (score.D > 0.8)
+                            HOperatorSet.SetGenericShapeModelParam(templateData.Template, "angle_start", (new HTuple(-180)).TupleRad()
+                                );
+                        }
+                        HOperatorSet.SetGenericShapeModelParam(templateData.Template, "border_shape_models", "false");
+
+                        HTuple hv_MatchResultID = new HTuple();
+                        HTuple hv_NumMatchResult = new HTuple();
+                        HOperatorSet.FindGenericShapeModel(image, templateData.Template, out hv_MatchResultID,
+                                                            out hv_NumMatchResult);
+                        // 检查是否找到匹配结果
+                        if (hv_NumMatchResult.I != 0)
+                        {
+                            // 获取所有匹配结果的分数
+                            List<double> scores = new List<double>();
+                            for (int i = 0; i < hv_NumMatchResult.I; i++)
                             {
+                                HTuple score = new HTuple();
+                                HOperatorSet.GetGenericShapeModelResult(
+                                    hv_MatchResultID,
+                                    i,
+                                    "score",
+                                    out score
+                                );
+                                scores.Add(score.D);
+                            }
+                            // 找到最高分数的索引
+                            double maxValue = scores.Max();
+                            int maxIndex = scores.FindIndex(x => x == maxValue);
+
+                            HOperatorSet.GetGenericShapeModelResultObject(out HObject ho_MatchContour, hv_MatchResultID,
+                                                                            maxIndex, "contours");
+                            RecognitionResultModel temp = new RecognitionResultModel();
+                            temp.RecognitionWheelType = templateData.WheelType;
+                            temp.Similarity = Math.Round(maxValue, 3);
+                            temp.WheelStyle = templateData.WheelStyle;
+                            temp.FullFigureGray = fullGray;
+                            temp.RecognitionContour = ho_MatchContour?.Clone();
+                            temp.AbsDifferenceGray = Math.Abs(templateData.FullGary - fullGray);
+
+                            
+                           
+                           
+                            if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
+                            {
+                                
                                 temp.status = "识别成功";
                                 result = temp;
-                                templateData.UseTemplate();
                                 break;
                             }
+                            if (temp.Similarity > minSimilarity)
+                            {
+                                recognitionResults.Add(temp);
+                            }
 
+                            SafeHalconDispose(ho_MatchContour);
                         }
-                        SafeHalconDispose(row);
-                        SafeHalconDispose(column);
-                        SafeHalconDispose(angle);
-                        SafeHalconDispose(score);
+
+                        SafeHalconDispose(hv_MatchResultID);
+                        SafeHalconDispose(hv_NumMatchResult);
+
                     }
                 }
             }
             if (result == null) //没有直接匹配到 采用查询的方式
             {
-                if (TryGetBestMatch(recognitionResults, minSimilarity + 0.05, out result))
+                if (TryGetBestMatch(recognitionResults, out result))
                 {
                     result.status = "识别成功";
-                    //识别成功后 把这个轮形上次使用时间刷新
-                    string _type = result.RecognitionWheelType;
-                    var results = templateDatas
-                        .Where(t => t.WheelType != null &&
-                                    t.WheelType == _type);
 
-                    // 输出结果
-                    foreach (TemplatedataModel item in results)
-                    {
-                        foreach (var t in templateDatas)
-                        {
-                            t.UseTemplate();
-                        }
-                    }
                 }
                 else
                 {
@@ -453,10 +480,10 @@ namespace WheelRecognitionSystem.Public
 
         }
 
+
         // 辅助方法：从识别结果中找出最高相似度的对象
         private static bool TryGetBestMatch(
             List<RecognitionResultModel> results,
-            double similarityThreshold,
             out RecognitionResultModel bestMatch)
         {
             if (results.Count == 0)
@@ -468,10 +495,26 @@ namespace WheelRecognitionSystem.Public
                 };
                 return false;
             }
+            // 第一步：按Similarity从大到小排序，然后筛选AbsDifferenceGray < 2的结果
+            var filteredResults = results
+                .Where(r => r.AbsDifferenceGray < 6)
+                .OrderByDescending(r => r.Similarity)
+                .ToList();
 
-            bestMatch = results.OrderByDescending(r => r.Similarity).First();
+            // 如果有符合条件的结果，返回相似度最高的
+            if (filteredResults.Any())
+            {
+                bestMatch = filteredResults.First();
+            }else
+            {
+                // 第二步：如果没有AbsDifferenceGray < 2的结果，则按AbsDifferenceGray从小到大排序取最小值
+                bestMatch = results.OrderBy(r => r.AbsDifferenceGray).First();
 
-            return bestMatch.Similarity > similarityThreshold;
+            }
+
+            //bestMatch = results.OrderByDescending(r => r.Similarity).First();
+
+            return true;
         }
 
         //public static RecognitionResultModel WheelRecognitionAlgorithm(HObject image, List<TemplatedataModels> templateDatas, double angleStart, double angleExtent, double minSimilarity, List<RecognitionResultModel> list = null)
@@ -850,7 +893,7 @@ namespace WheelRecognitionSystem.Public
                 // 异步获取磁盘空间
                 double diskFree = await Task.Run(() => GetHardDiskFreeSpace("D"));
 
-                if (diskFree <= 200)
+                if (diskFree <= 100)
                 {
                     // UI 线程安全的消息显示
                     Application.Current.Dispatcher.Invoke(() =>
@@ -889,14 +932,13 @@ namespace WheelRecognitionSystem.Public
 
 
         public static string GetImageSavePath(SaveWay way, string ImagePath, string prefixName = null)
-        {   
+        {
             // 路径定义
             string handImagesPath = string.Empty;
             string savePath = string.Empty;
             string path = string.Empty;
 
             DateTime now = DateTime.Now;
-
             DateTime today = now.Date;
             DateTime today8 = today.AddHours(8);
             DateTime today20 = today.AddHours(20);
@@ -934,7 +976,7 @@ namespace WheelRecognitionSystem.Public
             }
 
 
-           
+
 
             if (way == SaveWay.Hand)
             {
@@ -970,14 +1012,14 @@ namespace WheelRecognitionSystem.Public
                 else
                     saveWheelTypePath = Path.Combine(path, prefixName);
 
-                Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
-                savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{now:yyMMddHHmmss}.tif");
+                Directory.CreateDirectory(saveWheelTypePath);
+                savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{now:yyMMddHHmmssfff}.tif");
             }
             else if (way == SaveWay.AutoNG)
             {
-                string  ngPath = Path.Combine(path, "NG");
-                Task.Run(() => Directory.CreateDirectory(ngPath));
-                savePath = Path.Combine(ngPath, $"NG&{now:yyMMddHHmmss}.tif");
+                string ngPath = Path.Combine(path, "NG");
+                Directory.CreateDirectory(ngPath);
+                savePath = Path.Combine(ngPath, $"NG&{now:yyMMddHHmmssfff}.tif");
             }
             else
             {
@@ -1036,7 +1078,7 @@ namespace WheelRecognitionSystem.Public
                 else
                     saveWheelTypePath = Path.Combine(dayPath, prefixName);
 
-                Task.Run(() => Directory.CreateDirectory(saveWheelTypePath));
+                Directory.CreateDirectory(saveWheelTypePath);
                 savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{dateTime:yyMMddHHmmss}.tif");
             }
             else if (way == SaveWay.AutoNG)
