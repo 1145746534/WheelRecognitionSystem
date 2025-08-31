@@ -427,12 +427,11 @@ namespace WheelRecognitionSystem.ViewModels
                         foreach (KeyValuePair<InteractS7PLCModel, HObject> item in dic)
                         {
                             RecognitionResultModel recognitionResult = null;
+                           
                             InteractS7PLCModel interact = item.Key;
                             //需销毁
-                            HObject image = item.Value;
-                            List<RecognitionResultModel> list = null;
+                            HObject image = item.Value;                         
                             HObject templateContour = new HObject();
-                            HObject wheelContour = new HObject();
 
                             try
                             {
@@ -442,19 +441,17 @@ namespace WheelRecognitionSystem.ViewModels
                                     recognitionResult = new RecognitionResultModel();
                                     recognitionResult.RecognitionWheelType = "NG";
                                     recognitionResult.status = "图像采集失败";
-
                                 }
                                 else
                                 {
-
+                                    List<RecognitionResultModel> list = null;
                                     //处理图像
-                                    HObject grayImage = RGBTransGray(image);
-                                    string recognitionWay = "传统";
+                                    HObject grayImage = RGBTransGray(image);            
                                     string score = "0";
-
-                                    //如果没定位到轮毂 就不要用传统识别 - 直接用大模型
+                                    
+                                    //
                                     recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
-                                    recognitionResult.FullFigureGray = recognitionResult.FullFigureGray;
+                                    
                                     if (recognitionResult.RecognitionWheelType != "NG") //
                                     {
                                         //显示
@@ -479,37 +476,41 @@ namespace WheelRecognitionSystem.ViewModels
                                     {
                                         list[i].Dispose();
                                     }
+                                    list?.Clear();
 
-                                    recognitionResult.Way = recognitionWay;
-                                    SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
-
-                                    //保存图片
-                                    string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+{recognitionWay}{score}";
-
-
-                                    string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
-                                    interact.imagePath = savePath;
-                                    var saveRequest = new SaveImageRequest
+                                    if (interact.IsSaveImage)
                                     {
-                                        Image = grayImage.Clone(),
-                                        Path = savePath,
-                                    };
-                                    lock (_saveLock)
+                                        //保存图片
+                                        SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
+                                        string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
+                                        string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
+                                        string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
+                                        interact.imagePath = savePath;
+                                        var saveRequest = new SaveImageRequest
+                                        {
+                                            Image = grayImage.Clone(),
+                                            Path = savePath,
+                                        };
+                                        lock (_saveLock)
+                                        {
+                                            _saveImageQueue.Enqueue(saveRequest);
+                                        }
+                                    }
+
+                                    if (interact.IsDisplay)
                                     {
-                                        _saveImageQueue.Enqueue(saveRequest);
+                                        //下发显示
+                                        AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
+                                        autoRecognitionResult.Tag = $"DisplayRegion{interact.readPLCSignal.Index + 1}";
+                                        autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
+                                        autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
+                                        autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
+                                        EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(autoRecognitionResult);
                                     }
 
 
 
-                                    //下发显示
-                                    AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
-                                    autoRecognitionResult.Tag = $"DisplayRegion{interact.readPLCSignal.Index + 1}";
-                                    autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
-                                    autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
-                                    autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
-                                    autoRecognitionResult.WheelContour = CloneImageSafely(wheelContour);
-                                    EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(autoRecognitionResult);
+                                    
                                     //Console.WriteLine("步骤2");
                                     SafeDisposeHObject(ref grayImage);
                                 }
@@ -517,20 +518,23 @@ namespace WheelRecognitionSystem.ViewModels
                             }
                             catch (Exception ex)
                             {
-                                recognitionResult = new RecognitionResultModel();
+                                //recognitionResult = new RecognitionResultModel();
                                 recognitionResult.RecognitionWheelType = "NG";
-                                recognitionResult.status = "处理失败";
+                                recognitionResult.status = "异常";
                             }
                             finally
                             {
 
 
-                                list?.Clear();
+                               
                                 SafeDisposeHObject(ref image);
                                 SafeDisposeHObject(ref templateContour);
-                                SafeDisposeHObject(ref wheelContour);
+                                
                                 interact.endTime = DateTime.Now;
-                                interact.resultModel = recognitionResult;
+                                recognitionResult.Dispose();
+                                interact.resultModel = recognitionResult.Copy();
+                               
+                                recognitionResult = null;
                                 //回调处理完成
                                 EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
                             }

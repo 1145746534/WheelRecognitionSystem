@@ -21,11 +21,7 @@ namespace WheelRecognitionSystem.Models
         /// 当前图像
         /// </summary>
         public HObject CurrentImage { get; set; }
-        /// <summary>
-        /// 轮毂轮廓
-        /// </summary>
-        public HObject WheelContour { get; set; }
-        /// <summary>
+
         /// 模板轮廓
         /// </summary>
         public HObject TemplateContour { get; set; }
@@ -40,10 +36,10 @@ namespace WheelRecognitionSystem.Models
         public void Dispose()
         {
             CurrentImage?.Dispose();
-            WheelContour?.Dispose();
+            //WheelContour?.Dispose();
             TemplateContour?.Dispose();
             CurrentImage= null;
-            WheelContour = null;
+            //WheelContour = null;
             TemplateContour = null;
         }
     }

@@ -28,7 +28,7 @@
                 <RowDefinition Height="200"/>
             </Grid.RowDefinitions>
             <Menu Grid.Row="0" Margin="1" HorizontalAlignment="Left" VerticalAlignment="Stretch">
-               
+
                 <MenuItem Header="系统设置" FontSize="12">
                     <MenuItem Header="参数管理" Command="{Binding ClickCommand}"  CommandParameter="文件管理" FontSize="11" />
                     <MenuItem Header="数据库设置" FontSize="11"/>
@@ -91,9 +91,10 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <Label Content="PLC连接状态" FontSize="14" Style="{StaticResource NormalLabelStyle}" Margin="1,10,94,146" Background="{Binding PlcStatus, Converter={StaticResource BackgroundConverter}}"/>
-                        <Button Content="测试" FontSize="14"  Margin="0,54,94,101" Command="{Binding TestCommand}"/>
-                        <Button Content="参数刷新" FontSize="14"  Margin="97,10,-3,145" Command="{Binding RefreshParaCommand}"/>
-                        <Button Content="模板刷新" FontSize="14"  Margin="97,54,-3,101" Command="{Binding RefreshNCCCommand}"/>
+                        <Button Content="测试" FontSize="14"  Margin="0,54,94,101" Visibility="Visible" Command="{Binding BtuCommand}" CommandParameter="测试"/>
+                        <Button Content="参数刷新" FontSize="14"  Margin="97,10,0,145" Command="{Binding BtuCommand}" CommandParameter="参数刷新" HorizontalAlignment="Left" Width="85"/>
+                        <Button Content="模板刷新" FontSize="14"  Margin="97,50,0,105" Command="{Binding BtuCommand}" CommandParameter="模板刷新" HorizontalAlignment="Left" Width="85"/>
+                        <Button Content="NG图识别" FontSize="14"  Margin="97,90,0,65"  Command="{Binding BtuCommand}" CommandParameter="NG图识别" HorizontalAlignment="Left" Width="85"/>
                     </Grid>
                     <GroupBox Grid.Column="3" Style="{StaticResource NewGroupBoxStyle}" Header="信息显示" Margin="5">
                         <TextBox VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingStackPanel.IsVirtualizing="True" Style="{StaticResource NewTextBoxStyle}" Name="SystemMessage" Margin="5,28,5,5" IsReadOnly="True" FontSize="14" VerticalContentAlignment="Top"

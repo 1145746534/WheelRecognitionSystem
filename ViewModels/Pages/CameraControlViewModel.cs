@@ -422,7 +422,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             SafeDisposeHObject(ref _templateContour);
 
             CurrentImage = CloneImageSafely(model.CurrentImage);
-            WheelContour = CloneImageSafely(model.WheelContour);
+            //WheelContour = CloneImageSafely(model.WheelContour);
             TemplateContour = CloneImageSafely(model.TemplateContour);
             //轮毂资源可以随时关闭，原图可能需要手动保存
             SafeDisposeHObject(ref _wheelContour);

@@ -37,10 +37,7 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public string Colour { get; set; }
 
-        /// <summary>
-        /// 识别方式
-        /// </summary>
-        public string Way { get; set; }
+        
 
         /// <summary>
         /// 样式
@@ -65,20 +62,7 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public float AbsDifferenceGray { get; set; }
 
-        /// <summary>
-        /// 识别的中心行坐标
-        /// </summary>
-        public double CenterRow { get; set; }
 
-        /// <summary>
-        /// 识别的中心列坐标
-        /// </summary>
-        public double CenterColumn { get; set; }
-
-        /// <summary>
-        ///识别的弧度
-        /// </summary>
-        public double Radian { get; set; }
 
         /// <summary>
         /// 识别结果轮毂

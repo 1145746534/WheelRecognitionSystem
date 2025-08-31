@@ -1,5 +1,6 @@
 ﻿using HalconDotNet;
 using NPOI.SS.Formula.Functions;
+using NPOI.Util;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -386,7 +387,11 @@ namespace WheelRecognitionSystem.Public
             HObject image = CloneImageSafely(imageSource); //复制图片
             float fullGray = (float)GetIntensity(image);
 
-            RecognitionResultModel result = null;
+            RecognitionResultModel result = new RecognitionResultModel
+            {
+                RecognitionWheelType = "NG",
+                FullFigureGray = fullGray
+            };
             recognitionResults = new List<RecognitionResultModel>();
             lock (_lock)
             {
@@ -435,10 +440,7 @@ namespace WheelRecognitionSystem.Public
                             temp.FullFigureGray = fullGray;
                             temp.RecognitionContour = ho_MatchContour?.Clone();
                             temp.AbsDifferenceGray = Math.Abs(templateData.FullGary - fullGray);
-
-                            
-                           
-                           
+                                                                                 
                             if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
                             {
                                 
@@ -460,21 +462,20 @@ namespace WheelRecognitionSystem.Public
                     }
                 }
             }
-            if (result == null) //没有直接匹配到 采用查询的方式
+            if (result.RecognitionWheelType == "NG") //没有直接匹配到 采用查询的方式
             {
-                if (TryGetBestMatch(recognitionResults, out result))
+                if (TryGetBestMatch(recognitionResults, ref result))
                 {
                     result.status = "识别成功";
-
                 }
-                else
-                {
-                    //没有找到合格品
-                    result = new RecognitionResultModel
-                    {
-                        RecognitionWheelType = "NG"
-                    };
-                }
+                //else
+                //{
+                //    //没有找到合格品
+                //    result = new RecognitionResultModel
+                //    {
+                //        RecognitionWheelType = "NG"
+                //    };
+                //}
             }
             SafeHalconDispose(image);
             return result;
@@ -485,15 +486,10 @@ namespace WheelRecognitionSystem.Public
         // 辅助方法：从识别结果中找出最高相似度的对象
         private static bool TryGetBestMatch(
             List<RecognitionResultModel> results,
-            out RecognitionResultModel bestMatch)
+            ref RecognitionResultModel bestMatch)
         {
             if (results.Count == 0)
             {
-
-                bestMatch = new RecognitionResultModel
-                {
-                    RecognitionWheelType = "NG"
-                };
                 return false;
             }
             // 第一步：按Similarity从大到小排序，然后筛选AbsDifferenceGray < 2的结果
@@ -505,11 +501,11 @@ namespace WheelRecognitionSystem.Public
             // 如果有符合条件的结果，返回相似度最高的
             if (filteredResults.Any())
             {
-                bestMatch = filteredResults.First();
+                bestMatch = filteredResults.First().Copy();
             }else
             {
                 // 第二步：如果没有AbsDifferenceGray < 2的结果，则按AbsDifferenceGray从小到大排序取最小值
-                bestMatch = results.OrderBy(r => r.AbsDifferenceGray).First();
+                bestMatch = results.OrderBy(r => r.AbsDifferenceGray).First().Copy();
 
             }
 

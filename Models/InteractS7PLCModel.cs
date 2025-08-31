@@ -17,6 +17,27 @@ namespace WheelRecognitionSystem.Models
         public int ArrivalDelay;
 
         /// <summary>
+        /// 是否保存图片
+        /// </summary>
+        public bool IsSaveImage = true;
+
+        /// <summary>
+        /// 是否显示
+        /// </summary>
+        public bool IsDisplay = true;
+
+        /// <summary>
+        /// 是否发送PLC信号
+        /// </summary>
+        public bool IsSendPLCInfo = true;
+
+        /// <summary>
+        /// 数据处理方式
+        /// </summary>
+        public InfoHandle InfoHanleWay = InfoHandle.Save;
+
+
+        /// <summary>
         /// 读取到的PLC信息
         /// </summary>
         public ReadPLCSignal readPLCSignal;
@@ -46,5 +67,17 @@ namespace WheelRecognitionSystem.Models
             get { return endTime.Subtract(starTime); }
         }
 
+    }
+
+    public enum InfoHandle
+    {
+        /// <summary>
+        /// 数据保存
+        /// </summary>
+        Save = 0,
+        /// <summary>
+        /// 数据修改
+        /// </summary>
+        Update = 1,
     }
 }

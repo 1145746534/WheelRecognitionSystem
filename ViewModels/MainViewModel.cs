@@ -117,9 +117,8 @@ namespace WheelRecognitionSystem.ViewModels
         /// 顶部 系统设置命令
         /// </summary>
         public DelegateCommand<string> ClickCommand { get; set; }
-        public DelegateCommand<string> TestCommand { get; set; }
-        public DelegateCommand RefreshParaCommand { get; set; }
-        public DelegateCommand RefreshNCCCommand { get; set; }
+
+        public DelegateCommand<string> BtuCommand { get; set; }
 
 
         private S7Client PlcCilent;
@@ -239,9 +238,24 @@ namespace WheelRecognitionSystem.ViewModels
         public void CommandBinding()
         {
             ClickCommand = new DelegateCommand<string>(ClickManage);
-            TestCommand = new DelegateCommand<string>(Test);
-            RefreshParaCommand = new DelegateCommand(InitialPara);
-            RefreshNCCCommand = new DelegateCommand(RefreshNCC);
+            
+            BtuCommand = new DelegateCommand<string>(BtuClick);
+        }
+
+        private void BtuClick(string obj)
+        {
+            if (obj == "NG图识别") NGImageIdentity();
+            if (obj == "参数刷新") InitialPara();
+            if (obj == "模板刷新") RefreshNCC();
+            if (obj == "测试") Test();
+        }
+
+        /// <summary>
+        /// NG图片识别
+        /// </summary>
+        private void NGImageIdentity()
+        {
+            
         }
 
 
@@ -251,7 +265,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="obj"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private async void Test(string obj)
+        private async void Test()
         {
             string DirPath = "D:\\ZS\\终检\\测试图";
 
@@ -771,10 +785,10 @@ namespace WheelRecognitionSystem.ViewModels
                 ReadPLCSignal plcSignal = sender as ReadPLCSignal;
                 int n = plcSignal.Index;
                 // 在后台线程中修改集合时：
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
-                });
+                //System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                //{
+                //    DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
+                //});
 
                 workingPicture.ReceiveS7PLC(new InteractS7PLCModel()
                 {
@@ -796,20 +810,16 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
+            //发送PLC的数据
             int index = model.readPLCSignal.Index;
             S7.SetBitAt(ref WriteBuffer, 0, index, true); //拍照流程完成
-            //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 拍照流程完成: 0.{model.Index - 1} true");
             new Thread((obj) =>
             {
                 int threadI = (int)obj;  // 将 object 类型转为 int
                 Thread.Sleep(500);
                 S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
-                //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{0}.{threadI}拍照流程完成信号");
             }).Start(index);
 
-
-
-            //发送PLC的数据
             string prefix = DateTime.Now.ToString("mmss");
             string text;
             // PLC 中定义的最大长度
@@ -841,36 +851,38 @@ namespace WheelRecognitionSystem.ViewModels
             data.WheelType = wheelType;
             data.Similarity = decSimilarity * 100;
             data.TimeConsumed = fTimeConsumed;
-            data.Remark = $"{model.resultModel.Way}:{decSimilarity}";
+            data.Remark = $"";
             DisplayDataGrid(index, data);
             //EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
 
             EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
 
-
-            //插入数据库  -跟着相机工位走的数据
-            SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
-            Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
-            dataModel.GUID = Guid.NewGuid().ToString("N");
-            dataModel.WheelType = recognType;
-            dataModel.TimeConsumed = model.Interval.TotalMilliseconds.ToString();
-            dataModel.Similarity = model.resultModel.Similarity.ToString();
-            dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
-            dataModel.WheelTemperature = model.readPLCSignal.WheelTemperature;
-            dataModel.WheelStyle = model.resultModel.WheelStyle;
-            dataModel.RecognitionTime = model.endTime;
-            dataModel.TransmissionCoding = text;
-            dataModel.Model = wheelType;
-            dataModel.Station = model.readPLCSignal.Name;
-            dataModel.ImagePath = model.imagePath;
-            dataModel.ReportWay = "线上";
-            dataModel.ResultBool = model.resultModel.ResultBol;
-            dataModel.Remark = "-1";
-            dataModel.RecognitionDay = model.endTime;
-            pDB.Insertable(dataModel).ExecuteCommand();
-
-            pDB.Close();
-            pDB.Dispose();
+            if (model.InfoHanleWay == InfoHandle.Save)
+            {
+                //插入数据库  -跟着相机工位走的数据
+                SqlSugarClient pDB = new SqlAccess().SystemDataAccess;
+                Tbl_productiondatamodel dataModel = new Tbl_productiondatamodel();
+                dataModel.GUID = Guid.NewGuid().ToString("N");
+                dataModel.WheelType = recognType;
+                dataModel.TimeConsumed = model.Interval.TotalMilliseconds.ToString();
+                dataModel.Similarity = model.resultModel.Similarity.ToString();
+                dataModel.WheelHeight = model.readPLCSignal.WheelHeight;
+                dataModel.WheelTemperature = model.readPLCSignal.WheelTemperature;
+                dataModel.WheelStyle = model.resultModel.WheelStyle;
+                dataModel.RecognitionTime = model.endTime;
+                dataModel.TransmissionCoding = text;
+                dataModel.Model = wheelType;
+                dataModel.Station = model.readPLCSignal.Name;
+                dataModel.ImagePath = model.imagePath;
+                dataModel.ReportWay = "线上";
+                dataModel.ResultBool = model.resultModel.ResultBol;
+                dataModel.Remark = "-1";
+                dataModel.RecognitionDay = model.endTime;
+                pDB.Insertable(dataModel).ExecuteCommand();
+                pDB.Close();
+                pDB.Dispose();
+            }
+            
             model = null;
 
         }
