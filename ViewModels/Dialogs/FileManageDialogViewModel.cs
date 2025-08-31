@@ -18,17 +18,17 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
 
         private bool _disposed = false;
 
-        private string _saveImageDays;
+        private double _minSimilarity;
         /// <summary>
-        ///  保存天数
+        ///  最小匹配分数
         /// </summary>
-        public string SaveImageDays
+        public double MinSimilarity
         {
-            get { return _saveImageDays; }
+            get { return _minSimilarity; }
             set
             {
-                var filteredValue = new string(value.Where(c => char.IsDigit(c)).ToArray());
-                SetProperty(ref _saveImageDays, filteredValue);
+                //var filteredValue = new string(value.Where(c => char.IsDigit(c)).ToArray());
+                SetProperty(ref _minSimilarity, value);
             }
         }
 
@@ -56,17 +56,16 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
                 SetProperty(ref _sQLManageSoftwarePath, value);
             }
         }
-        private string _maintainQuantity;
+        private int _saveImageDays;
         /// <summary>
-        ///  常驻数量
+        ///  图片保存天数
         /// </summary>
-        public string MaintainQuantity
+        public int SaveImageDays
         {
-            get { return _maintainQuantity; }
+            get { return _saveImageDays; }
             set
             {
-                var filteredValue = new string(value.Where(c => char.IsDigit(c)).ToArray());
-                SetProperty(ref _maintainQuantity, filteredValue);
+                SetProperty(ref _saveImageDays, value);
             }
         }
 
@@ -129,11 +128,11 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             if (parameters.ContainsKey("saveImageDays"))
             {
-                SaveImageDays = parameters.GetValue<string>("saveImageDays");
+                SaveImageDays = parameters.GetValue<int>("saveImageDays");
             }
-            if (parameters.ContainsKey("maintainQuantity"))
+            if (parameters.ContainsKey("minSimilarity"))
             {
-                MaintainQuantity = parameters.GetValue<string>("maintainQuantity");
+                MinSimilarity = parameters.GetValue<double>("minSimilarity");
             }
             if (parameters.ContainsKey("TemplateSoftwarePath"))
             {
@@ -153,7 +152,7 @@ namespace WheelRecognitionSystem.ViewModels.Dialogs
         {
             DialogParameters parameters = new DialogParameters();
             parameters.Add("saveImageDays", SaveImageDays);
-            parameters.Add("maintainQuantity", 8);
+            parameters.Add("minSimilarity", MinSimilarity);
             parameters.Add("OpenTemplateFilePath", OpenTemplateFilePath);
             parameters.Add("SQLManageSoftwarePath", SQLManageSoftwarePath);
             RequestClose?.Invoke(new DialogResult(ButtonResult.OK, parameters));

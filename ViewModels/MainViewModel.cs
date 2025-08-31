@@ -1378,7 +1378,7 @@ namespace WheelRecognitionSystem.ViewModels
             var parameters = new DialogParameters
             {
                 { "saveImageDays", SystemDatas.SaveImageDays },
-                { "maintainQuantity", SystemDatas.MaintainQuantity },
+                { "minSimilarity", SystemDatas.MinSimilarity },
                 { "TemplateSoftwarePath", SystemDatas.TemplateSoftwarePath },
                 { "SQLManageSoftwarePath", SystemDatas.SQLManageSoftwarePath }
             };
@@ -1389,17 +1389,17 @@ namespace WheelRecognitionSystem.ViewModels
                     {
                         IDialogParameters dialog = result.Parameters;
 
-                        string days = dialog.GetValue<string>("saveImageDays");
-                        SystemDatas.SaveImageDays = Convert.ToInt32(days);
+                        int days = dialog.GetValue<int>("saveImageDays");
+                        SystemDatas.SaveImageDays = days;
 
-                        string quantity = dialog.GetValue<string>("maintainQuantity");
-                        SystemDatas.MaintainQuantity = Convert.ToInt32(quantity);
+                        double simil = dialog.GetValue<double>("minSimilarity");
+                        SystemDatas.MinSimilarity = simil;
 
                         TemplateSoftwarePath = dialog.GetValue<string>("OpenTemplateFilePath");
                         SQLManageSoftwarePath = dialog.GetValue<string>("SQLManageSoftwarePath");
 
-                        SqlAccess.SystemDatasUpdateable("SaveImageDays", days);
-                        SqlAccess.SystemDatasUpdateable("MaintainQuantity", quantity);
+                        SqlAccess.SystemDatasUpdateable("SaveImageDays", days.ToString());
+                        SqlAccess.SystemDatasUpdateable("MinSimilarity", simil.ToString());
                         SqlAccess.SystemDatasUpdateable("TemplateSoftwarePath", TemplateSoftwarePath);
                         SqlAccess.SystemDatasUpdateable("SQLManageSoftwarePath", SQLManageSoftwarePath);
                     }

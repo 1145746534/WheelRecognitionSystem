@@ -396,11 +396,12 @@ namespace WheelRecognitionSystem.Public
                     {
                         using (HDevDisposeHelper dh = new HDevDisposeHelper())
                         {
-                            HOperatorSet.SetGenericShapeModelParam(templateData.Template, "angle_start", (new HTuple(-180)).TupleRad()
-                                );
+                            HOperatorSet.SetGenericShapeModelParam(templateData.Template, "angle_start", (new HTuple(-180)).TupleRad());
                         }
                         HOperatorSet.SetGenericShapeModelParam(templateData.Template, "border_shape_models", "false");
-
+                        //set_generic_shape_model_param (ModelID, 'iso_scale_max', 1.1)
+                        //set_generic_shape_model_param(ModelID, 'iso_scale_min', 0.9)
+                        //
                         HTuple hv_MatchResultID = new HTuple();
                         HTuple hv_NumMatchResult = new HTuple();
                         HOperatorSet.FindGenericShapeModel(image, templateData.Template, out hv_MatchResultID,
