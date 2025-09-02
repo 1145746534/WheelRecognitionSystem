@@ -34,6 +34,10 @@ using System.Diagnostics;
 using NPOI.OpenXmlFormats.Vml;
 using System.IO.Pipes;
 using Microsoft.Office.Interop.Excel;
+using Microsoft.Xaml.Behaviors;
+using System.Windows.Shapes;
+using System.Globalization;
+using System.Web.UI.WebControls;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -109,6 +113,16 @@ namespace WheelRecognitionSystem.ViewModels
             set { SetProperty(ref _displayCollections, value); }
         }
 
+        private int _ngCount;
+        /// <summary>
+        /// NG待识别数
+        /// </summary>
+        public int NGCount
+        {
+            get { return _ngCount; }
+            set { SetProperty(ref _ngCount, value); }
+        }
+
         #endregion
 
 
@@ -162,9 +176,10 @@ namespace WheelRecognitionSystem.ViewModels
         {
             _dialogService = dialogService;
             _regionManager = regionManager;
-            LoadSystemDatas();
+
 
             ViewInitialization();
+            LoadSystemDatas();
             DataInitialization();
             CommandBinding();
             EventSubscribe();
@@ -173,178 +188,8 @@ namespace WheelRecognitionSystem.ViewModels
             PlcDataInteractionThread();
             //PictrueDeleteTimer_Tick(null, null);
         }
-        /// <summary>
-        /// 界面初始化
-        /// </summary>
-        private void ViewInitialization()
-        {
-            _regionManager.RegisterViewWithRegion("ViewRegion", typeof(DisplayInterfaceView));
-            //_regionManager.RegisterViewWithRegion("ViewRegion1", typeof(ReportManagementView));
-            //_regionManager.RegisterViewWithRegion("ViewRegion2", typeof(ReportManagementView));
-        }
 
-        /// <summary>
-        /// 数据初始化
-        /// </summary>
-        public void DataInitialization()
-        {
-            //PLC
-            PlcCilent = new S7Client();
-            //初始化数据库
-            SqlAccess sqlAccess = new SqlAccess();
-            sqlAccess.InitializeTable();
-            workingPicture = WorkingPicture.Instance;
-            workingPicture.Initialize();
-            //实例化数据组
-            for (int i = 0; i < readPLCSignals.Length; i++)
-            {
-                readPLCSignals[i] = new ReadPLCSignal();
-                readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
-            }
-
-            List<DisplayData> displayDatas = new List<DisplayData>();
-            for (int i = 0; i < 5; i++)
-            {
-                DisplayData data = new DisplayData()
-                {
-                    Station = "1检1",
-                    Status = "",
-                    WheelType = "",
-                    Similarity = 0M,
-                    TimeConsumed = null,
-                    Remark = ""
-                };
-                displayDatas.Add(data);
-            }
-            DisplayCollections = new ObservableCollection<DisplayData>(displayDatas);
-            //启动定时器
-            pictrueDeleteTimer = new DispatcherTimer();
-            pictrueDeleteTimer.Tick += new EventHandler(PictrueDeleteTimer_Tick);//添加事件(到达时间间隔后会自动调用)
-            pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔为1秒
-            pictrueDeleteTimer.Start();//启动定时器
-
-            // 管道名称（客户端和服务端必须一致）
-            string pipeName = "MyPipe";
-
-            // 在单独的线程中启动服务器，避免阻塞主线程
-            Thread serverThread = new Thread(() => StartServer(pipeName));
-            serverThread.IsBackground = true;
-            serverThread.Start();
-
-        }
-        /// <summary>
-        /// 事件绑定
-        /// </summary>
-        public void CommandBinding()
-        {
-            ClickCommand = new DelegateCommand<string>(ClickManage);
-            
-            BtuCommand = new DelegateCommand<string>(BtuClick);
-        }
-
-        private void BtuClick(string obj)
-        {
-            if (obj == "NG图识别") NGImageIdentity();
-            if (obj == "参数刷新") InitialPara();
-            if (obj == "模板刷新") RefreshNCC();
-            if (obj == "测试") Test();
-        }
-
-        /// <summary>
-        /// NG图片识别
-        /// </summary>
-        private void NGImageIdentity()
-        {
-            
-        }
-
-
-
-        /// <summary>
-        /// 测试使用
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private async void Test()
-        {
-            string DirPath = "D:\\ZS\\终检\\测试图";
-
-            await Task.Run(() => {
-                
-                string[] _files = Directory.GetFiles("D:\\ZS\\终检\\测试图");
-                string[] subDirectories = Directory.GetDirectories(DirPath);
-                //文件
-                foreach (string filePath in _files)
-                {
-                    Thread.Sleep(100);
-                    ImageHandle(filePath);
-                }
-                //文件夹
-                foreach (string subDir in subDirectories)
-                {
-                    //文件
-                    string[] files = Directory.GetFiles(subDir);
-                    foreach (string filePath in files)
-                    {
-                        Thread.Sleep(100);
-                        ImageHandle(filePath);
-                    }
-
-                }
-            });
-
-           
-
-
-        }
-
-
-        private void ImageHandle(string filePath)
-        {
-            try
-            {
-                if (filePath.EndsWith(".tif"))
-                {
-                    HOperatorSet.ReadImage(out HObject image, filePath);
-                    HObject gray = RGBTransGray(image);
-                    //DisplayDataGrid(0, new DisplayData()); //清空显示
-                    InteractS7PLCModel interact = new InteractS7PLCModel()
-                    {
-                        ArrivalDelay = ArrivalDelay,
-                        readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
-                    };
-
-                    Dictionary<InteractS7PLCModel, HObject> dic = new Dictionary<InteractS7PLCModel, HObject>();
-                    dic.Add(interact, gray);
-                    workingPicture.ImageHandle(dic);
-                    SafeHalconDispose(image);
-                    //AutoRecognitionResultDisplayModel displayModel = new AutoRecognitionResultDisplayModel();
-                    //displayModel.Tag = $"DisplayRegion1";
-                    //displayModel.CurrentImage = CloneImageSafely(image);
-                    //EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(displayModel);
-                    //SafeHalconDispose(displayModel);
-                    //SafeHalconDispose(gray);
-
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"  !! 处理文件 {filePath} 时出错: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 事件订阅
-        /// </summary>
-        public void EventSubscribe()
-        {
-            //订阅消息
-            EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
-            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow, ThreadOption.UIThread, // 确保在UI线程执行
-                            keepSubscriberReferenceAlive: true);
-        }
-
-
+        #region 软件启动加载
 
         /// <summary>
         /// 加载系统数据
@@ -426,83 +271,89 @@ namespace WheelRecognitionSystem.ViewModels
 
 
         /// <summary>
-        /// 管道通信
+        /// 界面初始化
         /// </summary>
-        /// <param name="pipeName"></param>
-        void StartServer(string pipeName)
+        private void ViewInitialization()
         {
-            while (true)
-            {
-                try
-                {
-                    using (NamedPipeServerStream pipeServer = new NamedPipeServerStream(
-                        pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte,
-                        PipeOptions.Asynchronous))
-                    {
-                        // 等待客户端连接
-                        Console.WriteLine("等待客户端连接...");
-                        pipeServer.WaitForConnection();
-                        Console.WriteLine("客户端已连接！");
-
-                        // 使用 StreamReader 读取客户端发送的字符串
-                        using (StreamReader reader = new StreamReader(pipeServer))
-                        {
-                            string line;
-                            while ((line = reader.ReadLine()) != null)
-                            {
-                                EventMessage.MessageDisplay($"接收到客户端消息:{line}", true, true);
-
-                                //Console.WriteLine("接收到客户端消息: " + line);
-                                if (line.Equals("参数刷新"))
-                                {
-                                    InitialPara();
-                                }
-                                if(line.Equals("传统视觉模板刷新"))
-                                {
-                                    RefreshNCC();
-                                }
-                                if (line.Equals("大模型刷新"))
-                                {
-                                    workingPicture._isNeedLoadAI = true;
-                                }
-                               
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("发生错误: " + ex.Message);
-                }
-            }
-        }
-
-        private void RefreshNCC()
-        {
-            //推送到工作类中刷新
-            EventMessage.MessageHelper.GetEvent<RefreshNCCParaEvent>().Publish();
+            _regionManager.RegisterViewWithRegion("ViewRegion", typeof(DisplayInterfaceView));
+            //_regionManager.RegisterViewWithRegion("ViewRegion1", typeof(ReportManagementView));
+            //_regionManager.RegisterViewWithRegion("ViewRegion2", typeof(ReportManagementView));
         }
 
         /// <summary>
-        ///获取参数 - 没有此参数插入数据库默认值
+        /// 数据初始化
         /// </summary>
-        /// <param name="systemDatas">数据源</param>
-        /// <param name="name">名称</param>
-        /// <param name="defaultValue">默认值</param>
-        /// <returns></returns>
-        private string GetPara(List<sys_bd_systemsettingsdatamodel> systemDatas, string name, string defaultValue)
+        public void DataInitialization()
         {
-            try
+            //PLC
+            PlcCilent = new S7Client();
+            //初始化数据库
+            SqlAccess sqlAccess = new SqlAccess();
+            sqlAccess.InitializeTable();
+            workingPicture = WorkingPicture.Instance;
+            workingPicture.Initialize();
+            //实例化数据组
+            for (int i = 0; i < readPLCSignals.Length; i++)
             {
-                string value = systemDatas.First(x => x.Name == name).Value;
-                return value;
-            }
-            catch (Exception ex)
-            {
-                SqlAccess.SystemDatasInsertable(name, defaultValue);
-                return defaultValue;
+                readPLCSignals[i] = new ReadPLCSignal();
+                readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
             }
 
+            List<DisplayData> displayDatas = new List<DisplayData>();
+            for (int i = 0; i < 5; i++)
+            {
+                DisplayData data = new DisplayData()
+                {
+                    Station = "1检1",
+                    Status = "",
+                    WheelType = "",
+                    Similarity = 0M,
+                    TimeConsumed = null,
+                    Remark = ""
+                };
+                displayDatas.Add(data);
+            }
+
+
+            DisplayCollections = new ObservableCollection<DisplayData>(displayDatas);
+            // 先立即执行一次删除操作
+            PictrueDeleteTimer_Tick(null, EventArgs.Empty);
+            //启动定时器
+            pictrueDeleteTimer = new DispatcherTimer();
+            pictrueDeleteTimer.Tick += new EventHandler(PictrueDeleteTimer_Tick);//添加事件(到达时间间隔后会自动调用)
+            pictrueDeleteTimer.Interval = new TimeSpan(12, 0, 0);//设置时间间隔
+            pictrueDeleteTimer.Start();//启动定时器
+
+
+            // 管道名称（客户端和服务端必须一致）
+            string pipeName = "MyPipe";
+
+            // 在单独的线程中启动服务器，避免阻塞主线程
+            Thread serverThread = new Thread(() => StartServer(pipeName));
+            serverThread.IsBackground = true;
+            serverThread.Start();
+
+        }
+
+        /// <summary>
+        /// 事件绑定
+        /// </summary>
+        public void CommandBinding()
+        {
+            ClickCommand = new DelegateCommand<string>(ClickManage);
+
+            BtuCommand = new DelegateCommand<string>(BtuClick);
+        }
+
+        /// <summary>
+        /// 事件订阅
+        /// </summary>
+        public void EventSubscribe()
+        {
+            //订阅消息
+            EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
+            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow, ThreadOption.UIThread, // 确保在UI线程执行
+                            keepSubscriberReferenceAlive: true);
         }
 
         /// <summary>
@@ -527,8 +378,6 @@ namespace WheelRecognitionSystem.ViewModels
                 }
             });
         }
-
-
 
         /// <summary>
         /// PLC数据交互线程
@@ -746,19 +595,203 @@ namespace WheelRecognitionSystem.ViewModels
         }
 
 
-        private void ResetSignal(int bytePos, int bitPos, int delayMs)
+        /// <summary>
+        /// 管道通信
+        /// </summary>
+        /// <param name="pipeName"></param>
+        void StartServer(string pipeName)
         {
-
-            new Thread(() =>
+            while (true)
             {
+                try
                 {
-                    Thread.Sleep(600);
-                    S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
-                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{bytePos}.{bitPos}成功");
+                    using (NamedPipeServerStream pipeServer = new NamedPipeServerStream(
+                        pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous))
+                    {
+                        // 等待客户端连接
+                        Console.WriteLine("等待客户端连接...");
+                        pipeServer.WaitForConnection();
+                        Console.WriteLine("客户端已连接！");
+
+                        // 使用 StreamReader 读取客户端发送的字符串
+                        using (StreamReader reader = new StreamReader(pipeServer))
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                EventMessage.MessageDisplay($"接收到客户端消息:{line}", true, true);
+
+                                //Console.WriteLine("接收到客户端消息: " + line);
+                                if (line.Equals("参数刷新"))
+                                {
+                                    InitialPara();
+                                }
+                                if (line.Equals("传统视觉模板刷新"))
+                                {
+                                    RefreshNCC();
+                                }
+                                if (line.Equals("大模型刷新"))
+                                {
+                                    workingPicture._isNeedLoadAI = true;
+                                }
+
+                            }
+                        }
+                    }
                 }
-            }).Start();
+                catch (Exception ex)
+                {
+                    Console.WriteLine("发生错误: " + ex.Message);
+                }
+            }
         }
 
+
+
+        #endregion
+
+
+        #region 按钮触发
+
+        private void BtuClick(string obj)
+        {
+            if (obj == "NG图识别") NGImageIdentity();
+            if (obj == "参数刷新") InitialPara();
+            if (obj == "模板刷新") RefreshNCC();
+            if (obj == "测试") Test();
+        }
+
+        /// <summary>
+        /// NG图片识别
+        /// </summary>
+        private async void NGImageIdentity()
+        {
+
+            await Task.Run(() =>
+            {
+               
+                string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
+
+                //文件夹
+                foreach (string subDir1 in subDirectories)
+                {
+                    string[] subDir2 = Directory.GetDirectories(subDir1);
+
+                    //文件夹
+                    foreach (string subDir3 in subDir2)
+                    {
+                        if (subDir3.EndsWith("NG"))
+                        {
+                            //文件
+                            string[] files = Directory.GetFiles(subDir3);
+                            NGCount = files.Length;
+                            foreach (string filePath in files)
+                            {
+                                
+                                InteractS7PLCModel interact = new InteractS7PLCModel()
+                                {
+                                    ArrivalDelay = ArrivalDelay,
+                                    IsSaveImage = true,
+                                    ManualReadImagePath = filePath,
+                                    IsDisplay = false,
+                                    IsSendPLCInfo = false,
+                                    IsInteraction = false,
+                                    InfoHanleWay = InfoHandle.Update,
+                                    readPLCSignal = new ReadPLCSignal() { Index = -1, Name = "手动识别" },
+                                };
+                                
+                                ImageHandle(interact, filePath);
+                            }
+                        }
+                    }
+
+
+                }
+            });
+
+            PictrueDeleteTimer_Tick(null,null);
+        }
+
+        /// <summary>
+        /// 测试使用
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private async void Test()
+        {
+            string DirPath = "D:\\ZS\\终检\\测试图";
+            if (!Directory.Exists(DirPath))
+            {
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+               
+                string[] _files = Directory.GetFiles(DirPath);
+                string[] subDirectories = Directory.GetDirectories(DirPath);
+                InteractS7PLCModel interact = new InteractS7PLCModel()
+                {
+                    ArrivalDelay = ArrivalDelay,
+                    readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
+                };
+                //文件
+                foreach (string filePath in _files)
+                {
+                   
+                    ImageHandle(interact, filePath);
+                }
+                //文件夹
+                foreach (string subDir in subDirectories)
+                {
+                    //文件
+                    string[] files = Directory.GetFiles(subDir);
+                    foreach (string filePath in files)
+                    {                                           
+                        ImageHandle(interact, filePath);
+                    }
+
+                }
+            });
+        }
+
+
+        private void ImageHandle(InteractS7PLCModel interact, string filePath)
+        {
+            try
+            {
+                Thread.Sleep(100);
+                if (filePath.EndsWith(".tif"))
+                {
+                    //Console.WriteLine($"读取文件：{filePath}");
+                    HOperatorSet.ReadImage(out HObject image, filePath);
+
+                    HObject gray = RGBTransGray(image);
+
+
+                    Dictionary<InteractS7PLCModel, HObject> dic = new Dictionary<InteractS7PLCModel, HObject>();
+                    dic.Add(interact, gray);
+                    workingPicture.ImageHandle(dic);
+                    SafeHalconDispose(image);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  !! 处理文件 {filePath} 时出错: {ex.Message}");
+            }
+        }
+
+        private void RefreshNCC()
+        {
+            //推送到工作类中刷新
+            EventMessage.MessageHelper.GetEvent<RefreshNCCParaEvent>().Publish();
+        }
+
+        #endregion
+
+        #region 轮毂到位 处理完成 登录 
         /// <summary>
         /// 轮毂到位
         /// </summary>
@@ -808,24 +841,13 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="model"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private void CallShow(InteractS7PLCModel model)
+        private async void CallShow(InteractS7PLCModel model)
         {
-            //发送PLC的数据
+            string wheelType = string.Empty;
             int index = model.readPLCSignal.Index;
-            S7.SetBitAt(ref WriteBuffer, 0, index, true); //拍照流程完成
-            new Thread((obj) =>
-            {
-                int threadI = (int)obj;  // 将 object 类型转为 int
-                Thread.Sleep(500);
-                S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
-            }).Start(index);
-
+            string recognType = model.resultModel.RecognitionWheelType;
             string prefix = DateTime.Now.ToString("mmss");
             string text;
-            // PLC 中定义的最大长度
-            // 转换字符串为 PLC 格式字节数组
-            string recognType = model.resultModel.RecognitionWheelType;
-            string wheelType = string.Empty;
             if (!model.resultModel.ResultBol || recognType == null || recognType == "NG")
             {
                 text = prefix + DateTime.Now.ToString("yyMMddHH");
@@ -837,26 +859,41 @@ namespace WheelRecognitionSystem.ViewModels
                 wheelType = recognType.Trim('_');
                 text = prefix + wheelType;
             }
-            int maxLength = 16;
-            byte[] buffer = StringToS7Bytes(text, maxLength);
-            CopyBytes(buffer, WriteBuffer, 10 + index * 16);
-            string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
-            string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
-            //显示状态信息
-            decimal.TryParse(similarity, out decimal decSimilarity);
-            float.TryParse(timeConsumed, out float fTimeConsumed);
-            DisplayData data = new DisplayData();
-            data.Station = model.readPLCSignal.Name;
-            data.Status = model.resultModel.status;
-            data.WheelType = wheelType;
-            data.Similarity = decSimilarity * 100;
-            data.TimeConsumed = fTimeConsumed;
-            data.Remark = $"";
-            DisplayDataGrid(index, data);
-            //EventMessage.MessageDisplay($"拍照流程完成:{model.Index}：下标：{model.Index - 1}", true, true);
 
-            EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
+            if (model.IsSendPLCInfo)
+            {
+                //发送PLC的数据
 
+                S7.SetBitAt(ref WriteBuffer, 0, index, true); //拍照流程完成
+                new Thread((obj) =>
+                {
+                    int threadI = (int)obj;  // 将 object 类型转为 int
+                    Thread.Sleep(500);
+                    S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
+                }).Start(index);
+
+                int maxLength = 16; // PLC 中定义的最大长度
+                byte[] buffer = StringToS7Bytes(text, maxLength); // 转换字符串为 PLC 格式字节数组
+                CopyBytes(buffer, WriteBuffer, 10 + index * 16);
+
+            }
+            if (model.IsInteraction)
+            {
+                string similarity = model.resultModel.Similarity == 0 ? "" : model.resultModel.Similarity.ToString();
+                string timeConsumed = model.Interval.TotalMilliseconds == 0 ? "" : model.Interval.TotalMilliseconds.ToString();
+                //显示状态信息
+                decimal.TryParse(similarity, out decimal decSimilarity);
+                float.TryParse(timeConsumed, out float fTimeConsumed);
+                DisplayData data = new DisplayData();
+                data.Station = model.readPLCSignal.Name;
+                data.Status = model.resultModel.status;
+                data.WheelType = wheelType;
+                data.Similarity = decSimilarity * 100;
+                data.TimeConsumed = fTimeConsumed;
+                data.Remark = $"分数：{decSimilarity}";
+                DisplayDataGrid(index, data);
+                EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
+            }
             if (model.InfoHanleWay == InfoHandle.Save)
             {
                 //插入数据库  -跟着相机工位走的数据
@@ -882,11 +919,134 @@ namespace WheelRecognitionSystem.ViewModels
                 pDB.Close();
                 pDB.Dispose();
             }
-            
+            if (model.InfoHanleWay == InfoHandle.Update)
+            {
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        //查询数据库 然后修改数据
+                        UpdateModelByImageFileName(model.ManualReadImagePath, model.imagePath,
+                           recognType,wheelType, model.resultModel.WheelStyle);
+                        Task.Delay(30);
+                        string path = model.ManualReadImagePath;
+                        if (File.Exists(path))
+                        {
+                            --NGCount;
+                            Console.WriteLine($"{NGCount}删除：{path}");
+                            File.Delete(path);
+                        }
+                    }
+                    catch (Exception ex) { }
+                    
+                });
+
+
+            }
+
             model = null;
 
         }
+        public void UpdateModelByImageFileName(string fileName, string newImagePath,
+            string recognType,string newModelName, string style)
+        {
+            try
+            {
+                //先把文件名解析
+                string[] strings = fileName.Split('&');
+                if (strings.Length != 2)
+                {
+                    return;
+                }
+                string compactTime = strings[1].Split('.')[0];
 
+                DateTime result = ConvertToDateTime(compactTime);
+                DateTime startTime = result.AddMinutes(-3);
+                DateTime endTime = result.AddMinutes(3);
+                using (SqlSugarClient db = new SqlAccess().SystemDataAccess)
+                {
+                    Console.WriteLine($"{startTime}   {endTime}   {fileName}"  );
+                    var record = db.Queryable<Tbl_productiondatamodel>()
+                                .Where(t => t.RecognitionTime > startTime && t.RecognitionTime < endTime)
+                                .Where(t => t.ImagePath == fileName)
+                                .First();
+                    //开启Sql日志输出（调试用）
+                    //db.Aop.OnLogExecuting = (sql, pars) =>
+                    //{
+                    //    Console.WriteLine("---" + sql);
+                    //};
+
+                    if (record != null)
+                    {
+                        // 更新Model字段
+                        record.WheelType = recognType;
+                        record.Model = newModelName;
+                        record.ImagePath = newImagePath;
+                        record.WheelStyle = style;
+
+                        // 更新数据库记录
+                        db.Updateable(record)
+                          .Where(t => t.ID == record.ID) // 确保使用主键定位记录
+                          .ExecuteCommand();
+                    }
+                    else
+                    {
+                        // 可选：处理未找到记录的情况
+                        //throw new Exception($"未找到包含文件名的记录: {fileName}");
+                    }
+                }
+
+
+                using (SqlSugarClient db = new SqlAccess().SystemDataAccess)
+                {
+                    var record = db.Queryable<Tbl_productiondatamodel>()
+                                .Where(t => t.RecognitionTime > startTime && t.RecognitionTime < endTime)
+                                .Where(t => t.ImagePath != null && t.ImagePath.Contains(fileName))
+                                .First();
+                    //开启Sql日志输出（调试用）
+                    //db.Aop.OnLogExecuting = (sql, pars) =>
+                    //{
+                    //    Console.WriteLine("---" + sql);
+                    //};
+
+                    if (record != null)
+                    {
+                        // 更新Model字段
+                        record.Model = newModelName;
+                        record.ImagePath = newImagePath;
+                        record.WheelStyle = style;
+
+                        // 更新数据库记录
+                        db.Updateable(record)
+                          .Where(t => t.ID == record.ID) // 确保使用主键定位记录
+                          .ExecuteCommand();
+                    }
+                    else
+                    {
+                        // 可选：处理未找到记录的情况
+                        //throw new Exception($"未找到包含文件名的记录: {fileName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        public DateTime ConvertToDateTime(string compactTime)
+        {
+            if (string.IsNullOrWhiteSpace(compactTime) || compactTime.Length != 15)
+            {
+                throw new ArgumentException("时间格式必须为15位数字: yyMMddHHmmssfff");
+            }
+
+            return DateTime.ParseExact(
+                compactTime,
+                "yyMMddHHmmssfff",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None
+            );
+        }
 
         /// <summary>
         /// 修改产品流向 下转/回流
@@ -952,7 +1112,7 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
-        public async Task SendMes(string _uri, string _sation, string _guid)
+        private async Task SendMes(string _uri, string _sation, string _guid)
         {
 
             // 使用传统using块管理HttpClient
@@ -1069,6 +1229,46 @@ namespace WheelRecognitionSystem.ViewModels
                 sDB?.Dispose();
             }
             return false;
+        }
+
+
+        private void ResetSignal(int bytePos, int bitPos, int delayMs)
+        {
+
+            new Thread(() =>
+            {
+                {
+                    Thread.Sleep(600);
+                    S7.SetBitAt(ref WriteBuffer, bytePos, bitPos, false);
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 复位{bytePos}.{bitPos}成功");
+                }
+            }).Start();
+        }
+
+
+        #endregion
+
+
+        /// <summary>
+        ///获取参数 - 没有此参数插入数据库默认值
+        /// </summary>
+        /// <param name="systemDatas">数据源</param>
+        /// <param name="name">名称</param>
+        /// <param name="defaultValue">默认值</param>
+        /// <returns></returns>
+        private string GetPara(List<sys_bd_systemsettingsdatamodel> systemDatas, string name, string defaultValue)
+        {
+            try
+            {
+                string value = systemDatas.First(x => x.Name == name).Value;
+                return value;
+            }
+            catch (Exception ex)
+            {
+                SqlAccess.SystemDatasInsertable(name, defaultValue);
+                return defaultValue;
+            }
+
         }
 
 
@@ -1209,93 +1409,66 @@ namespace WheelRecognitionSystem.ViewModels
         /// <param name="e"></param>
         private void PictrueDeleteTimer_Tick(object sender, EventArgs e)
         {
-            // 计算过期日期（保留当天）
-            DateTime expirationDate = DateTime.Now.AddDays(-SaveImageDays).Date;
-
-            // 检查基础目录是否存在
-            if (!Directory.Exists(HistoricalImagesPath))
-            {            
-                return;
-            }
-            try
+            Task.Run(() =>
             {
-                // 获取所有子目录
-                string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
-                foreach (string dirPath in subDirectories)
-                {
-                    try
-                    {
-                        DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
+                // 计算过期日期（保留当天）
+                DateTime expirationDate = DateTime.Now.AddDays(-SaveImageDays).Date;
 
-                        // 检查目录创建时间是否早于阈值日期
-                        if (dirInfo.CreationTime < expirationDate)
+                // 检查基础目录是否存在
+                if (!Directory.Exists(HistoricalImagesPath))
+                {
+                    return;
+                }
+                try
+                {
+                    int sum = 0;
+                    // 获取所有子目录
+                    string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
+                    foreach (string dirPath in subDirectories)
+                    {
+                        try
                         {
-                            // 递归删除目录及其所有内容
-                            Directory.Delete(dirPath, recursive: true);
-                            Console.WriteLine($"已删除目录: {dirPath} (创建时间: {dirInfo.CreationTime})");
+                            DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
+
+                            // 检查目录创建时间是否早于阈值日期
+                            if (dirInfo.CreationTime < expirationDate)
+                            {
+                                // 递归删除目录及其所有内容
+                                Directory.Delete(dirPath, recursive: true);
+                                Console.WriteLine($"已删除目录: {dirPath} (创建时间: {dirInfo.CreationTime})");
+                            }
+                            else
+                            {
+                                string[] subDir2 = Directory.GetDirectories(dirPath);
+
+                                //文件夹
+                                foreach (string subDir3 in subDir2)
+                                {
+                                    if (subDir3.EndsWith("NG"))
+                                    {
+                                        //文件
+                                        string[] files = Directory.GetFiles(subDir3);
+                                        sum = sum + files.Length;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"处理目录 '{dirPath}' 时出错: {ex.Message}");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"处理目录 '{dirPath}' 时出错: {ex.Message}");
-                    }
+
+                    NGCount = sum;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"扫描目录 '{HistoricalImagesPath}' 时出错: {ex.Message}");
-            }
-
-        } 
-        private void PictrueDeleteTimer_Tick1(object sender, EventArgs e)
-        {
-            // 计算过期日期（保留当天）
-            DateTime expirationDate = DateTime.Now.AddDays(-SaveImageDays).Date;
-
-            // 删除过期的天文件夹
-            for (int i = 0; i <= SaveImageDays + 30; i++) // 覆盖所有可能过期的日期
-            {
-                DateTime currentDate = expirationDate.AddDays(-i);
-                string monthDir = currentDate.ToString("M月");
-                string dayDir = currentDate.ToString("d日");
-
-                string fullPath = Path.Combine(HistoricalImagesPath, monthDir, dayDir);
-                Console.WriteLine($"目标路径：{fullPath}");
-                if (Directory.Exists(fullPath))
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        Directory.Delete(fullPath, true);
-                        EventMessage.MessageDisplay($"已删除 {currentDate:M月d日} 的图片文件", true, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        // 添加错误处理
-                        EventMessage.MessageDisplay($"删除失败: {ex.Message}", true, false);
-                    }
+                    Console.WriteLine($"扫描目录 '{HistoricalImagesPath}' 时出错: {ex.Message}");
                 }
-            }
-
-            // 删除空月文件夹（更安全的逻辑）
-            foreach (var monthPath in Directory.GetDirectories(HistoricalImagesPath))
-            {
-                // 检查月份文件夹是否为空
-                if (!Directory.EnumerateFileSystemEntries(monthPath).Any())
-                {
-                    try
-                    {
-                        Directory.Delete(monthPath);
-                        string monthName = Path.GetFileName(monthPath);
-                        EventMessage.MessageDisplay($"已删除空文件夹: {monthName}", true, true);
-                    }
-                    catch { /* 错误处理 */ }
-                }
-            }
-      
+            });
         }
 
 
-        #region 显示
 
         /// <summary>
         /// 显示数据
@@ -1443,7 +1616,6 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
-        #endregion
 
 
     }

@@ -72,10 +72,16 @@ namespace WheelRecognitionSystem.Models
 
         public void Dispose()
         {
-            if (RecognitionContour != null)
+            try
             {
-                RecognitionContour.Dispose();
+                if (RecognitionContour != null && RecognitionContour.IsInitialized())
+                {
+                    RecognitionContour?.Dispose();
+                }
+            }catch(Exception ex) {
+                Console.WriteLine(  ex.ToString());
             }
+           
         }
 
     }

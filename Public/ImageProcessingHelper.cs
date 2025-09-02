@@ -377,7 +377,7 @@ namespace WheelRecognitionSystem.Public
         //    }
         //}
 
-        
+
 
         public static RecognitionResultModel WheelRecognitionAlgorithm1(HObject imageSource, List<TemplatedataModel> templateDatas, double angleStart,
                                                                         double angleExtent, double minSimilarity, out List<RecognitionResultModel> recognitionResults)
@@ -438,17 +438,17 @@ namespace WheelRecognitionSystem.Public
                             temp.Similarity = Math.Round(maxValue, 3);
                             temp.WheelStyle = templateData.WheelStyle;
                             temp.FullFigureGray = fullGray;
-                            temp.RecognitionContour = ho_MatchContour?.Clone();
+                            temp.RecognitionContour = CloneImageSafely(ho_MatchContour);
                             temp.AbsDifferenceGray = Math.Abs(templateData.FullGary - fullGray);
-                                                                                 
+
                             if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
                             {
-                                
+
                                 temp.status = "识别成功";
                                 result = temp;
                                 break;
                             }
-                            if (temp.Similarity > minSimilarity)
+                            if (temp.Similarity > minSimilarity && temp.AbsDifferenceGray < 20)
                             {
                                 recognitionResults.Add(temp);
                             }
@@ -501,15 +501,14 @@ namespace WheelRecognitionSystem.Public
             // 如果有符合条件的结果，返回相似度最高的
             if (filteredResults.Any())
             {
-                bestMatch = filteredResults.First().Copy();
-            }else
+                bestMatch = filteredResults.First();
+            }
+            else
             {
                 // 第二步：如果没有AbsDifferenceGray < 2的结果，则按AbsDifferenceGray从小到大排序取最小值
-                bestMatch = results.OrderBy(r => r.AbsDifferenceGray).First().Copy();
+                bestMatch = results.OrderBy(r => r.AbsDifferenceGray).First();
 
             }
-
-            //bestMatch = results.OrderByDescending(r => r.Similarity).First();
 
             return true;
         }
@@ -899,11 +898,30 @@ namespace WheelRecognitionSystem.Public
                     throw new Exception("D盘磁盘存储空间不足");
                 }
 
-                string saveImagePath = string.Empty;
+                // 获取目录路径（去掉文件名）
+                string directoryPath = Path.GetDirectoryName(savePath);
+
+                // 检查目录是否存在
+                if (!Directory.Exists(directoryPath))
+                {
+                    try
+                    {
+                        // 创建目录（包括所有父目录）
+                        Directory.CreateDirectory(directoryPath);
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"创建目录时出错: {ex.Message}");
+                        return;
+                    }
+                }
+
+               
                 // 异步保存图像
                 await Task.Run(() =>
                 {
-                    saveImagePath = savePath.Replace(@"\", "/");
+                    string saveImagePath = savePath.Replace(@"\", "/");
                     HOperatorSet.WriteImage(saveImage, "tiff", 0, saveImagePath);
 
                 });

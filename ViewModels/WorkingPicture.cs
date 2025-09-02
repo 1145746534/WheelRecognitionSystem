@@ -407,6 +407,7 @@ namespace WheelRecognitionSystem.ViewModels
             lock (_processingLock)
             {
                 _processingQueue.Enqueue(dic);
+                //Console.WriteLine("待处理图像："+ _processingQueue.Count);
             }
 
         }
@@ -427,10 +428,10 @@ namespace WheelRecognitionSystem.ViewModels
                         foreach (KeyValuePair<InteractS7PLCModel, HObject> item in dic)
                         {
                             RecognitionResultModel recognitionResult = null;
-                           
+                            List<RecognitionResultModel> list = null;
                             InteractS7PLCModel interact = item.Key;
                             //需销毁
-                            HObject image = item.Value;                         
+                            HObject image = item.Value;
                             HObject templateContour = new HObject();
 
                             try
@@ -444,23 +445,23 @@ namespace WheelRecognitionSystem.ViewModels
                                 }
                                 else
                                 {
-                                    List<RecognitionResultModel> list = null;
+
                                     //处理图像
-                                    HObject grayImage = RGBTransGray(image);            
+                                    HObject grayImage = RGBTransGray(image);
                                     string score = "0";
-                                    
+
                                     //
                                     recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
-                                    
+
                                     if (recognitionResult.RecognitionWheelType != "NG") //
                                     {
                                         //显示
-                                        templateContour = recognitionResult.RecognitionContour.Clone();
+                                        templateContour = CloneImageSafely(recognitionResult.RecognitionContour);
                                         //更新使用时间
                                         string _type = recognitionResult.RecognitionWheelType;
 
                                         var results = TemplateModels
-                                            .Where(t => t.WheelType != null &&t.WheelType == _type);
+                                            .Where(t => t.WheelType != null && t.WheelType == _type);
                                         foreach (TemplatedataModel it in results)
                                         {
                                             it.UseTemplate();
@@ -470,13 +471,13 @@ namespace WheelRecognitionSystem.ViewModels
                                         score = recognitionResult.Similarity.ToString("F3");
 
                                     }
-                                    
+
 
                                     for (int i = 0; i < list.Count; i++)
                                     {
                                         list[i].Dispose();
                                     }
-                                    list?.Clear();
+
 
                                     if (interact.IsSaveImage)
                                     {
@@ -484,7 +485,25 @@ namespace WheelRecognitionSystem.ViewModels
                                         SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                                         string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
                                         string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
-                                        string savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
+                                        string savePath = string.Empty;
+                                        savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
+                                        if (File.Exists(interact.ManualReadImagePath))
+                                        {
+                                            string pathA = savePath;
+                                            string pathB = interact.ManualReadImagePath;
+
+                                            // 从路径B中提取目录名
+                                            string targetDirectory = FileHelper.ExtractTargetDirectory(pathB);
+
+                                            // 替换路径A中的目录
+                                            string newPathA = FileHelper.ReplaceDirectoryInPath(pathA, targetDirectory);
+
+                                            //Console.WriteLine("原始路径A: " + pathA);
+                                            //Console.WriteLine("提取的目录: " + targetDirectory);
+                                            //Console.WriteLine("新路径A: " + newPathA);
+                                            savePath = newPathA;
+                                        }
+                                       
                                         interact.imagePath = savePath;
                                         var saveRequest = new SaveImageRequest
                                         {
@@ -510,7 +529,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
 
-                                    
+
                                     //Console.WriteLine("步骤2");
                                     SafeDisposeHObject(ref grayImage);
                                 }
@@ -526,15 +545,16 @@ namespace WheelRecognitionSystem.ViewModels
                             {
 
 
-                               
+
                                 SafeDisposeHObject(ref image);
                                 SafeDisposeHObject(ref templateContour);
-                                
+
                                 interact.endTime = DateTime.Now;
                                 recognitionResult.Dispose();
                                 interact.resultModel = recognitionResult.Copy();
-                               
+
                                 recognitionResult = null;
+                                list?.Clear();
                                 //回调处理完成
                                 EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
                             }
@@ -566,7 +586,7 @@ namespace WheelRecognitionSystem.ViewModels
                     if (_saveImageQueue.Count > 0)
                     {
                         request = _saveImageQueue.Dequeue();
-                        Console.WriteLine($"剩余处理图片:{_saveImageQueue.Count}");
+                        //Console.WriteLine($"剩余处理图片:{_saveImageQueue.Count}");
                     }
                 }
                 if (!request.HasValue)

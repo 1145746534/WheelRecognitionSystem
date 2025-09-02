@@ -31,7 +31,7 @@ namespace WheelRecognitionSystem.Models
                 if (_template == null && File.Exists(TemplateUsePath))
                 {
                     // 同步加载（）
-                    Console.WriteLine( $"同步加载文件：{TemplateUsePath}");
+                    //Console.WriteLine( $"同步加载文件：{TemplateUsePath}");
                     string strPath = TemplateUsePath.Replace(@"\", "/");
                     //HOperatorSet.ReadNccModel(strPath, out HTuple modelID);
                     HOperatorSet.ReadShapeModel(strPath, out HTuple modelID);

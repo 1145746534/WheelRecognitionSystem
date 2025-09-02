@@ -228,6 +228,70 @@ namespace WheelRecognitionSystem.Public
             }
         }
 
+        /// <summary>
+        /// 从路径中提取目标目录
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string ExtractTargetDirectory(string path)
+        {
+            // 将路径分割成部分
+            string[] parts = path.Split(Path.DirectorySeparatorChar);
 
+            // 找到"HistoricalImages"的索引
+            int historicalImagesIndex = -1;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Equals("HistoricalImages", StringComparison.OrdinalIgnoreCase))
+                {
+                    historicalImagesIndex = i;
+                    break;
+                }
+            }
+
+            // 如果找到"HistoricalImages"，则返回它后面的目录
+            if (historicalImagesIndex != -1 && historicalImagesIndex + 1 < parts.Length)
+            {
+                return parts[historicalImagesIndex + 1];
+            }
+
+            // 如果没有找到，返回空字符串或抛出异常
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 替换路径中的目录
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="newDirectory"></param>
+        /// <returns></returns>
+       public static string ReplaceDirectoryInPath(string path, string newDirectory)
+        {
+            // 将路径分割成部分
+            string[] parts = path.Split(Path.DirectorySeparatorChar);
+
+            // 找到"HistoricalImages"的索引
+            int historicalImagesIndex = -1;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Equals("HistoricalImages", StringComparison.OrdinalIgnoreCase))
+                {
+                    historicalImagesIndex = i;
+                    break;
+                }
+            }
+
+            // 如果找到"HistoricalImages"，则替换它后面的目录
+            if (historicalImagesIndex != -1 && historicalImagesIndex + 1 < parts.Length)
+            {
+                parts[historicalImagesIndex + 1] = newDirectory;
+
+                // 重新组合路径
+                return string.Join(Path.DirectorySeparatorChar.ToString(), parts);
+            }
+
+            // 如果没有找到，返回原始路径
+            return path;
+        }
     }
 }

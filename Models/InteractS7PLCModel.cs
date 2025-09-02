@@ -21,8 +21,10 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public bool IsSaveImage = true;
 
+        public string ManualReadImagePath;
+
         /// <summary>
-        /// 是否显示
+        /// 是否显示图片到界面
         /// </summary>
         public bool IsDisplay = true;
 
@@ -30,6 +32,11 @@ namespace WheelRecognitionSystem.Models
         /// 是否发送PLC信号
         /// </summary>
         public bool IsSendPLCInfo = true;
+
+        /// <summary>
+        /// 是否通知界面
+        /// </summary>
+        public bool IsInteraction = true;
 
         /// <summary>
         /// 数据处理方式
