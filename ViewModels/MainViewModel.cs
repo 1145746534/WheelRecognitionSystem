@@ -918,6 +918,10 @@ namespace WheelRecognitionSystem.ViewModels
                 pDB.Insertable(dataModel).ExecuteCommand();
                 pDB.Close();
                 pDB.Dispose();
+                if (wheelType == "error")
+                {
+                    ++NGCount;
+                }
             }
             if (model.InfoHanleWay == InfoHandle.Update)
             {
