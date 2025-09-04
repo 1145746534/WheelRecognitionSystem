@@ -996,14 +996,14 @@ namespace WheelRecognitionSystem.Public
             if (way == SaveWay.Hand)
             {
                 handImagesPath = ImagePath;
-                Directory.CreateDirectory(handImagesPath);
+                
 
             }
             else
             {
                 path = $"{startTime.ToString("yyyyMMddHH")}-{endTime.ToString("MMddHH")}({workShift})";
                 path = Path.Combine(ImagePath, path);
-                Directory.CreateDirectory(path);
+               
             }
 
 
@@ -1027,82 +1027,18 @@ namespace WheelRecognitionSystem.Public
                 else
                     saveWheelTypePath = Path.Combine(path, prefixName);
 
-                Directory.CreateDirectory(saveWheelTypePath);
+                //Directory.CreateDirectory(saveWheelTypePath);
                 savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{now:yyMMddHHmmssfff}.tif");
             }
             else if (way == SaveWay.AutoNG)
             {
                 string ngPath = Path.Combine(path, "NG");
-                Directory.CreateDirectory(ngPath);
+                //Directory.CreateDirectory(ngPath);
                 savePath = Path.Combine(ngPath, $"NG&{now:yyMMddHHmmssfff}.tif");
             }
             else
             {
                 savePath = Path.Combine(handImagesPath, $"Hand&{now:yyMMddHHmmss}.tif");
-            }
-
-            return savePath;
-        }
-
-        public static string GetImageSavePath1(SaveWay way, string ImagePath, string prefixName = null)
-        {
-            string savePath = string.Empty;
-            DateTime dateTime = DateTime.Now;
-
-            // 路径定义
-            string handImagesPath = string.Empty;
-
-            string monthPath = string.Empty;
-            string dayPath = string.Empty;
-            string ngPath = string.Empty;
-
-            if (way == SaveWay.Hand)
-            {
-                handImagesPath = ImagePath;
-                Directory.CreateDirectory(handImagesPath);
-
-            }
-            else
-            {
-                monthPath = Path.Combine(ImagePath, $"{dateTime.Month}月");
-                dayPath = Path.Combine(monthPath, $"{dateTime.Day}日");
-                ngPath = Path.Combine(dayPath, "NG");
-                Directory.CreateDirectory(monthPath); // CreateDirectory 自动处理已存在的情况
-                Directory.CreateDirectory(dayPath);
-                Directory.CreateDirectory(ngPath);
-            }
-
-
-
-            // 根据保存方式构建路径
-            string saveWheelTypePath = "";
-            if (way == SaveWay.AutoOK)
-            {
-                // 查找下划线的位置
-                int index = prefixName.IndexOf("_", StringComparison.Ordinal);
-
-                // 如果找到双下划线，返回前面的部分
-                if (index >= 0)
-                {
-                    string value = prefixName.Substring(0, index);
-                    string finallyName = prefixName.Contains("半") ? "半" : "成";
-                    value = $"{value}_{finallyName}";
-                    saveWheelTypePath = Path.Combine(dayPath, value);
-
-                }
-                else
-                    saveWheelTypePath = Path.Combine(dayPath, prefixName);
-
-                Directory.CreateDirectory(saveWheelTypePath);
-                savePath = Path.Combine(saveWheelTypePath, $"{prefixName}&{dateTime:yyMMddHHmmss}.tif");
-            }
-            else if (way == SaveWay.AutoNG)
-            {
-                savePath = Path.Combine(ngPath, $"NG&{dateTime:yyMMddHHmmss}.tif");
-            }
-            else
-            {
-                savePath = Path.Combine(handImagesPath, $"Hand&{dateTime:yyMMddHHmmss}.tif");
             }
 
             return savePath;

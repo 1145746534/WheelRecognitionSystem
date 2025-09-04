@@ -38,6 +38,7 @@ using Microsoft.Xaml.Behaviors;
 using System.Windows.Shapes;
 using System.Globalization;
 using System.Web.UI.WebControls;
+using NPOI.SS.Formula.Functions;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -670,7 +671,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             await Task.Run(() =>
             {
-               
+
                 string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
 
                 //文件夹
@@ -688,11 +689,11 @@ namespace WheelRecognitionSystem.ViewModels
                             NGCount = files.Length;
                             foreach (string filePath in files)
                             {
-                                
+
                                 InteractS7PLCModel interact = new InteractS7PLCModel()
                                 {
                                     ArrivalDelay = ArrivalDelay,
-                                    IsSaveImage = true,
+                                    IsSaveImage = false,
                                     ManualReadImagePath = filePath,
                                     IsDisplay = false,
                                     IsSendPLCInfo = false,
@@ -700,7 +701,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     InfoHanleWay = InfoHandle.Update,
                                     readPLCSignal = new ReadPLCSignal() { Index = -1, Name = "手动识别" },
                                 };
-                                
+
                                 ImageHandle(interact, filePath);
                             }
                         }
@@ -708,9 +709,11 @@ namespace WheelRecognitionSystem.ViewModels
 
 
                 }
+
+                Task.Delay(1000);
+                PictrueDeleteTimer_Tick(null, null);
             });
 
-            PictrueDeleteTimer_Tick(null,null);
         }
 
         /// <summary>
@@ -728,7 +731,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             await Task.Run(() =>
             {
-               
+
                 string[] _files = Directory.GetFiles(DirPath);
                 string[] subDirectories = Directory.GetDirectories(DirPath);
                 InteractS7PLCModel interact = new InteractS7PLCModel()
@@ -739,7 +742,7 @@ namespace WheelRecognitionSystem.ViewModels
                 //文件
                 foreach (string filePath in _files)
                 {
-                   
+
                     ImageHandle(interact, filePath);
                 }
                 //文件夹
@@ -748,7 +751,7 @@ namespace WheelRecognitionSystem.ViewModels
                     //文件
                     string[] files = Directory.GetFiles(subDir);
                     foreach (string filePath in files)
-                    {                                           
+                    {
                         ImageHandle(interact, filePath);
                     }
 
@@ -912,7 +915,7 @@ namespace WheelRecognitionSystem.ViewModels
                 dataModel.Station = model.readPLCSignal.Name;
                 dataModel.ImagePath = model.imagePath;
                 dataModel.ReportWay = "线上";
-                dataModel.ResultBool = model.resultModel.ResultBol;
+                dataModel.ResultBool = true; //人工检查结果
                 dataModel.Remark = "-1";
                 dataModel.RecognitionDay = model.endTime;
                 pDB.Insertable(dataModel).ExecuteCommand();
@@ -925,25 +928,38 @@ namespace WheelRecognitionSystem.ViewModels
             }
             if (model.InfoHanleWay == InfoHandle.Update)
             {
-                await Task.Run(() =>
+
+
+                try
                 {
-                    try
+                    if (recognType != "NG")
                     {
                         //查询数据库 然后修改数据
                         UpdateModelByImageFileName(model.ManualReadImagePath, model.imagePath,
-                           recognType,wheelType, model.resultModel.WheelStyle);
-                        Task.Delay(30);
+                           recognType, wheelType, model.resultModel.WheelStyle);
+
                         string path = model.ManualReadImagePath;
                         if (File.Exists(path))
                         {
                             --NGCount;
-                            Console.WriteLine($"{NGCount}删除：{path}");
-                            File.Delete(path);
+                            string directoryPath = System.IO.Path.GetDirectoryName(model.imagePath);
+                            // 检查目录是否存在
+                            if (!Directory.Exists(directoryPath))
+                                Directory.CreateDirectory(directoryPath);
+
+                            //Console.WriteLine($"{NGCount}删除：{path}");
+                            //File.Delete(path);
+                            // 移动并重命名文件
+                            File.Move(path, model.imagePath);
                         }
                     }
-                    catch (Exception ex) { }
-                    
-                });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"图片修改报错:{ex.ToString()}");
+                }
+
+
 
 
             }
@@ -951,11 +967,12 @@ namespace WheelRecognitionSystem.ViewModels
             model = null;
 
         }
-        public void UpdateModelByImageFileName(string fileName, string newImagePath,
-            string recognType,string newModelName, string style)
+        public void UpdateModelByImageFileName(string imagePath, string newImagePath,
+            string recognType, string newModelName, string style)
         {
             try
             {
+                string fileName = System.IO.Path.GetFileName(imagePath);
                 //先把文件名解析
                 string[] strings = fileName.Split('&');
                 if (strings.Length != 2)
@@ -969,10 +986,10 @@ namespace WheelRecognitionSystem.ViewModels
                 DateTime endTime = result.AddMinutes(3);
                 using (SqlSugarClient db = new SqlAccess().SystemDataAccess)
                 {
-                    Console.WriteLine($"{startTime}   {endTime}   {fileName}"  );
+                    Console.WriteLine($"{startTime}   {endTime}   {fileName}");
                     var record = db.Queryable<Tbl_productiondatamodel>()
                                 .Where(t => t.RecognitionTime > startTime && t.RecognitionTime < endTime)
-                                .Where(t => t.ImagePath == fileName)
+                                .Where(t => t.ImagePath != null && t.ImagePath.Contains(fileName))
                                 .First();
                     //开启Sql日志输出（调试用）
                     //db.Aop.OnLogExecuting = (sql, pars) =>

@@ -478,33 +478,14 @@ namespace WheelRecognitionSystem.ViewModels
                                         list[i].Dispose();
                                     }
 
-
+                                    //保存图片
+                                    SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
+                                    string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
+                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
+                                    string savePath = string.Empty;
+                                    savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                     if (interact.IsSaveImage)
-                                    {
-                                        //保存图片
-                                        SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
-                                        string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                        string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
-                                        string savePath = string.Empty;
-                                        savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
-                                        if (File.Exists(interact.ManualReadImagePath))
-                                        {
-                                            string pathA = savePath;
-                                            string pathB = interact.ManualReadImagePath;
-
-                                            // 从路径B中提取目录名
-                                            string targetDirectory = FileHelper.ExtractTargetDirectory(pathB);
-
-                                            // 替换路径A中的目录
-                                            string newPathA = FileHelper.ReplaceDirectoryInPath(pathA, targetDirectory);
-
-                                            //Console.WriteLine("原始路径A: " + pathA);
-                                            //Console.WriteLine("提取的目录: " + targetDirectory);
-                                            //Console.WriteLine("新路径A: " + newPathA);
-                                            savePath = newPathA;
-                                        }
-                                       
-                                        interact.imagePath = savePath;
+                                    {                      
                                         var saveRequest = new SaveImageRequest
                                         {
                                             Image = grayImage.Clone(),
@@ -515,6 +496,56 @@ namespace WheelRecognitionSystem.ViewModels
                                             _saveImageQueue.Enqueue(saveRequest);
                                         }
                                     }
+                                    else
+                                    {
+                                        if (recognitionResult.RecognitionWheelType != "NG" && File.Exists(interact.ManualReadImagePath))
+                                        {
+                                            //string pathA = savePath;
+                                            string pathB = interact.ManualReadImagePath;
+                                            //获取原文件名称
+                                            string fileNameWithExtension = System.IO.Path.GetFileName(pathB);
+
+                                            string[] strings = fileNameWithExtension.Split('&');
+                                            if (strings.Length == 2)
+                                            {
+                                                string prefix = strings[0];
+                                                string time = strings[1];
+                                                //修改名称
+                                                string newFileName = $"{_prefixName}&{time}";
+                                                //修改路径 把NG替换成识别轮型目录
+                                                string value = recognitionResult.RecognitionWheelType.Trim('_');
+                                                string dirName = $"{value}_{style}";
+
+                                                // 将路径分割成部分
+                                                string[] parts = pathB.Split(System.IO.Path.DirectorySeparatorChar);
+
+                                                // 找到"NG"的索引
+                                                int ngIndex = -1;
+                                                for (int i = 0; i < parts.Length; i++)
+                                                {
+                                                    if (parts[i].Equals("NG", StringComparison.OrdinalIgnoreCase))
+                                                    {
+                                                        ngIndex = i;
+                                                        break;
+                                                    }
+                                                }
+
+                                                // 如果找到"NG"，则替换它后面的目录
+                                                if (ngIndex != -1 && ngIndex + 1 < parts.Length)
+                                                {
+                                                    parts[ngIndex] = dirName;
+                                                    parts[ngIndex + 1] = newFileName;
+
+                                                    // 重新组合路径
+                                                    savePath =  string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), parts);
+                                                }
+
+                                            }
+
+                                        }
+                                    }
+
+                                    interact.imagePath = savePath;
 
                                     if (interact.IsDisplay)
                                     {
