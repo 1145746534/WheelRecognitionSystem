@@ -844,7 +844,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="model"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private async void CallShow(InteractS7PLCModel model)
+        private void CallShow(InteractS7PLCModel model)
         {
             string wheelType = string.Empty;
             int index = model.readPLCSignal.Index;
