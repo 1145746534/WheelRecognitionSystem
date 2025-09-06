@@ -83,6 +83,19 @@ namespace WheelRecognitionSystem.Public
             }
         }
 
+        /// <summary>
+        /// 处理 HTuple 的释放
+        /// </summary>
+        /// <param name="tuple"></param>
+        public static void SafeDisposeHTuple(ref HTuple tuple)
+        {
+            if (tuple != null)
+            {
+                tuple.Dispose();
+                tuple = null;
+            }
+        }
+
         // 安全克隆方法
         public static HObject CloneImageSafely(HObject source)
         {
@@ -440,6 +453,23 @@ namespace WheelRecognitionSystem.Public
                             temp.FullFigureGray = fullGray;
                             temp.RecognitionContour = CloneImageSafely(ho_MatchContour);
                             temp.AbsDifferenceGray = Math.Abs(templateData.FullGary - fullGray);
+                            temp.RecognitionContour = ho_MatchContour?.Clone();
+                            temp.CenterRow = templateData.PositionCircleRow;
+                            temp.CenterColumn = templateData.PositionCircleColumn;
+                            temp.Radius = templateData.CircumCircleRadius;
+                            if (templateData.TemplateAreaCenterRow != 0
+                                && templateData.TemplateAreaCenterColumn != 0)
+                            {
+                                HOperatorSet.GetGenericShapeModelResult(hv_MatchResultID, maxIndex, "hom_mat_2d", out HTuple HomMat2D);
+                                HOperatorSet.HomMat2dIdentity(out HTuple AlignmentHomMat2D);
+                                HOperatorSet.HomMat2dTranslate(AlignmentHomMat2D, -templateData.TemplateAreaCenterRow,
+                                    -templateData.TemplateAreaCenterColumn, out AlignmentHomMat2D);
+                                HOperatorSet.HomMat2dCompose(HomMat2D, AlignmentHomMat2D, out AlignmentHomMat2D);
+                                //Console.WriteLine($"变换矩阵1: {AlignmentHomMat2D.ToString()}");
+                                //Console.WriteLine($"变换矩阵2: {HomMat2D.ToString()}");
+                                temp.HomMat2D = AlignmentHomMat2D?.Clone();
+                                SafeDisposeHTuple(ref HomMat2D);
+                            }
 
                             if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
                             {
@@ -452,6 +482,9 @@ namespace WheelRecognitionSystem.Public
                             {
                                 recognitionResults.Add(temp);
                             }
+                            else                            
+                                temp.Dispose(); //此对象无用 释放掉
+                            
 
                             SafeHalconDispose(ho_MatchContour);
                         }
@@ -908,7 +941,7 @@ namespace WheelRecognitionSystem.Public
                     {
                         // 创建目录（包括所有父目录）
                         Directory.CreateDirectory(directoryPath);
-                        
+
                     }
                     catch (Exception ex)
                     {
@@ -917,7 +950,7 @@ namespace WheelRecognitionSystem.Public
                     }
                 }
 
-               
+
                 // 异步保存图像
                 await Task.Run(() =>
                 {
@@ -996,14 +1029,14 @@ namespace WheelRecognitionSystem.Public
             if (way == SaveWay.Hand)
             {
                 handImagesPath = ImagePath;
-                
+
 
             }
             else
             {
                 path = $"{startTime.ToString("yyyyMMddHH")}-{endTime.ToString("MMddHH")}({workShift})";
                 path = Path.Combine(ImagePath, path);
-               
+
             }
 
 

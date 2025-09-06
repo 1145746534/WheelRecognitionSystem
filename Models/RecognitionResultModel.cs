@@ -69,6 +69,23 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public HObject RecognitionContour { get; set; }
 
+        /// <summary>
+        /// 中心行坐标
+        /// </summary>
+        public double CenterRow { get; set; }
+
+        /// <summary>
+        /// 中心列坐标
+        /// </summary>
+        public double CenterColumn { get; set; }
+
+        public double Radius { get; set; }
+
+        /// <summary>
+        /// 仿射变化矩阵
+        /// </summary>
+        public HTuple HomMat2D { get; set; }
+
 
         public void Dispose()
         {
@@ -78,7 +95,12 @@ namespace WheelRecognitionSystem.Models
                 {
                     RecognitionContour?.Dispose();
                 }
-            }catch(Exception ex) {
+                if (HomMat2D != null)
+                {
+                    HomMat2D?.Dispose();
+                }
+            }
+            catch(Exception ex) {
                 Console.WriteLine(  ex.ToString());
             }
            

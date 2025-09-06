@@ -12,18 +12,29 @@ namespace WheelRecognitionSystem.Models
     /// <summary>
     /// 模板数据模型
     /// </summary>
-    public class sys_bd_Templatedatamodel : BindableBase
+    public class sys_bd_Templatedatamodel : BindableBase, ICloneable
     {
         private int _index;
         private string _wheelType;
         private int _unusedDays;
         private float _wheelHeight;
-        private float _innerCircleGary;
+        private float _fullGary;
         private string _wheelStyle;
+
+        private float _positionCircleRow;
+        private float _positionCircleColumn;
+        private float _positionCircleRadius;
+        private float _circumCircleRadius;
+
+        private float _templateAreaCenterRow;
+        private float _templateAreaCenterColumn;
+
+
+
         /// <summary>
         /// 序号
         /// </summary>
-        [SugarColumn(IsPrimaryKey = true, IsIdentity = false)]
+        [SqlSugar.SugarColumn(IsPrimaryKey = true, IsIdentity = false)]
         public int Index
         {
             get { return _index; }
@@ -32,7 +43,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 轮毂型号
         /// </summary>
-        [SugarColumn(IsNullable = false, Length = 25)]
+        [SqlSugar.SugarColumn(IsNullable = false, Length = 25)]
         public string WheelType
         {
             get { return _wheelType; }
@@ -41,7 +52,7 @@ namespace WheelRecognitionSystem.Models
         /// <summary>
         /// 未用天数
         /// </summary>
-        [SugarColumn(IsNullable = false)]
+        [SqlSugar.SugarColumn(IsNullable = false)]
         public int UnusedDays
         {
             get { return _unusedDays; }
@@ -67,13 +78,73 @@ namespace WheelRecognitionSystem.Models
         }
 
         /// <summary>
+        /// 定位圆Row
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float PositionCircleRow
+        {
+            get { return _positionCircleRow; }
+            set { SetProperty(ref _positionCircleRow, value); }
+        }
+
+        /// <summary>
+        /// 定位圆Column
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float PositionCircleColumn
+        {
+            get { return _positionCircleColumn; }
+            set { SetProperty(ref _positionCircleColumn, value); }
+        }
+
+        /// <summary>
+        /// 定位圆半径
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float PositionCircleRadius
+        {
+            get { return _positionCircleRadius; }
+            set { SetProperty(ref _positionCircleRadius, value); }
+        }
+
+        /// <summary>
+        /// 外接圆半径
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float CircumCircleRadius
+        {
+            get { return _circumCircleRadius; }
+            set { SetProperty(ref _circumCircleRadius, value); }
+        }
+
+        /// <summary>
+        /// 模板区域中心点Row
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float TemplateAreaCenterRow
+        {
+            get { return _templateAreaCenterRow; }
+            set { SetProperty(ref _templateAreaCenterRow, value); }
+        }
+
+        /// <summary>
+        /// 模板区域中心点Column
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = false)]
+        public float TemplateAreaCenterColumn
+        {
+            get { return _templateAreaCenterColumn; }
+            set { SetProperty(ref _templateAreaCenterColumn, value); }
+        }
+
+        /// <summary>
         /// 全局灰度
         /// </summary>
         [SqlSugar.SugarColumn(IsNullable = false)]
         public float FullGary
         {
-            get { return _innerCircleGary; }
-            set { SetProperty(ref _innerCircleGary, value); }
+            get { return _fullGary; }
+            set { SetProperty(ref _fullGary, value); }
         }
 
         private string _creationTime;
@@ -86,6 +157,7 @@ namespace WheelRecognitionSystem.Models
             get { return _creationTime; }
             set { SetProperty(ref _creationTime, value); }
         }
+
         private DateTime _updateTime;
         /// <summary>
         /// 更新数据时间
@@ -130,6 +202,30 @@ namespace WheelRecognitionSystem.Models
         {
             get { return _templatePicturePath; }
             set { SetProperty(ref _templatePicturePath, value); }
+        }
+
+        public object Clone()
+        {
+            return new sys_bd_Templatedatamodel
+            {
+                Index = this.Index,
+                WheelType = this.WheelType,
+                UnusedDays = this.UnusedDays,
+                WheelHeight = this.WheelHeight,
+                FullGary = this.FullGary,
+                WheelStyle = this.WheelStyle,
+                CreationTime = this.CreationTime, // string 是引用类型但不可变
+                UpdateTime = this.UpdateTime,     // DateTime 是值类型
+                LastUsedTime = this.LastUsedTime,
+                TemplatePath = this.TemplatePath,
+                TemplatePicturePath = this.TemplatePicturePath,
+                PositionCircleRow = this.PositionCircleRow,
+                PositionCircleColumn = this.PositionCircleColumn,
+                PositionCircleRadius = this.PositionCircleRadius,
+                CircumCircleRadius = this.CircumCircleRadius,
+                TemplateAreaCenterRow = this.TemplateAreaCenterRow,
+                TemplateAreaCenterColumn = this.TemplateAreaCenterColumn,
+            };
         }
     }
 }

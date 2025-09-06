@@ -26,6 +26,11 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         public HObject TemplateContour { get; set; }
 
+        /// <summary>
+        /// 外接圆轮毂
+        /// </summary>
+        public HObject WheelContour { get; set; }
+
         
         /// <summary>
         /// 全图灰度
@@ -36,10 +41,10 @@ namespace WheelRecognitionSystem.Models
         public void Dispose()
         {
             CurrentImage?.Dispose();
-            //WheelContour?.Dispose();
+            WheelContour?.Dispose();
             TemplateContour?.Dispose();
             CurrentImage= null;
-            //WheelContour = null;
+            WheelContour = null;
             TemplateContour = null;
         }
     }

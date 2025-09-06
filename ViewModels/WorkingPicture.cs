@@ -359,30 +359,30 @@ namespace WheelRecognitionSystem.ViewModels
         /// 释放不活跃内存
         /// </summary>
         /// <param name="keepCount"></param>
-        public void ReleaseUnusedTemplates(int keepCount = 3)
-        {
-            if (TemplateModels == null || TemplateModels.Count <= keepCount)
-                return;
-            // 原地排序：按照LastUsedTime降序（从最近到最久）
-            TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
-            // 释放从索引keepCount开始的所有模板
-            //for (int i = keepCount; i < TemplateModels.Count; i++)
-            //{
-            //    TemplateModels[i].ReleaseTemplate();
+        //public void ReleaseUnusedTemplates(int keepCount = 3)
+        //{
+        //    if (TemplateModels == null || TemplateModels.Count <= keepCount)
+        //        return;
+        //    // 原地排序：按照LastUsedTime降序（从最近到最久）
+        //    TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
+        //    // 释放从索引keepCount开始的所有模板
+        //    //for (int i = keepCount; i < TemplateModels.Count; i++)
+        //    //{
+        //    //    TemplateModels[i].ReleaseTemplate();
 
-            //}
-        }
+        //    //}
+        //}
 
         /// <summary>
         /// 根据名称获取模板数据 供生成模板区域使用
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public HTuple GetHTupleByName(string name)
-        {
-            TemplatedataModel templatedata = TemplateModels.Find((TemplatedataModel x) => x.WheelType == name);
-            return templatedata.Template;
-        }
+        //public HTuple GetHTupleByName(string name)
+        //{
+        //    TemplatedataModel templatedata = TemplateModels.Find((TemplatedataModel x) => x.WheelType == name);
+        //    return templatedata.Template;
+        //}
 
 
 
@@ -433,7 +433,8 @@ namespace WheelRecognitionSystem.ViewModels
                             //需销毁
                             HObject image = item.Value;
                             HObject templateContour = new HObject();
-
+                            HObject contoursAffineTrans = null;
+                            HObject wheelContour = null;
                             try
                             {
                                 interact.starTime = DateTime.Now;
@@ -449,8 +450,6 @@ namespace WheelRecognitionSystem.ViewModels
                                     //处理图像
                                     HObject grayImage = RGBTransGray(image);
                                     string score = "0";
-
-                                    //
                                     recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
 
                                     if (recognitionResult.RecognitionWheelType != "NG") //
@@ -462,14 +461,20 @@ namespace WheelRecognitionSystem.ViewModels
 
                                         var results = TemplateModels
                                             .Where(t => t.WheelType != null && t.WheelType == _type);
-                                        foreach (TemplatedataModel it in results)
-                                        {
+                                        foreach (TemplatedataModel it in results)                                       
                                             it.UseTemplate();
-                                        }
+                                        
                                         // 原地排序：按照LastUsedTime降序（从最近到最久）
                                         TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
                                         score = recognitionResult.Similarity.ToString("F3");
 
+                                        if (recognitionResult.HomMat2D != null)
+                                        {
+                                            HOperatorSet.GenCircleContourXld(out wheelContour, recognitionResult.CenterRow,
+                                                recognitionResult.CenterColumn, recognitionResult.Radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
+                                            HOperatorSet.AffineTransContourXld(wheelContour, out contoursAffineTrans, recognitionResult.HomMat2D);
+
+                                        }
                                     }
 
 
@@ -478,17 +483,17 @@ namespace WheelRecognitionSystem.ViewModels
                                         list[i].Dispose();
                                     }
 
-                                    //保存图片
+                                   
                                     SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                                     string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
                                     string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
                                     string savePath = string.Empty;
                                     savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
-                                    if (interact.IsSaveImage)
+                                    if (interact.IsSaveImage)  //保存图片
                                     {                      
                                         var saveRequest = new SaveImageRequest
                                         {
-                                            Image = grayImage.Clone(),
+                                            Image = image.Clone(), //保存原图
                                             Path = savePath,
                                         };
                                         lock (_saveLock)
@@ -496,7 +501,7 @@ namespace WheelRecognitionSystem.ViewModels
                                             _saveImageQueue.Enqueue(saveRequest);
                                         }
                                     }
-                                    else
+                                    else  //不保存图片 - 这里用于NG图修正
                                     {
                                         if (recognitionResult.RecognitionWheelType != "NG" && File.Exists(interact.ManualReadImagePath))
                                         {
@@ -555,6 +560,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
                                         autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
                                         autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
+                                        autoRecognitionResult.WheelContour = CloneImageSafely(contoursAffineTrans);
                                         EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(autoRecognitionResult);
                                     }
 
@@ -579,8 +585,10 @@ namespace WheelRecognitionSystem.ViewModels
 
                                 SafeDisposeHObject(ref image);
                                 SafeDisposeHObject(ref templateContour);
-
+                                SafeHalconDispose(wheelContour);
+                                SafeHalconDispose(contoursAffineTrans);
                                 interact.endTime = DateTime.Now;
+                              
                                 recognitionResult.Dispose();
                                 interact.resultModel = recognitionResult.Copy();
 
@@ -629,8 +637,6 @@ namespace WheelRecognitionSystem.ViewModels
                 try
                 {
                     SaveImageDatasAsync(req.Image, req.Path);
-
-                    // 可在此处记录保存结果
                 }
                 finally
                 {

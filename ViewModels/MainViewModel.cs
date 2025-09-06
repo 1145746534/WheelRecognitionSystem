@@ -734,15 +734,15 @@ namespace WheelRecognitionSystem.ViewModels
 
                 string[] _files = Directory.GetFiles(DirPath);
                 string[] subDirectories = Directory.GetDirectories(DirPath);
-                InteractS7PLCModel interact = new InteractS7PLCModel()
-                {
-                    ArrivalDelay = ArrivalDelay,
-                    readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
-                };
+               
                 //文件
                 foreach (string filePath in _files)
                 {
-
+                    InteractS7PLCModel interact = new InteractS7PLCModel()
+                    {
+                        ArrivalDelay = ArrivalDelay,
+                        readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
+                    };
                     ImageHandle(interact, filePath);
                 }
                 //文件夹
@@ -752,6 +752,11 @@ namespace WheelRecognitionSystem.ViewModels
                     string[] files = Directory.GetFiles(subDir);
                     foreach (string filePath in files)
                     {
+                        InteractS7PLCModel interact = new InteractS7PLCModel()
+                        {
+                            ArrivalDelay = ArrivalDelay,
+                            readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
+                        };
                         ImageHandle(interact, filePath);
                     }
 
@@ -846,6 +851,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
+           
             string wheelType = string.Empty;
             int index = model.readPLCSignal.Index;
             string recognType = model.resultModel.RecognitionWheelType;

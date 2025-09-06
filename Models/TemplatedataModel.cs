@@ -118,8 +118,13 @@ namespace WheelRecognitionSystem.Models
             this.UpdateTime = source.UpdateTime;
             this.LastUsedTime = source.LastUsedTime;  //
             this.TemplatePath = source.TemplatePath;
-            this.TemplatePicturePath = source.TemplatePicturePath;        
-
+            this.TemplatePicturePath = source.TemplatePicturePath;
+            this.PositionCircleRow = source.PositionCircleRow;
+            this.PositionCircleColumn = source.PositionCircleColumn;
+            this.PositionCircleRadius = source.PositionCircleRadius;
+            this.CircumCircleRadius = source.CircumCircleRadius;
+            this.TemplateAreaCenterRow = source.TemplateAreaCenterRow;
+            this.TemplateAreaCenterColumn = source.TemplateAreaCenterColumn;
         }
     }
 

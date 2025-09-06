@@ -140,15 +140,6 @@ namespace WheelRecognitionSystem.Public
 
 
 
-
-        /// <summary>
-        /// 模板数据集合
-        /// </summary>
-        public static TemplateDatasModel TemplateDataCollection { get; set;} = new TemplateDatasModel();
-        
-
-
-
         /// <summary>
         /// 上传地址
         /// </summary>
