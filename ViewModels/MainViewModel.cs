@@ -710,10 +710,11 @@ namespace WheelRecognitionSystem.ViewModels
 
                 }
 
-                Task.Delay(1000);
-                PictrueDeleteTimer_Tick(null, null);
+               
+               
             });
-
+            await Task.Delay(1000);
+            PictrueDeleteTimer_Tick(null, null);
         }
 
         /// <summary>
