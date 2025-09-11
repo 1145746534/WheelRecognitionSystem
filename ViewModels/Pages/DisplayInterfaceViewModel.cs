@@ -152,8 +152,10 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 if (interact.IsSecondPhoto)
                 {
                     viewModel.SetExposure(interact.SecondPhotoExposure);
+                    Thread.Sleep(10);
+                    Console.WriteLine( $"二次曝光：{interact.SecondPhotoExposure}" );
                     HObject SecondIamge = viewModel.GetImage();
-                    interact.SecondImage = SecondIamge;
+                    interact.SecondImage = CloneImageSafely(SecondIamge);
                     viewModel.SetExposure();
                     SafeDisposeHObject(ref SecondIamge);
                 }
