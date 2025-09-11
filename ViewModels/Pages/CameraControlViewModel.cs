@@ -290,7 +290,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (myCamera != null)
             {
-                return myCamera.Grabimage();
+                HObject image = myCamera.Grabimage(); 
+
+                return image;
             }
             else
                 return null;

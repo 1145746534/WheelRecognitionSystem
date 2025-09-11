@@ -428,6 +428,7 @@ namespace WheelRecognitionSystem.ViewModels
                         RecognitionResultModel recognitionResult = null;
                         List<RecognitionResultModel> list = null;
                         string score = "0";
+
                         //需销毁
                         HObject image = CloneImageSafely(interact.Image);
                         HObject templateContour = new HObject();

@@ -157,7 +157,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                    
                     HObject SecondIamge = viewModel.GetImage();
                     interact.SecondImage = CloneImageSafely(SecondIamge);
-                    Console.WriteLine($"首次图：{iamge.ToString()} 二次图：{SecondIamge.ToString()}");
+                    Console.WriteLine($"首次图：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
                     SafeDisposeHObject(ref SecondIamge);
                 }
                
