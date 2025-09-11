@@ -156,8 +156,9 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     
                    
                     HObject SecondIamge = viewModel.GetImage();
+                    bool areEqual = iamge == SecondIamge; // 比较对象引用
                     interact.SecondImage = CloneImageSafely(SecondIamge);
-                    Console.WriteLine($"首次图：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
+                    Console.WriteLine($"首次图 - {areEqual}：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
                     SafeDisposeHObject(ref SecondIamge);
                 }
                

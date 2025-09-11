@@ -1071,7 +1071,7 @@ namespace WheelRecognitionSystem.Public
             }
             else
             {
-                savePath = Path.Combine(handImagesPath, $"Hand&{now:yyMMddHHmmss}.tif");
+                savePath = Path.Combine(handImagesPath, $"Hand&{now:yyMMddHHmmssfff}.tif");
             }
 
             return savePath;
