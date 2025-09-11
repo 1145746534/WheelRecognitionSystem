@@ -17,6 +17,7 @@ using MvCamCtrl.NET;
 using Prism.Services.Dialogs;
 using WheelRecognitionSystem.Public;
 using System.Windows;
+using Org.BouncyCastle.Crypto.Engines;
 
 namespace WheelRecognitionSystem.ViewModels.Pages
 {
@@ -103,6 +104,15 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             get { return _fullGray; }
             set { SetProperty(ref _fullGray, value); }
+        }
+        private int _nowExposure;
+        /// <summary>
+        /// 当前曝光值
+        /// </summary>
+        public int NowExposure
+        {
+            get { return _nowExposure; }
+            set { SetProperty(ref _nowExposure, value); }
         }
 
         #endregion
@@ -236,7 +246,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (CheckInitialize())
             {
-                myCamera.SetExposureTime(camerainformation.Exposure);
+                SetExposure(camerainformation.Exposure);
+                //myCamera.SetExposureTime(camerainformation.Exposure);
             }
         }
 
@@ -343,14 +354,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                 myCamera.Connect(newLinkID); //连接
                 if (IsRefreshExp)
                 {
+                    SetExposure(newExposure);
                     //修改曝光时间
-                    myCamera.SetExposureTime(newExposure);
+                    //myCamera.SetExposureTime(newExposure);
                 }
             }
             //只修改了曝光时间
             if (IsRefreshExp)
             {
-                myCamera.SetExposureTime(newExposure);
+                SetExposure(newExposure);
+                //myCamera.SetExposureTime(newExposure);
             }
 
         }
@@ -360,7 +373,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// <param name="exposure"></param>
         public void SetExposure(int exposure)
         {
-            if (myCamera != null && exposure != 0)
+            if (myCamera != null && exposure != 0 && exposure != NowExposure)
             {
                 myCamera.SetExposureTime(exposure);
             }
@@ -372,7 +385,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             if (myCamera != null && camerainformation.Exposure != 0)
             {
-                myCamera.SetExposureTime(camerainformation.Exposure);
+                SetExposure(camerainformation.Exposure);
+                //myCamera.SetExposureTime(camerainformation.Exposure);
             }
         }
 

@@ -143,20 +143,21 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         {
             int index = interact.readPLCSignal.Index + 1;
             string name = $"DisplayRegion{index}";
-
+          
             CameraControlViewModel viewModel = GetViewModelByName(name);
             if (viewModel != null)
             {
+                viewModel.SetExposure();
                 HObject iamge = viewModel.GetImage();
                 interact.Image = CloneImageSafely(iamge);
                 if (interact.IsSecondPhoto)
                 {
                     viewModel.SetExposure(interact.SecondPhotoExposure);
-                    Thread.Sleep(10);
-                    Console.WriteLine( $"二次曝光：{interact.SecondPhotoExposure}" );
+                    
+                   
                     HObject SecondIamge = viewModel.GetImage();
                     interact.SecondImage = CloneImageSafely(SecondIamge);
-                    viewModel.SetExposure();
+                    Console.WriteLine($"首次图：{iamge.ToString()} 二次图：{SecondIamge.ToString()}");
                     SafeDisposeHObject(ref SecondIamge);
                 }
                
