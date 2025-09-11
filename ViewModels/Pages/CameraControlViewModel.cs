@@ -354,6 +354,27 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             }
 
         }
+        /// <summary>
+        /// 指定曝光
+        /// </summary>
+        /// <param name="exposure"></param>
+        public void SetExposure(int exposure)
+        {
+            if (myCamera != null && exposure != 0)
+            {
+                myCamera.SetExposureTime(exposure);
+            }
+        }
+        /// <summary>
+        /// 默认曝光
+        /// </summary>
+        public void SetExposure()
+        {
+            if (myCamera != null && camerainformation.Exposure != 0)
+            {
+                myCamera.SetExposureTime(camerainformation.Exposure);
+            }
+        }
 
         /// <summary>
         /// 保存图片

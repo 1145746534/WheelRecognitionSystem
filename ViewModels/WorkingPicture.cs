@@ -55,7 +55,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
 
-        private readonly Queue<Dictionary<InteractS7PLCModel, HObject>> _processingQueue = new Queue<Dictionary<InteractS7PLCModel, HObject>>();
+        private readonly Queue<InteractS7PLCModel> _processingQueue = new Queue<InteractS7PLCModel>();
         private readonly object _processingLock = new object();
         private readonly Queue<SaveImageRequest> _saveImageQueue = new Queue<SaveImageRequest>();
         private readonly object _saveLock = new object();
@@ -402,7 +402,7 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
-        public void ImageHandle(Dictionary<InteractS7PLCModel, HObject> dic)
+        public void ImageHandle(InteractS7PLCModel dic)
         {
             lock (_processingLock)
             {
@@ -418,198 +418,230 @@ namespace WheelRecognitionSystem.ViewModels
             _isProcessing = true;
             while (!_cts.IsCancellationRequested)
             {
-                Dictionary<InteractS7PLCModel, HObject> dic = null;
+
                 lock (_processingLock)
                 {
                     if (_processingQueue.Count > 0)
                     {
                         UpdateTemplates();
-                        dic = _processingQueue.Dequeue();
-                        foreach (KeyValuePair<InteractS7PLCModel, HObject> item in dic)
+                        InteractS7PLCModel interact = _processingQueue.Dequeue();
+                        RecognitionResultModel recognitionResult = null;
+                        List<RecognitionResultModel> list = null;
+                        string score = "0";
+                        //需销毁
+                        HObject image = CloneImageSafely(interact.Image);
+                        HObject templateContour = new HObject();
+                        HObject contoursAffineTrans = null;
+                        HObject wheelContour = null;
+                        try
                         {
-                            RecognitionResultModel recognitionResult = null;
-                            List<RecognitionResultModel> list = null;
-                            InteractS7PLCModel interact = item.Key;
-                            //需销毁
-                            HObject image = item.Value;
-                            HObject templateContour = new HObject();
-                            HObject contoursAffineTrans = null;
-                            HObject wheelContour = null;
-                            try
+                            interact.starTime = DateTime.Now;
+                            if (image == null)
                             {
-                                interact.starTime = DateTime.Now;
-                                if (image == null)
-                                {
-                                    recognitionResult = new RecognitionResultModel();
-                                    recognitionResult.RecognitionWheelType = "NG";
-                                    recognitionResult.status = "图像采集失败";
-                                }
-                                else
-                                {
+                                recognitionResult = new RecognitionResultModel();
+                                recognitionResult.RecognitionWheelType = "NG";
+                                recognitionResult.status = "图像采集失败";
+                            }
+                            else
+                            {
 
-                                    //处理图像
-                                    HObject grayImage = RGBTransGray(image);
-                                    string score = "0";
-                                    recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
+                                //处理图像
+                                HObject grayImage = RGBTransGray(image);                               
+                                recognitionResult = WheelRecognitionAlgorithm1(grayImage, TemplateModels, AngleStart, AngleExtent, MinSimilarity, out list);
 
-                                    if (recognitionResult.RecognitionWheelType != "NG") //
+                                if (recognitionResult.RecognitionWheelType != "NG") //
+                                {
+                                    //显示
+                                    templateContour = CloneImageSafely(recognitionResult.RecognitionContour);
+                                    //更新使用时间
+                                    string _type = recognitionResult.RecognitionWheelType;
+
+                                    var results = TemplateModels
+                                        .Where(t => t.WheelType != null && t.WheelType == _type);
+                                    foreach (TemplatedataModel it in results)
+                                        it.UseTemplate();
+
+                                    // 原地排序：按照LastUsedTime降序（从最近到最久）
+                                    TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
+                                    score = recognitionResult.Similarity.ToString("F3");
+
+                                    if (recognitionResult.HomMat2D != null)
                                     {
-                                        //显示
-                                        templateContour = CloneImageSafely(recognitionResult.RecognitionContour);
-                                        //更新使用时间
-                                        string _type = recognitionResult.RecognitionWheelType;
+                                        HOperatorSet.GenCircleContourXld(out wheelContour, recognitionResult.CenterRow,
+                                            recognitionResult.CenterColumn, recognitionResult.Radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
+                                        HOperatorSet.AffineTransContourXld(wheelContour, out contoursAffineTrans, recognitionResult.HomMat2D);
 
-                                        var results = TemplateModels
-                                            .Where(t => t.WheelType != null && t.WheelType == _type);
-                                        foreach (TemplatedataModel it in results)                                       
-                                            it.UseTemplate();
-                                        
-                                        // 原地排序：按照LastUsedTime降序（从最近到最久）
-                                        TemplateModels.Sort((TemplatedataModel a, TemplatedataModel b) => b.LastUsedTime.CompareTo(a.LastUsedTime));
-                                        score = recognitionResult.Similarity.ToString("F3");
+                                    }
+                                }
 
-                                        if (recognitionResult.HomMat2D != null)
+                                SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
+                                string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
+                                string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
+                                string savePath = string.Empty;
+                                savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
+                                if (interact.IsSaveOrMoveImage)  //保存图片
+                                {
+                                    var saveRequest = new SaveImageRequest
+                                    {
+                                        Image = image.Clone(), //保存原图
+                                        Path = savePath,
+                                    };
+                                    lock (_saveLock)
+                                    {
+                                        _saveImageQueue.Enqueue(saveRequest);
+                                    }
+                                   
+
+                                }
+                                else  //不保存图片 - 这里用于NG图修正
+                                {
+                                    if (recognitionResult.RecognitionWheelType != "NG")
+                                    {
+                                        //string pathA = savePath;
+                                        string pathB = interact.ManualReadImagePath;
+                                        //获取原文件名称
+                                        string fileNameWithExtension = System.IO.Path.GetFileName(pathB);
+
+                                        string[] strings = fileNameWithExtension.Split('&');
+                                        if (strings.Length == 2)
                                         {
-                                            HOperatorSet.GenCircleContourXld(out wheelContour, recognitionResult.CenterRow,
-                                                recognitionResult.CenterColumn, recognitionResult.Radius, 0, (new HTuple(360)).TupleRad(), "positive", 1.0);
-                                            HOperatorSet.AffineTransContourXld(wheelContour, out contoursAffineTrans, recognitionResult.HomMat2D);
+                                            string prefix = strings[0];
+                                            string time = strings[1];
+                                            //修改名称
+                                            string newFileName = $"{_prefixName}&{time}";
+                                            //修改路径 把NG替换成识别轮型目录
+                                            string value = recognitionResult.RecognitionWheelType.Trim('_');
+                                            string dirName = $"{value}_{style}";
+
+                                            // 将路径分割成部分
+                                            string[] parts = pathB.Split(System.IO.Path.DirectorySeparatorChar);
+
+                                            // 找到"NG"的索引
+                                            int ngIndex = -1;
+                                            for (int i = 0; i < parts.Length; i++)
+                                            {
+                                                if (parts[i].Equals("NG", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    ngIndex = i;
+                                                    break;
+                                                }
+                                            }
+
+                                            // 如果找到"NG"，则替换它后面的目录
+                                            if (ngIndex != -1 && ngIndex + 1 < parts.Length)
+                                            {
+                                                parts[ngIndex] = dirName;
+                                                parts[ngIndex + 1] = newFileName;
+
+                                                // 重新组合路径
+                                                savePath = string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), parts);
+                                            }
 
                                         }
+
                                     }
-
-
-                                    for (int i = 0; i < list.Count; i++)
+                                    else
                                     {
-                                        list[i].Dispose();
+                                        savePath = interact.ManualReadImagePath;
                                     }
+                                }
+                                interact.imagePath = savePath;
 
-                                   
-                                    SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
-                                    string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                    string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
-                                    string savePath = string.Empty;
-                                    savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
-                                    if (interact.IsSaveImage)  //保存图片
-                                    {                      
+                                if (interact.IsSecondPhoto) //二次拍照
+                                {
+                                    // 分割路径
+                                    string[] parts = savePath.Split(System.IO.Path.DirectorySeparatorChar);
+
+                                    // 找到HistoricalImages的索引位置
+                                    int index = Array.IndexOf(parts, "HistoricalImages");
+
+                                    if (index >= 0 && index < parts.Length - 1)
+                                    {
+                                        // 插入新目录
+                                        string[] newParts = new string[parts.Length + 1];
+                                        Array.Copy(parts, 0, newParts, 0, index + 1);
+                                        newParts[index + 1] = "颜色识别";
+                                        Array.Copy(parts, index + 1, newParts, index + 2, parts.Length - index - 1);
+
+                                        // 重新组合路径
+                                        string newPath = string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), newParts);
+                                        Console.WriteLine("新路径: " + newPath);
+                                        interact.SecondImagePath = newPath;
                                         var saveRequest = new SaveImageRequest
                                         {
-                                            Image = image.Clone(), //保存原图
-                                            Path = savePath,
+                                            Image = CloneImageSafely(interact.SecondImage),
+                                            Path = interact.SecondImagePath,
                                         };
                                         lock (_saveLock)
                                         {
                                             _saveImageQueue.Enqueue(saveRequest);
                                         }
                                     }
-                                    else  //不保存图片 - 这里用于NG图修正
-                                    {
-                                        if (recognitionResult.RecognitionWheelType != "NG" && File.Exists(interact.ManualReadImagePath))
-                                        {
-                                            //string pathA = savePath;
-                                            string pathB = interact.ManualReadImagePath;
-                                            //获取原文件名称
-                                            string fileNameWithExtension = System.IO.Path.GetFileName(pathB);
-
-                                            string[] strings = fileNameWithExtension.Split('&');
-                                            if (strings.Length == 2)
-                                            {
-                                                string prefix = strings[0];
-                                                string time = strings[1];
-                                                //修改名称
-                                                string newFileName = $"{_prefixName}&{time}";
-                                                //修改路径 把NG替换成识别轮型目录
-                                                string value = recognitionResult.RecognitionWheelType.Trim('_');
-                                                string dirName = $"{value}_{style}";
-
-                                                // 将路径分割成部分
-                                                string[] parts = pathB.Split(System.IO.Path.DirectorySeparatorChar);
-
-                                                // 找到"NG"的索引
-                                                int ngIndex = -1;
-                                                for (int i = 0; i < parts.Length; i++)
-                                                {
-                                                    if (parts[i].Equals("NG", StringComparison.OrdinalIgnoreCase))
-                                                    {
-                                                        ngIndex = i;
-                                                        break;
-                                                    }
-                                                }
-
-                                                // 如果找到"NG"，则替换它后面的目录
-                                                if (ngIndex != -1 && ngIndex + 1 < parts.Length)
-                                                {
-                                                    parts[ngIndex] = dirName;
-                                                    parts[ngIndex + 1] = newFileName;
-
-                                                    // 重新组合路径
-                                                    savePath =  string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), parts);
-                                                }
-
-                                            }
-
-                                        }
-                                    }
-
-                                    interact.imagePath = savePath;
-
-                                    if (interact.IsDisplay)
-                                    {
-                                        //下发显示
-                                        AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
-                                        autoRecognitionResult.Tag = $"DisplayRegion{interact.readPLCSignal.Index + 1}";
-                                        autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
-                                        autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
-                                        autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
-                                        autoRecognitionResult.WheelContour = CloneImageSafely(contoursAffineTrans);
-                                        EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(autoRecognitionResult);
-                                    }
-
-
-
-
-                                    //Console.WriteLine("步骤2");
-                                    SafeDisposeHObject(ref grayImage);
+                                   
                                 }
 
-                            }
-                            catch (Exception ex)
-                            {
-                                //recognitionResult = new RecognitionResultModel();
-                                recognitionResult.RecognitionWheelType = "NG";
-                                recognitionResult.status = "异常";
-                            }
-                            finally
-                            {
+                                if (interact.IsDisplay)
+                                {
+                                    //下发显示
+                                    AutoRecognitionResultDisplayModel autoRecognitionResult = new AutoRecognitionResultDisplayModel();
+                                    autoRecognitionResult.Tag = $"DisplayRegion{interact.readPLCSignal.Index + 1}";
+                                    autoRecognitionResult.FullFigureGary = recognitionResult.FullFigureGray;
+                                    autoRecognitionResult.CurrentImage = CloneImageSafely(grayImage);
+                                    autoRecognitionResult.TemplateContour = CloneImageSafely(templateContour);
+                                    autoRecognitionResult.WheelContour = CloneImageSafely(contoursAffineTrans);
+                                    EventMessage.MessageHelper.GetEvent<RecognitionDisplayEvent>().Publish(autoRecognitionResult);
+                                }
 
-
-
-                                SafeDisposeHObject(ref image);
-                                SafeDisposeHObject(ref templateContour);
-                                SafeHalconDispose(wheelContour);
-                                SafeHalconDispose(contoursAffineTrans);
-                                interact.endTime = DateTime.Now;
                               
-                                recognitionResult.Dispose();
-                                interact.resultModel = recognitionResult.Copy();
-
-                                recognitionResult = null;
-                                list?.Clear();
-                                //回调处理完成
-                                EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
+                                //Console.WriteLine("步骤2");
+                                SafeDisposeHObject(ref grayImage);
                             }
+
                         }
-                        dic.Clear();
+                        catch (Exception ex)
+                        {
+                            //recognitionResult = new RecognitionResultModel();
+                            recognitionResult.RecognitionWheelType = "NG";
+                            recognitionResult.status = "异常";
+                        }
+                        finally
+                        {
+
+
+
+                            SafeDisposeHObject(ref image);
+                            SafeDisposeHObject(ref templateContour);
+                            SafeHalconDispose(wheelContour);
+                            SafeHalconDispose(contoursAffineTrans);
+                            interact.endTime = DateTime.Now;
+
+                            recognitionResult.Dispose();
+                            interact.resultModel = recognitionResult.Copy();
+
+                            recognitionResult = null;
+                            if (list!=null)
+                            {
+                                for (int i = 0; i < list.Count; i++)
+                                {
+                                    list[i].Dispose();
+                                }
+                                list?.Clear();
+                            }
+                           
+                          
+                            //回调处理完成
+                            interact.Dispose();
+                            EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Publish(interact);
+                        }
+
+
 
                     }
+                    else
+                    {
+                        Thread.Sleep(200); // 队列空时短暂休眠
+                    }
                 }
-
-                if (dic == null)
-                {
-                    Thread.Sleep(100); // 队列空时短暂休眠
-                    continue;
-                }
-
-                //ProcessImage(item.Value.Key, item.Value.Value);
             }
         }
 

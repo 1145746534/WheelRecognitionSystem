@@ -265,6 +265,9 @@ namespace WheelRecognitionSystem.ViewModels
             AngleStart = double.Parse(GetPara(systemDatas, "AngleStart", "-1.57"));
             AngleExtent = double.Parse(GetPara(systemDatas, "AngleExtent", "1.57"));
 
+            IsSecondGetImage = int.Parse(GetPara(systemDatas, "IsSecondGetImage", "0")) == 0 ? false : true;
+            SecondExposure = int.Parse(GetPara(systemDatas, "SecondExposure", "10000"));
+
 
             EventMessage.MessageDisplay($"参数加载成功！", true, true);
 
@@ -693,7 +696,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 InteractS7PLCModel interact = new InteractS7PLCModel()
                                 {
                                     ArrivalDelay = ArrivalDelay,
-                                    IsSaveImage = false,
+                                    IsSaveOrMoveImage = false,
                                     ManualReadImagePath = filePath,
                                     IsDisplay = false,
                                     IsSendPLCInfo = false,
@@ -710,8 +713,8 @@ namespace WheelRecognitionSystem.ViewModels
 
                 }
 
-               
-               
+
+
             });
             await Task.Delay(1000);
             PictrueDeleteTimer_Tick(null, null);
@@ -735,7 +738,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                 string[] _files = Directory.GetFiles(DirPath);
                 string[] subDirectories = Directory.GetDirectories(DirPath);
-               
+
                 //文件
                 foreach (string filePath in _files)
                 {
@@ -773,17 +776,12 @@ namespace WheelRecognitionSystem.ViewModels
                 Thread.Sleep(100);
                 if (filePath.EndsWith(".tif"))
                 {
-                    //Console.WriteLine($"读取文件：{filePath}");
                     HOperatorSet.ReadImage(out HObject image, filePath);
-
                     HObject gray = RGBTransGray(image);
-
-
-                    Dictionary<InteractS7PLCModel, HObject> dic = new Dictionary<InteractS7PLCModel, HObject>();
-                    dic.Add(interact, gray);
-                    workingPicture.ImageHandle(dic);
+                    interact.Image = CloneImageSafely(gray);
                     SafeHalconDispose(image);
-
+                    SafeHalconDispose(gray);
+                    workingPicture.ImageHandle(interact);
                 }
             }
             catch (Exception ex)
@@ -823,19 +821,19 @@ namespace WheelRecognitionSystem.ViewModels
                     WriteLogToFile(triggerCount, count);
                 }
 
-
-                ReadPLCSignal plcSignal = sender as ReadPLCSignal;
-                int n = plcSignal.Index;
                 // 在后台线程中修改集合时：
                 //System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 //{
                 //    DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
                 //});
+                ReadPLCSignal plcSignal = sender as ReadPLCSignal;              
 
                 workingPicture.ReceiveS7PLC(new InteractS7PLCModel()
                 {
                     ArrivalDelay = ArrivalDelay,
-                    readPLCSignal = readPLCSignals[plcSignal.Index]
+                    readPLCSignal = readPLCSignals[plcSignal.Index].Clone(),
+                    IsSecondPhoto = IsSecondGetImage,
+                    SecondPhotoExposure = SecondExposure,
                 });
 
             }
@@ -852,7 +850,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         private void CallShow(InteractS7PLCModel model)
         {
-           
+
             string wheelType = string.Empty;
             int index = model.readPLCSignal.Index;
             string recognType = model.resultModel.RecognitionWheelType;
@@ -939,11 +937,11 @@ namespace WheelRecognitionSystem.ViewModels
 
                 try
                 {
-                    if (recognType != "NG")
+                    if (model.resultModel.RecognitionWheelType != "NG")
                     {
                         //查询数据库 然后修改数据
                         UpdateModelByImageFileName(model.ManualReadImagePath, model.imagePath,
-                           recognType, wheelType, model.resultModel.WheelStyle);
+                           model.resultModel.RecognitionWheelType, wheelType, model.resultModel.WheelStyle);
 
                         string path = model.ManualReadImagePath;
                         if (File.Exists(path))
@@ -955,7 +953,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 Directory.CreateDirectory(directoryPath);
 
                             //Console.WriteLine($"{NGCount}删除：{path}");
-                            //File.Delete(path);
+
                             // 移动并重命名文件
                             File.Move(path, model.imagePath);
                         }
@@ -970,7 +968,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
             }
-
+            model.Dispose();
             model = null;
 
         }

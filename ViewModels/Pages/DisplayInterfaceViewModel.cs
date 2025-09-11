@@ -141,24 +141,30 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         /// </summary>
         public void GrabimageByView(InteractS7PLCModel interact)
         {
-            int index = interact.readPLCSignal.Index+1;
+            int index = interact.readPLCSignal.Index + 1;
             string name = $"DisplayRegion{index}";
+
             CameraControlViewModel viewModel = GetViewModelByName(name);
-            HObject iamge = viewModel.GetImage();
-            Dictionary<InteractS7PLCModel, HObject> dictionary = new Dictionary<InteractS7PLCModel, HObject>();
-
-            if (iamge != null)
+            if (viewModel != null)
             {
-                // 使用Add方法添加新项
-                dictionary.Add(interact, iamge);
-
+                HObject iamge = viewModel.GetImage();
+                interact.Image = CloneImageSafely(iamge);
+                if (interact.IsSecondPhoto)
+                {
+                    viewModel.SetExposure(interact.SecondPhotoExposure);
+                    HObject SecondIamge = viewModel.GetImage();
+                    interact.SecondImage = SecondIamge;
+                    viewModel.SetExposure();
+                    SafeDisposeHObject(ref SecondIamge);
+                }
+               
+                SafeDisposeHObject(ref iamge);
+              
+               
             }
-            else
-            {
-                dictionary.Add(interact, null);
-            }
+                    
             //推送回去处理
-            EventMessage.MessageHelper.GetEvent<ImagePushHandleEvent>().Publish(dictionary);
+            EventMessage.MessageHelper.GetEvent<ImagePushHandleEvent>().Publish(interact);
         }
 
 

@@ -97,6 +97,16 @@ namespace WheelRecognitionSystem.Public
         /// </summary>
         public static double MinSimilarity { get; set;}
 
+        /// <summary>
+        /// 是否二次取图
+        /// </summary>
+        public static bool IsSecondGetImage { get; set;}
+
+        /// <summary>
+        /// 二次取图曝光
+        /// </summary>
+        public static int SecondExposure { get; set;}
+
 
 
 

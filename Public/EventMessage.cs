@@ -108,7 +108,7 @@ namespace WheelRecognitionSystem.Public
     /// <summary>
     /// 图片推送处理事件
     /// </summary>
-    public class ImagePushHandleEvent : PubSubEvent<Dictionary<InteractS7PLCModel,HObject>> { }
+    public class ImagePushHandleEvent : PubSubEvent<InteractS7PLCModel> { }
     /// <summary>
     /// 识别结果推送显示事件
     /// </summary>

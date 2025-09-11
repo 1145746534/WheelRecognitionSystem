@@ -17,8 +17,6 @@ namespace WheelRecognitionSystem.Models
 
         public event EventHandler<EventArgs> ArrivalSignalTriggered;
 
-        public event EventHandler<EventArgs> DataModificationTriggered;
-
         private int _index;
         /// <summary>
         /// 下标 从0开始
@@ -62,10 +60,6 @@ namespace WheelRecognitionSystem.Models
 
 
 
-        public int newArrival = 0;
-
-
-
         private float _wheelTemperature;
         /// <summary>
         /// 轮毂温度
@@ -87,5 +81,18 @@ namespace WheelRecognitionSystem.Models
             set { SetProperty(ref _wheelHeight, value); }
         }
 
+        /// <summary>
+        /// 实现深拷贝克隆方法
+        /// </summary>
+        public ReadPLCSignal Clone()
+        {
+            return new ReadPLCSignal
+            {
+                Index = this.Index,
+                Name = this.Name,
+                WheelTemperature = this.WheelTemperature,
+                WheelHeight = this.WheelHeight,
+            };
+        }
     }
 }

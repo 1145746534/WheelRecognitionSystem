@@ -3,25 +3,53 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HalconDotNet;
 
 namespace WheelRecognitionSystem.Models
 {
     /// <summary>
     /// 信号交互类-PLC发送的信号
     /// </summary>
-    public class InteractS7PLCModel
+    public class InteractS7PLCModel : IDisposable
     {
         /// <summary>
         /// 轮毂到位延时
         /// </summary>
         public int ArrivalDelay;
 
-        /// <summary>
-        /// 是否保存图片
-        /// </summary>
-        public bool IsSaveImage = true;
+        public HObject Image;
 
+        /// <summary>
+        /// 手动读取图片地址
+        /// </summary>
         public string ManualReadImagePath;
+
+        /// <summary>
+        /// 是否二次拍照
+        /// </summary>
+        public bool IsSecondPhoto = false;
+
+        /// <summary>
+        /// 二次曝光值
+        /// </summary>
+        public int SecondPhotoExposure = 0;
+
+        /// <summary>
+        /// 二次拍照图
+        /// </summary>
+        public HObject SecondImage;
+
+        /// <summary>
+        /// 二次拍照图保存位置
+        /// </summary>
+        public string SecondImagePath;
+
+
+
+        /// <summary>
+        /// 保存或者移动图片 
+        /// </summary>
+        public bool IsSaveOrMoveImage = true;
 
         /// <summary>
         /// 是否显示图片到界面
@@ -74,6 +102,22 @@ namespace WheelRecognitionSystem.Models
             get { return endTime.Subtract(starTime); }
         }
 
+        /// <summary>
+        /// 释放图片
+        /// </summary>
+        public void Dispose()
+        {
+            if (Image != null && Image.IsInitialized())
+            {
+                Image.Dispose();
+                Image = null;
+            }
+            if(SecondImage != null && SecondImage.IsInitialized())
+            {
+                SecondImage.Dispose();
+                SecondImage = null;
+            }
+        }
     }
 
     public enum InfoHandle
