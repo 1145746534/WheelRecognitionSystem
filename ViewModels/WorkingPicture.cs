@@ -560,9 +560,10 @@ namespace WheelRecognitionSystem.ViewModels
                                     {
                                         // 插入新目录
                                         string[] newParts = new string[parts.Length + 1];
-                                        Array.Copy(parts, 0, newParts, 0, index + 1);
-                                        newParts[index + 1] = "颜色识别";
-                                        Array.Copy(parts, index + 1, newParts, index + 2, parts.Length - index - 1);
+                                        Array.Copy(parts, 0, newParts, 0, index + 2);
+
+                                        newParts[index + 2] = "颜色识别";
+                                        Array.Copy(parts, index + 2, newParts, index + 3, parts.Length - index - 2);
 
                                         // 重新组合路径
                                         string newPath = string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), newParts);
@@ -594,7 +595,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 }
 
                               
-                                //Console.WriteLine("步骤2");
+                               
                                 SafeDisposeHObject(ref grayImage);
                             }
 

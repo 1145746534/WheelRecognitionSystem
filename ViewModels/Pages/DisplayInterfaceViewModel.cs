@@ -148,27 +148,16 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (viewModel != null)
             {
                 viewModel.SetExposure();
-                HObject iamge = viewModel.GetImage();
-                //string savePath = GetImageSavePath(SaveWay.Hand, HandImagesPath);
-                //SaveImageDatasAsync(iamge, savePath);
+                HObject iamge = viewModel.GetImage();                
                 interact.Image = CloneImageSafely(iamge);
+                SafeDisposeHObject(ref iamge);
                 if (interact.IsSecondPhoto)
                 {
-                    viewModel.SetExposure(interact.SecondPhotoExposure);
-                    
-                   
-                    HObject SecondIamge = viewModel.GetImage();
-                    //string savePath2 = GetImageSavePath(SaveWay.Hand, HandImagesPath);
-                    //SaveImageDatasAsync(SecondIamge, savePath2);
-                    //bool areEqual = iamge == SecondIamge; // 比较对象引用
+                    viewModel.SetExposure(interact.SecondPhotoExposure);                                    
+                    HObject SecondIamge = viewModel.GetImage();                   
                     interact.SecondImage = CloneImageSafely(SecondIamge);
-                    //Console.WriteLine($"首次图 - {areEqual}：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
                     SafeDisposeHObject(ref SecondIamge);
-                }
-               
-                SafeDisposeHObject(ref iamge);
-              
-               
+                } 
             }
                     
             //推送回去处理

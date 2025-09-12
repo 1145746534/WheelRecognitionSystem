@@ -34,7 +34,7 @@ namespace WheelRecognitionSystem.Models
         }
 
         public bool Connect(string camerID)
-        { 
+        {
             if (string.IsNullOrEmpty(camerID))
             {
                 return false;
@@ -117,9 +117,9 @@ namespace WheelRecognitionSystem.Models
                 HOperatorSet.GrabImage(out ho_Image, acqHandle);
 
 
-             
-               // 初始化本地图像空间的变量
-                                                       //采集图像
+
+                // 初始化本地图像空间的变量
+                //采集图像
                 //HOperatorSet.GetFramegrabberParam(acqHandle, "ExposureTime", out HTuple exposureValue);
                 //Console.WriteLine( $"采集图像曝光值：{exposureValue}");
                 //exposureValue.Dispose();
@@ -151,7 +151,7 @@ namespace WheelRecognitionSystem.Models
             catch (Exception ex)
             {
                 Console.WriteLine($"设置曝光时间识别:{ex.ToString()}");
-                
+
             }
         }
 
