@@ -106,13 +106,24 @@ namespace WheelRecognitionSystem.Models
 
             try
             {
+                // 同步采集一帧（丢弃），以便让新曝光设置生效
+                HObject discardImage;
+                HOperatorSet.GrabImage(out discardImage, acqHandle);
+                discardImage.Dispose();
+
                 HObject ho_Image;//定义图片变量
-                HOperatorSet.GenEmptyObj(out ho_Image);// 初始化本地图像空间的变量
+                HOperatorSet.GenEmptyObj(out ho_Image);
+                // 再同步采集一帧，这一帧应该是新曝光下的图像
+                HOperatorSet.GrabImage(out ho_Image, acqHandle);
+
+
+             
+               // 初始化本地图像空间的变量
                                                        //采集图像
-                HOperatorSet.GetFramegrabberParam(acqHandle, "ExposureTime", out HTuple exposureValue);
-                Console.WriteLine( $"采集图像曝光值：{exposureValue}");
-                exposureValue.Dispose();
-                HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
+                //HOperatorSet.GetFramegrabberParam(acqHandle, "ExposureTime", out HTuple exposureValue);
+                //Console.WriteLine( $"采集图像曝光值：{exposureValue}");
+                //exposureValue.Dispose();
+                //HOperatorSet.GrabImageAsync(out ho_Image, acqHandle, -1);
                 return ho_Image;
             }
             catch (Exception ex)
