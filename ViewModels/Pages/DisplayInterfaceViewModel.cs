@@ -149,8 +149,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             {
                 viewModel.SetExposure();
                 HObject iamge = viewModel.GetImage();
-                string savePath = GetImageSavePath(SaveWay.Hand, HandImagesPath);
-                SaveImageDatasAsync(iamge, savePath);
+                //string savePath = GetImageSavePath(SaveWay.Hand, HandImagesPath);
+                //SaveImageDatasAsync(iamge, savePath);
                 interact.Image = CloneImageSafely(iamge);
                 if (interact.IsSecondPhoto)
                 {
@@ -158,11 +158,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     
                    
                     HObject SecondIamge = viewModel.GetImage();
-                    string savePath2 = GetImageSavePath(SaveWay.Hand, HandImagesPath);
-                    SaveImageDatasAsync(SecondIamge, savePath2);
-                    bool areEqual = iamge == SecondIamge; // 比较对象引用
+                    //string savePath2 = GetImageSavePath(SaveWay.Hand, HandImagesPath);
+                    //SaveImageDatasAsync(SecondIamge, savePath2);
+                    //bool areEqual = iamge == SecondIamge; // 比较对象引用
                     interact.SecondImage = CloneImageSafely(SecondIamge);
-                    Console.WriteLine($"首次图 - {areEqual}：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
+                    //Console.WriteLine($"首次图 - {areEqual}：{iamge.GetHashCode()} 二次图：{SecondIamge.GetHashCode()}");
                     SafeDisposeHObject(ref SecondIamge);
                 }
                

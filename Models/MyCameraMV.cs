@@ -107,9 +107,9 @@ namespace WheelRecognitionSystem.Models
             try
             {
                 // 同步采集一帧（丢弃），以便让新曝光设置生效
-                HObject discardImage;
-                HOperatorSet.GrabImage(out discardImage, acqHandle);
-                discardImage.Dispose();
+                //HObject discardImage;
+                //HOperatorSet.GrabImage(out discardImage, acqHandle);
+                //discardImage.Dispose();
 
                 HObject ho_Image;//定义图片变量
                 HOperatorSet.GenEmptyObj(out ho_Image);
