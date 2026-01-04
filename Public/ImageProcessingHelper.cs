@@ -99,7 +99,21 @@ namespace WheelRecognitionSystem.Public
         // 安全克隆方法
         public static HObject CloneImageSafely(HObject source)
         {
-            return (source != null && source.IsInitialized()) ? source.Clone() : null;
+            try
+            {
+                if (source != null && source.IsInitialized())
+                {
+                    return source.Clone();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
 
@@ -482,9 +496,9 @@ namespace WheelRecognitionSystem.Public
                             {
                                 recognitionResults.Add(temp);
                             }
-                            else                            
+                            else
                                 temp.Dispose(); //此对象无用 释放掉
-                            
+
 
                             SafeHalconDispose(ho_MatchContour);
                         }
