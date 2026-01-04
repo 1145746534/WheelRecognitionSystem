@@ -25,7 +25,6 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -37,9 +36,7 @@
         <Grid Grid.Row="0" Grid.Column="1">
             <ContentControl p:RegionManager.RegionName="DisplayRegion2"></ContentControl>
         </Grid>
-        <Grid Grid.Row="0" Grid.Column="2">
-            <ContentControl p:RegionManager.RegionName="DisplayRegion3"></ContentControl>
-        </Grid>
+
         <Grid Grid.Row="1" Grid.Column="0">
             <ContentControl p:RegionManager.RegionName="DisplayRegion4"></ContentControl>
         </Grid>

@@ -57,7 +57,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Grid.Column="0">
-                        <DataGrid x:Name="AzureDataGrid" Grid.Column="0" Margin="5"
+                        <DataGrid x:Name="AzureDataGrid" Grid.Column="0" Margin="5"  CanUserAddRows="False" IsReadOnly="True"
                             AutoGenerateColumns="False" ItemsSource="{Binding Path=DisplayCollections}" RowHeaderWidth="0"
                             Style="{DynamicResource MahApps.Styles.DataGrid.Azure}">
                             <DataGrid.Columns>

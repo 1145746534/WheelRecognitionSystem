@@ -304,7 +304,7 @@ namespace WheelRecognitionSystem.ViewModels
             }
 
             List<DisplayData> displayDatas = new List<DisplayData>();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
             {
                 DisplayData data = new DisplayData()
                 {
