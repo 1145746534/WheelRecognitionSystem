@@ -145,7 +145,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// <summary>
         /// 读取PLC信号数据信息组
         /// </summary>
-        private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[5];
+        private ReadPLCSignal[] readPLCSignals = new ReadPLCSignal[4];
 
         /// <summary>
         /// 信息显示定时器
@@ -187,7 +187,7 @@ namespace WheelRecognitionSystem.ViewModels
             EventSubscribe();
 
             HeartbeatThread();
-            PlcDataInteractionThread();
+          
             //PictrueDeleteTimer_Tick(null, null);
         }
 
@@ -366,11 +366,8 @@ namespace WheelRecognitionSystem.ViewModels
                 };
                 displayDatas.Add(data);
             }
-
-
-
             DisplayCollections = new ObservableCollection<DisplayData>(displayDatas);
-
+            PlcDataInteractionThread();
         }
 
         /// <summary>
@@ -402,18 +399,15 @@ namespace WheelRecognitionSystem.ViewModels
         private void PlcDataInteractionThread()
         {
            
-            Thread.Sleep(500);
+            Thread.Sleep(200);
             Console.WriteLine("进来次数");
-            readPLCSignals[0].Name = "1检1";
-            readPLCSignals[0].Index = 0;
-            readPLCSignals[1].Name = "1检2A_B";
-            readPLCSignals[1].Index = 1;
-            readPLCSignals[2].Name = "1检3";
-            readPLCSignals[2].Index = 2;
-            readPLCSignals[3].Name = "1检3返修";
-            readPLCSignals[3].Index = 3;
-            readPLCSignals[4].Name = "2检1";
-            readPLCSignals[4].Index = 4;
+           
+            for (int i = 0; i < sys_Camerars.Count; i++)
+            {
+                readPLCSignals[i].Name = sys_Camerars[i].Name;
+                readPLCSignals[i].Index = i;
+            }
+           
             _readBuffer = new byte[ReadLenght - ReadStartAddress + 1];
             float temperature;
             KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>();
@@ -480,7 +474,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 //计数
                                 //count = S7.GetIntAt(_readBuffer, 156);
 
-                                for (int i = 0; i < 5; i++)
+                                for (int i = 0; i < readPLCSignals.Length; i++)
                                 {
 
                                     //轮毂高度

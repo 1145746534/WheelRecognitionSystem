@@ -81,12 +81,11 @@ namespace WheelRecognitionSystem.ViewModels.Pages
         private async void OnControlLoaded()
         {
             Console.WriteLine($"加载显示界面");
-            await Task.Delay(1000);
+            await Task.Delay(500);
             //查询数据库中所有的相机信息
             SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
             List<Sys_bd_camerainformation> DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
             sDB.Close(); sDB.Dispose();
-            EventMessage.MessageHelper.GetEvent<SystemCameraList>().Publish(DatasCamera);
             for (int i = 0; i < 4; i++)
             {
                 if (DatasCamera.Count > i)
@@ -95,6 +94,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
                     SetChildViewModelParameter($"DisplayRegion{ID}", DatasCamera[i]);
                 }
             }
+            EventMessage.MessageHelper.GetEvent<SystemCameraList>().Publish(DatasCamera);
+
         }
         /// <summary>
         /// 初始化给个区域的参数

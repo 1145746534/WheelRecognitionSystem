@@ -1079,7 +1079,16 @@ namespace WheelRecognitionSystem.Public
             }
             else if (way == SaveWay.AutoNG)
             {
-                string ngPath = Path.Combine(path, "NG");
+                // 查找+的位置
+                int index = prefixName.IndexOf("+", StringComparison.Ordinal);
+                string value = string.Empty;
+                // 如果找到
+                if (index >= 0)
+                {
+                    value = prefixName.Substring(0, index);                                    
+                }
+                string ngPath = Path.Combine(path, value);
+                ngPath = Path.Combine(ngPath, "NG");
                 //Directory.CreateDirectory(ngPath);
                 savePath = Path.Combine(ngPath, $"NG&{now:yyMMddHHmmssfff}.tif");
             }

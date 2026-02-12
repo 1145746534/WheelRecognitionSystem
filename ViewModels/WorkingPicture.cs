@@ -477,7 +477,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                                 SaveWay way = recognitionResult.ResultBol ? SaveWay.AutoOK : SaveWay.AutoNG;
                                 string style = recognitionResult.WheelStyle == "成品" ? "成" : "半";
-                                string _prefixName = $"{recognitionResult.RecognitionWheelType}_{style}+分{score}";
+                                string _prefixName = $"{interact.readPLCSignal.Name}+{recognitionResult.RecognitionWheelType}_{style}+分{score}";
                                 string savePath = string.Empty;
                                 savePath = GetImageSavePath(way, HistoricalImagesPath, _prefixName);
                                 if (interact.IsSaveOrMoveImage)  //保存图片
