@@ -1,44 +1,32 @@
-﻿using Prism.Commands;
+﻿using HalconDotNet;
+using Prism.Commands;
+using Prism.Events;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
+using Sharp7;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WheelRecognitionSystem.DataAccess;
-using WheelRecognitionSystem.Public;
-using HalconDotNet;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
-using Sharp7;
+using System.IO.Pipes;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Threading;
+using WheelRecognitionSystem.DataAccess;
 using WheelRecognitionSystem.Models;
-using static WheelRecognitionSystem.Public.SystemDatas;
-using static WheelRecognitionSystem.Public.ConfigEdit;
+using WheelRecognitionSystem.Public;
+using WheelRecognitionSystem.Views.Pages;
 using static WheelRecognitionSystem.Public.ExternalConnections;
 using static WheelRecognitionSystem.Public.ImageProcessingHelper;
-using WheelRecognitionSystem.Views.Dialogs;
-using System.Windows.Threading;
-using System.Windows;
-using System.Windows.Media;
-using SqlSugar;
-using System.Threading;
-using System.Net.Http;
-using Prism.Services.Dialogs;
-using Microsoft.Win32;
-using System.Windows.Input;
-using static NPOI.HSSF.Util.HSSFColor;
-using System.Collections.ObjectModel;
-using WheelRecognitionSystem.Views.Pages;
-using Prism.Events;
-using System.Diagnostics;
-using NPOI.OpenXmlFormats.Vml;
-using System.IO.Pipes;
-using Microsoft.Office.Interop.Excel;
-using Microsoft.Xaml.Behaviors;
-using System.Windows.Shapes;
-using System.Globalization;
-using System.Web.UI.WebControls;
-using NPOI.SS.Formula.Functions;
+using static WheelRecognitionSystem.Public.SystemDatas;
 
 
 namespace WheelRecognitionSystem.ViewModels
@@ -72,7 +60,15 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
-
+        private string _plcip;
+        /// <summary>
+        /// PLC的IP
+        /// </summary>
+        public string PLCIP
+        {
+            get { return _plcip; }
+            set { SetProperty(ref _plcip, value); }
+        }
 
         private string _systemMessages = "";
         /// <summary>
@@ -388,7 +384,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
-
+            PLCIP = PlcIP;
             Thread.Sleep(500);
             Console.WriteLine("进来次数");
             readPLCSignals[0].Name = "1检1";
@@ -826,7 +822,7 @@ namespace WheelRecognitionSystem.ViewModels
                 //{
                 //    DisplayDataGrid(n, new DisplayData() { Similarity = 0M }); //清空显示
                 //});
-                ReadPLCSignal plcSignal = sender as ReadPLCSignal;              
+                ReadPLCSignal plcSignal = sender as ReadPLCSignal;
 
                 workingPicture.ReceiveS7PLC(new InteractS7PLCModel()
                 {

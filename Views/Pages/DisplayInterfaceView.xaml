@@ -38,10 +38,10 @@
         </Border>
 
         <Border Grid.Row="1" Grid.Column="0"  CornerRadius="15" >
-            <ContentControl p:RegionManager.RegionName="DisplayRegion4"></ContentControl>
+            <ContentControl p:RegionManager.RegionName="DisplayRegion3"></ContentControl>
         </Border>
         <Border Grid.Row="1" Grid.Column="1"  CornerRadius="15" >
-            <ContentControl p:RegionManager.RegionName="DisplayRegion5"></ContentControl>
+            <ContentControl p:RegionManager.RegionName="DisplayRegion4"></ContentControl>
         </Border>
        
     </Grid>

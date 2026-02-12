@@ -32,9 +32,12 @@
                     <mah:ToggleSwitch OnContent="关闭实时" OffContent="开启实时" FontFamily="Microsoft YaHei UI" 
                                       OffCommand="{Binding SwitchOffCommand}"
                                       OnCommand="{Binding SwitchOnCommand}"  />
-                    <Button Command="{Binding BtnTakePhotoCommand}" Width="50" Content="拍照"  Background="#999" Margin="0,4,0,4"/>
-                    <Button Command="{Binding BtnLinkCommand}" Width="50" Content="连接" Background="#999" Margin="1,4,0,4"/>
-                    <Button  Command="{Binding BtnSaveCommand}" Width="50" Content="保存"  Background="#999" Margin="1,4,0,4"/>
+                    <Button Style="{StaticResource UltraFlatButtonStyle}" Command="{Binding BtnTakePhotoCommand}" Width="50" Content="拍照"  
+                            Background="#999" Margin="0,4,0,4" Cursor ="Hand"/>
+                    <Button Style="{StaticResource UltraFlatButtonStyle}" Command="{Binding BtnLinkCommand}" Width="50" Content="连接" 
+                            Background="#999" Margin="1,4,0,4" Cursor ="Hand"/>
+                    <Button Style="{StaticResource UltraFlatButtonStyle}" Command="{Binding BtnSaveCommand}" Width="50" Content="保存"  
+                            Background="#999" Margin="1,4,0,4" Cursor ="Hand"/>
                     <Label Content="{Binding FullGray}" Margin="1,4,0,4"></Label>
                 </StackPanel>
             </Border>

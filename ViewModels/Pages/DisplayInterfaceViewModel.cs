@@ -59,7 +59,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             _regionManager.RegisterViewWithRegion("DisplayRegion2", typeof(CameraControl));
             _regionManager.RegisterViewWithRegion("DisplayRegion3", typeof(CameraControl));
             _regionManager.RegisterViewWithRegion("DisplayRegion4", typeof(CameraControl));
-            _regionManager.RegisterViewWithRegion("DisplayRegion5", typeof(CameraControl));
+            //_regionManager.RegisterViewWithRegion("DisplayRegion5", typeof(CameraControl));
             LoadedCommand = new DelegateCommand(OnControlLoaded);
 
 

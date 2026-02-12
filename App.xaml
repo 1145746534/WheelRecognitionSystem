@@ -19,6 +19,11 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
 
+                <ResourceDictionary Source="pack://application:,,,/Themes/CleanLightTheme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Styles/UltraFlatButtonStyle.xaml" />
+
+
+
             </ResourceDictionary.MergedDictionaries>
             
             <BitmapImage x:Key="icon" UriSource="pack://application:,,,/Assets/Images/wheels.png"/>
