@@ -161,11 +161,16 @@ namespace WheelRecognitionSystem.ViewModels
         /// 回流状态上次更新的二维码
         /// </summary>
         private string lastUpdateCodeBack;
+
+
         private IRegionManager _regionManager;
         readonly IDialogService _dialogService;
         private WorkingPicture workingPicture;
-        private int triggerCount = 0;
-        private int count = 0;
+
+        private List<Sys_bd_camerainformation> sys_Camerars;
+
+        //private int triggerCount = 0;
+        //private int count = 0;
 
 
 
@@ -200,6 +205,7 @@ namespace WheelRecognitionSystem.ViewModels
                 sDB.Close(); sDB.Dispose();
                 //PLC参数
                 PlcIP = GetPara(systemDatas, "PlcIP", "192.168.0.188");
+                PLCIP = PlcIP;
                 ReadDB = int.Parse(GetPara(systemDatas, "ReadDB", "100"));
                 ReadStartAddress = int.Parse(GetPara(systemDatas, "ReadStartAddress", "0"));
                 ReadLenght = int.Parse(GetPara(systemDatas, "ReadLenght", "394"));
@@ -299,23 +305,7 @@ namespace WheelRecognitionSystem.ViewModels
                 readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
             }
 
-            List<DisplayData> displayDatas = new List<DisplayData>();
-            for (int i = 0; i < 4; i++)
-            {
-                DisplayData data = new DisplayData()
-                {
-                    Station = "1检1",
-                    Status = "",
-                    WheelType = "",
-                    Similarity = 0M,
-                    TimeConsumed = null,
-                    Remark = ""
-                };
-                displayDatas.Add(data);
-            }
-
-
-            DisplayCollections = new ObservableCollection<DisplayData>(displayDatas);
+          
             // 先立即执行一次删除操作
             PictrueDeleteTimer_Tick(null, EventArgs.Empty);
             //启动定时器
@@ -352,8 +342,35 @@ namespace WheelRecognitionSystem.ViewModels
         {
             //订阅消息
             EventMessage.MessageHelper.GetEvent<SystemMessageDisplayEvent>().Subscribe(SystemMessageDisplay);
+            EventMessage.MessageHelper.GetEvent<SystemCameraList>().Subscribe(SystemCameraListMethod, ThreadOption.UIThread,
+                            keepSubscriberReferenceAlive: true);
             EventMessage.MessageHelper.GetEvent<InteractCallEvent>().Subscribe(CallShow, ThreadOption.UIThread, // 确保在UI线程执行
                             keepSubscriberReferenceAlive: true);
+        }
+
+        private void SystemCameraListMethod(List<Sys_bd_camerainformation> list)
+        {
+            sys_Camerars = list;
+            List<DisplayData> displayDatas = new List<DisplayData>();
+
+            for (int i = 0; i < sys_Camerars.Count; i++)
+            {
+                DisplayData data = new DisplayData()
+                {
+                    Station = sys_Camerars[i].Name,
+                    Status = "",
+                    WheelType = "",
+                    Similarity = 0M,
+                    TimeConsumed = null,
+                    Remark = ""
+                };
+                displayDatas.Add(data);
+            }
+
+
+
+            DisplayCollections = new ObservableCollection<DisplayData>(displayDatas);
+
         }
 
         /// <summary>
@@ -384,7 +401,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
-            PLCIP = PlcIP;
+           
             Thread.Sleep(500);
             Console.WriteLine("进来次数");
             readPLCSignals[0].Name = "1检1";
@@ -461,7 +478,7 @@ namespace WheelRecognitionSystem.ViewModels
                                 //readPLCSignals[2].WheelTemperature = temperature; 
                                 readPLCSignals[2].WheelTemperature = S7.GetRealAt(_readBuffer, 132); //1检3
                                 //计数
-                                count = S7.GetIntAt(_readBuffer, 156);
+                                //count = S7.GetIntAt(_readBuffer, 156);
 
                                 for (int i = 0; i < 5; i++)
                                 {
@@ -805,17 +822,17 @@ namespace WheelRecognitionSystem.ViewModels
             try
             {
 
-                if (triggerCount > 10000)
-                {
-                    triggerCount = 0;
-                }
+                //if (triggerCount > 10000)
+                //{
+                //    triggerCount = 0;
+                //}
 
-                triggerCount++;
+                //triggerCount++;
 
-                if (triggerCount % 100 == 0)
-                {
-                    WriteLogToFile(triggerCount, count);
-                }
+                //if (triggerCount % 100 == 0)
+                //{
+                //    WriteLogToFile(triggerCount, count);
+                //}
 
                 // 在后台线程中修改集合时：
                 //System.Windows.Application.Current.Dispatcher.Invoke(() =>

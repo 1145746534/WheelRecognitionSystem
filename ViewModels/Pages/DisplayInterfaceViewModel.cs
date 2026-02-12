@@ -86,8 +86,8 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             SqlSugarClient sDB = new SqlAccess().SystemDataAccess;
             List<Sys_bd_camerainformation> DatasCamera = sDB.Queryable<Sys_bd_camerainformation>().OrderBy(o => o.ID).ToList();
             sDB.Close(); sDB.Dispose();
-
-            for (int i = 0; i < 5; i++)
+            EventMessage.MessageHelper.GetEvent<SystemCameraList>().Publish(DatasCamera);
+            for (int i = 0; i < 4; i++)
             {
                 if (DatasCamera.Count > i)
                 {

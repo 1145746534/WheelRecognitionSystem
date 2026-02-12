@@ -89,6 +89,8 @@ namespace WheelRecognitionSystem.Public
     /// </summary>
     public class SystemMessageDisplayEvent : PubSubEvent<MessageModel> { }
 
+    public class SystemCameraList : PubSubEvent<List<Sys_bd_camerainformation>>{}
+
     /// <summary>
     /// 信号交互-回复事件
     /// </summary>
