@@ -5,8 +5,6 @@ VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelRecognitionSystem", "WheelRecognitionSystem.csproj", "{6B6840DE-CB34-4AB6-B41A-BB181F567129}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelRecognitionSystem.Tests", "..\WheelRecognitionSystem.Tests\WheelRecognitionSystem.Tests.csproj", "{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,14 +21,6 @@ Global
 		{6B6840DE-CB34-4AB6-B41A-BB181F567129}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6B6840DE-CB34-4AB6-B41A-BB181F567129}.Release|x64.ActiveCfg = Release|x64
 		{6B6840DE-CB34-4AB6-B41A-BB181F567129}.Release|x64.Build.0 = Release|x64
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Debug|x64.Build.0 = Debug|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Release|x64.ActiveCfg = Release|Any CPU
-		{2DA0C00C-4F92-4F63-9FF9-2E70BFDC7526}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

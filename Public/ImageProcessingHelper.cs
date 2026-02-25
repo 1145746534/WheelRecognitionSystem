@@ -1,4 +1,5 @@
 ﻿using HalconDotNet;
+using NPOI.DDF;
 using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using System;
@@ -1059,7 +1060,7 @@ namespace WheelRecognitionSystem.Public
             string saveWheelTypePath = "";
             if (way == SaveWay.AutoOK)
             {
-                // 查找下划线的位置
+                // 查找下划线的位置 1检1+02024F03_半+0.998
                 int index = prefixName.IndexOf("_", StringComparison.Ordinal);
 
                 // 如果找到双下划线，返回前面的部分
@@ -1067,9 +1068,20 @@ namespace WheelRecognitionSystem.Public
                 {
                     string value = prefixName.Substring(0, index);
                     string finallyName = prefixName.Contains("半") ? "半" : "成";
-                    value = $"{value}_{finallyName}";
-                    saveWheelTypePath = Path.Combine(path, value);
-
+                    int addIndex = value.IndexOf("+", StringComparison.Ordinal);
+                    if (addIndex > 0)
+                    {
+                        string station = value.Substring(0, addIndex);
+                        string type = value.Substring(addIndex+1, value.Length- addIndex-1);
+                        saveWheelTypePath = Path.Combine(path, station);
+                        saveWheelTypePath = Path.Combine(saveWheelTypePath, $"{type}_{finallyName}");
+                       
+                    }
+                    else
+                    {
+                        value = $"{value}_{finallyName}";
+                        saveWheelTypePath = Path.Combine(path, value);
+                    }
                 }
                 else
                     saveWheelTypePath = Path.Combine(path, prefixName);
@@ -1085,7 +1097,7 @@ namespace WheelRecognitionSystem.Public
                 // 如果找到
                 if (index >= 0)
                 {
-                    value = prefixName.Substring(0, index);                                    
+                    value = prefixName.Substring(0, index);
                 }
                 string ngPath = Path.Combine(path, value);
                 ngPath = Path.Combine(ngPath, "NG");

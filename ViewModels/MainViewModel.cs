@@ -496,6 +496,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     string back_WheelCoding = GetBytesToString(_readBuffer, 314 + i * 16);
                                     string NG_WheelCoding = GetBytesToString(_readBuffer, 2 + i * 16);
                                     Thread.Sleep(10);
+
                                     // 2. 回流状态处理
                                     int backBit = i + 1;
                                     bool back = S7.GetBitAt(_readBuffer, 192, backBit);
@@ -504,8 +505,12 @@ namespace WheelRecognitionSystem.ViewModels
                                     if (back)
                                     {
                                         EventMessage.MessageDisplay($"接收到回流信号：（92.{i + 1}） 轮形：{back_WheelCoding}-{showStatus}", true, true);
-                                        Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回流信号192.{i + 1}：{back}");
+                                        //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回流信号192.{i + 1}：{back}");
                                         modifiValue = new KeyValuePair<string, string>(back_WheelCoding, showStatus);
+                                        ModfiModel modfi = new ModfiModel();
+                                        modfi.WheelCoding = back_WheelCoding;
+                                        modfi.FlowOrDown = showStatus;
+                                        modfi.Station = sys_Camerars[i].Name;
                                         int indexPos = 144;
                                         int indexBit = i + 5;
                                         if (i >= 8)
@@ -519,7 +524,7 @@ namespace WheelRecognitionSystem.ViewModels
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
                                         //0 1检1  1 
-                                        await OnDataModifiNextStationAsync(modifiValue);
+                                        await OnDataModifiNextStationAsync(modfi);
                                         ResetSignal(indexPos, indexBit, 600); // 回流状态复位                                 
 
 
@@ -752,7 +757,7 @@ namespace WheelRecognitionSystem.ViewModels
                     InteractS7PLCModel interact = new InteractS7PLCModel()
                     {
                         ArrivalDelay = ArrivalDelay,
-                        readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
+                        readPLCSignal = new ReadPLCSignal() { Index = 2, Name = "返修1号" },
                     };
                     ImageHandle(interact, filePath);
                 }
@@ -766,7 +771,7 @@ namespace WheelRecognitionSystem.ViewModels
                         InteractS7PLCModel interact = new InteractS7PLCModel()
                         {
                             ArrivalDelay = ArrivalDelay,
-                            readPLCSignal = new ReadPLCSignal() { Index = 0, Name = "1检1" },
+                            readPLCSignal = new ReadPLCSignal() { Index = 2, Name = "返修1号" },
                         };
                         ImageHandle(interact, filePath);
                     }
@@ -1086,14 +1091,14 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         /// <param name="keyValue"></param>
 
-        private async Task OnDataModifiNextStationAsync(KeyValuePair<string, string> keyValue)
+        private async Task OnDataModifiNextStationAsync(ModfiModel model)
         {
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
-
-                string prefix_WheelCoding = keyValue.Key;
-                string station = keyValue.Value;
+               
+                string prefix_WheelCoding = model.WheelCoding;
+                string nextStation = model.FlowOrDown;
                 char[] parts = prefix_WheelCoding.ToCharArray();
                 if (prefix_WheelCoding == lastUpdateCodeBack)
                 {
@@ -1116,17 +1121,19 @@ namespace WheelRecognitionSystem.ViewModels
 
                 if (latestRecord != null)
                 {
-                    //上传mes
-                    await SendMes(UpMesUri, "1检1", latestRecord.GUID);
+                   
                     //await SendMes(UpMesUri, "1检1", "97624f8807e14e89b95b653e03b2c9e9");
                     // 步骤2：更新 Result 和 Code
                     var rowsAffected = db.Updateable<Tbl_productiondatamodel>()
                         .SetColumns(it => new Tbl_productiondatamodel()
                         {
-                            NextStation = station
+                            NextStation = nextStation
                         }).Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
-                    Console.WriteLine($"NextStation-成功更新了{rowsAffected}条记录 - {latestRecord.GUID}");
+                    Console.WriteLine($"工位：{model.Station}-{rowsAffected}-编码：{model.WheelCoding}");
+                    //上传mes
+                    //await SendMes(UpMesUri, "1检1", latestRecord.GUID);
+                    await SendMes(UpMesUri, model.Station, latestRecord.GUID);
                 }
                 else
                 {
