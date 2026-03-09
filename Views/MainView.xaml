@@ -120,7 +120,7 @@
                                 HorizontalAlignment="Center" BorderThickness="0" Width="90" Cursor ="Hand"/>
                         <Button Grid.Column="0" Grid.Row="3" Content="模板刷新" Background="White" FontSize="14"  Command="{Binding BtuCommand}" CommandParameter="模板刷新" 
                                 HorizontalAlignment="Center" BorderThickness="0" Width="90" Cursor ="Hand"/>
-                        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" >
+                        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Background="#FFEDEBEB" CornerRadius="10"  >
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
@@ -136,13 +136,13 @@
                                 <TextBlock Grid.Row="1" Text="精车2号" FontSize="12" FontWeight="Bold"  HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                 <TextBlock Grid.Row="2" Text="返修1号" FontSize="12" FontWeight="Bold"  HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                 <TextBlock Grid.Row="3" Text="二检1号" FontSize="12" FontWeight="Bold"  HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                <TextBlock Grid.Column="1" Grid.Row="0"  Text="99" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                <TextBlock Grid.Column="1" Grid.Row="1"  Text="100" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                <TextBlock Grid.Column="1" Grid.Row="2"  Text="110" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                <TextBlock Grid.Column="1" Grid.Row="3"  Text="120" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+                                <TextBlock Grid.Column="1" Grid.Row="0"  Text="{Binding NG_Count1}" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+                                <TextBlock Grid.Column="1" Grid.Row="1"  Text="{Binding NG_Count2}" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+                                <TextBlock Grid.Column="1" Grid.Row="2"  Text="{Binding NG_Count3}" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+                                <TextBlock Grid.Column="1" Grid.Row="3"  Text="{Binding NG_Count4}" FontSize="15" Foreground="Green" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                             </Grid>
                         </Border>
-                        <mah:Badged  Grid.Column="1" Grid.Row="2" Width="90"    Badge="{Binding NGCount}"  IsEnabled="True">
+                        <mah:Badged  Grid.Column="1" Grid.Row="2" Width="90" Margin="1,2,1,1"   Badge="{Binding NGCount}"  IsEnabled="True">
                             <Button Content="NG图识别" BorderThickness="0"  Background="White"  FontSize="14" Command="{Binding BtuCommand}" CommandParameter="NG图识别"
                                     Cursor ="Hand"/>
                         </mah:Badged>

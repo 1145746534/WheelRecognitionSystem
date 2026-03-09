@@ -119,6 +119,43 @@ namespace WheelRecognitionSystem.ViewModels
             get { return _ngCount; }
             set { SetProperty(ref _ngCount, value); }
         }
+        private int _ngCount1;
+        /// <summary>
+        /// NG1待识别数
+        /// </summary>
+        public int NG_Count1
+        {
+            get { return _ngCount1; }
+            set { SetProperty(ref _ngCount1, value); }
+        }
+        private int _ngCount2;
+        /// <summary>
+        /// NG2待识别数
+        /// </summary>
+        public int NG_Count2
+        {
+            get { return _ngCount2; }
+            set { SetProperty(ref _ngCount2, value); }
+        }
+        private int _ngCount3;
+        /// <summary>
+        /// NG3待识别数
+        /// </summary>
+        public int NG_Count3
+        {
+            get { return _ngCount3; }
+            set { SetProperty(ref _ngCount3, value); }
+        }
+        private int _ngCount4;
+        /// <summary>
+        /// NG4待识别数
+        /// </summary>
+        public int NG_Count4
+        {
+            get { return _ngCount4; }
+            set { SetProperty(ref _ngCount4, value); }
+        }
+
 
         #endregion
 
@@ -187,7 +224,7 @@ namespace WheelRecognitionSystem.ViewModels
             EventSubscribe();
 
             HeartbeatThread();
-          
+
             //PictrueDeleteTimer_Tick(null, null);
         }
 
@@ -305,7 +342,7 @@ namespace WheelRecognitionSystem.ViewModels
                 readPLCSignals[i].ArrivalSignalTriggered += OnArrivalSignalTriggered;
             }
 
-          
+
             // 先立即执行一次删除操作
             PictrueDeleteTimer_Tick(null, EventArgs.Empty);
             //启动定时器
@@ -398,16 +435,16 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         private void PlcDataInteractionThread()
         {
-           
+
             Thread.Sleep(200);
             Console.WriteLine("进来次数");
-           
+
             for (int i = 0; i < sys_Camerars.Count; i++)
             {
                 readPLCSignals[i].Name = sys_Camerars[i].Name;
                 readPLCSignals[i].Index = i;
             }
-           
+
             _readBuffer = new byte[ReadLenght - ReadStartAddress + 1];
             float temperature;
             KeyValuePair<string, string> modifiValue = new KeyValuePair<string, string>();
@@ -692,35 +729,41 @@ namespace WheelRecognitionSystem.ViewModels
                 //文件夹
                 foreach (string subDir1 in subDirectories)
                 {
-                    string[] subDir2 = Directory.GetDirectories(subDir1);
-
                     //文件夹
+                    string[] subDir2 = Directory.GetDirectories(subDir1);
                     foreach (string subDir3 in subDir2)
                     {
-                        if (subDir3.EndsWith("NG"))
+                        //文件夹
+                        string[] subDir4 = Directory.GetDirectories(subDir3);
+                        foreach (string subDir5 in subDir4)
                         {
-                            //文件
-                            string[] files = Directory.GetFiles(subDir3);
-                            NGCount = files.Length;
-                            foreach (string filePath in files)
+                            if (subDir5.EndsWith("NG"))
                             {
-
-                                InteractS7PLCModel interact = new InteractS7PLCModel()
+                                //文件
+                                string[] files = Directory.GetFiles(subDir5);
+                                NGCount = files.Length;
+                                foreach (string filePath in files)
                                 {
-                                    ArrivalDelay = ArrivalDelay,
-                                    IsSaveOrMoveImage = false,
-                                    ManualReadImagePath = filePath,
-                                    IsDisplay = false,
-                                    IsSendPLCInfo = false,
-                                    IsInteraction = false,
-                                    InfoHanleWay = InfoHandle.Update,
-                                    readPLCSignal = new ReadPLCSignal() { Index = -1, Name = "手动识别" },
-                                };
 
-                                ImageHandle(interact, filePath);
+                                    InteractS7PLCModel interact = new InteractS7PLCModel()
+                                    {
+                                        ArrivalDelay = ArrivalDelay,
+                                        IsSaveOrMoveImage = false,
+                                        ManualReadImagePath = filePath,
+                                        IsDisplay = false,
+                                        IsSendPLCInfo = false,
+                                        IsInteraction = false,
+                                        InfoHanleWay = InfoHandle.Update,
+                                        readPLCSignal = new ReadPLCSignal() { Index = -1, Name = "手动识别" },
+                                    };
+
+                                    ImageHandle(interact, filePath);
+                                }
                             }
                         }
                     }
+                    
+                 
 
 
                 }
@@ -729,7 +772,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             });
             await Task.Delay(1000);
-            PictrueDeleteTimer_Tick(null, null);
+            //PictrueDeleteTimer_Tick(null, null);
         }
 
         /// <summary>
@@ -940,13 +983,12 @@ namespace WheelRecognitionSystem.ViewModels
                 pDB.Dispose();
                 if (wheelType == "error")
                 {
-                    ++NGCount;
+                    //NG数量规整
+                    StatisticalData(index, 1,false);
                 }
             }
             if (model.InfoHanleWay == InfoHandle.Update)
             {
-
-
                 try
                 {
                     if (model.resultModel.RecognitionWheelType != "NG")
@@ -975,15 +1017,48 @@ namespace WheelRecognitionSystem.ViewModels
                 {
                     Console.WriteLine($"图片修改报错:{ex.ToString()}");
                 }
-
-
-
-
             }
             model.Dispose();
             model = null;
 
         }
+        /// <summary>
+        /// 统计数据
+        /// </summary>
+        private void StatisticalData(int index, int addQuantity, bool resetToZero)
+        {
+
+            switch (index)
+            {
+                case 0:
+                    if (resetToZero)
+                        NG_Count1 = 0;
+                    else
+                        NG_Count1 = NG_Count1 + addQuantity;
+                    break;
+                case 1:
+                    if (resetToZero)
+                        NG_Count2 = 0;
+                    else
+                        NG_Count2 = NG_Count2 + addQuantity;
+                    break;
+                case 2:
+                    if (resetToZero)
+                        NG_Count3 = 0;
+                    else
+                        NG_Count3 = NG_Count3 + addQuantity;
+                    break;
+                case 3:
+                    if (resetToZero)
+                        NG_Count4 = 0;
+                    else
+                        NG_Count4 = NG_Count4 + addQuantity;
+                    break;
+            }
+            NGCount = NG_Count1 + NG_Count2 + NG_Count3 + NG_Count4;
+        }
+
+
         public void UpdateModelByImageFileName(string imagePath, string newImagePath,
             string recognType, string newModelName, string style)
         {
@@ -1016,7 +1091,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                     if (record != null)
                     {
-                        // 更新Model字段
+                        // 更新Model字段 
                         record.WheelType = recognType;
                         record.Model = newModelName;
                         record.ImagePath = newImagePath;
@@ -1096,7 +1171,7 @@ namespace WheelRecognitionSystem.ViewModels
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
-               
+
                 string prefix_WheelCoding = model.WheelCoding;
                 string nextStation = model.FlowOrDown;
                 char[] parts = prefix_WheelCoding.ToCharArray();
@@ -1121,7 +1196,7 @@ namespace WheelRecognitionSystem.ViewModels
 
                 if (latestRecord != null)
                 {
-                   
+
                     //await SendMes(UpMesUri, "1检1", "97624f8807e14e89b95b653e03b2c9e9");
                     // 步骤2：更新 Result 和 Code
                     var rowsAffected = db.Updateable<Tbl_productiondatamodel>()
