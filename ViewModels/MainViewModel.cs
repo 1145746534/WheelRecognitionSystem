@@ -733,7 +733,7 @@ namespace WheelRecognitionSystem.ViewModels
                     string[] subDir2 = Directory.GetDirectories(subDir1);
                     foreach (string subDir3 in subDir2)
                     {
-                        //文件夹
+                        //文件夹 返修等
                         string[] subDir4 = Directory.GetDirectories(subDir3);
                         foreach (string subDir5 in subDir4)
                         {
@@ -741,7 +741,7 @@ namespace WheelRecognitionSystem.ViewModels
                             {
                                 //文件
                                 string[] files = Directory.GetFiles(subDir5);
-                                NGCount = files.Length;
+                                //NGCount = files.Length;
                                 foreach (string filePath in files)
                                 {
 
@@ -762,14 +762,7 @@ namespace WheelRecognitionSystem.ViewModels
                             }
                         }
                     }
-                    
-                 
-
-
                 }
-
-
-
             });
             await Task.Delay(1000);
             //PictrueDeleteTimer_Tick(null, null);
@@ -984,7 +977,7 @@ namespace WheelRecognitionSystem.ViewModels
                 if (wheelType == "error")
                 {
                     //NG数量规整
-                    StatisticalData(index, 1,false);
+                    StatisticalData(index, 1, false);
                 }
             }
             if (model.InfoHanleWay == InfoHandle.Update)
@@ -1021,6 +1014,58 @@ namespace WheelRecognitionSystem.ViewModels
             model.Dispose();
             model = null;
 
+        }
+
+        public void CalculateNGCount()
+        {
+            for (int i = 0; i < 4; i++)
+                StatisticalData(i, 0, true);
+
+
+            //StatisticalData(1,0,true);
+            //StatisticalData(2,0,true);
+            //StatisticalData(3,0,true);
+
+            string[] subDirectories = Directory.GetDirectories(HistoricalImagesPath);
+
+            //文件夹
+            foreach (string subDir1 in subDirectories)
+            {
+                //文件夹
+                string[] subDir2 = Directory.GetDirectories(subDir1);
+                foreach (string subDir3 in subDir2)
+                {
+
+                    string[] subDir4 = Directory.GetDirectories(subDir3);
+
+                    foreach (string subDir5 in subDir4)
+                    {
+                        if (subDir5.EndsWith("NG"))
+                        {
+                            //文件
+                            string[] files = Directory.GetFiles(subDir5);
+
+                            //文件夹 返修等
+                            if (subDir3.EndsWith("精车1号"))
+                            {
+                                StatisticalData(0, files.Length, true);
+                            }
+                            if (subDir3.EndsWith("精车2号"))
+                            {
+                                StatisticalData(1, files.Length, true);
+                            }
+                            if (subDir3.EndsWith("返修1号"))
+                            {
+                                StatisticalData(2, files.Length, true);
+                            }
+                            if (subDir3.EndsWith("二检1号"))
+                            {
+                                StatisticalData(3, files.Length, true);
+                            }
+                        }
+                    }
+                }
+            }
         }
         /// <summary>
         /// 统计数据

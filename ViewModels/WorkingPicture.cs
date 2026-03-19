@@ -102,7 +102,7 @@ namespace WheelRecognitionSystem.ViewModels
         /// </summary>
         public void Initialize()
         {
-            loadAIProcessParam(); //加载AI参数
+            //loadAIProcessParam(); //加载AI参数
             LoadedTemplateDatas();
 
             //订阅图像处理事件
@@ -178,9 +178,6 @@ namespace WheelRecognitionSystem.ViewModels
 
             }
         }
-
-
-
 
 
         /// <summary>
