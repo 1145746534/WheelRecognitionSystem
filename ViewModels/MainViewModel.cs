@@ -1253,7 +1253,7 @@ namespace WheelRecognitionSystem.ViewModels
                     Console.WriteLine($"工位：{model.Station}-{rowsAffected}-编码：{model.WheelCoding}");
                     //上传mes
                     //await SendMes(UpMesUri, "1检1", latestRecord.GUID);
-                    await SendMes(UpMesUri, model.Station, latestRecord.GUID);
+                     SendMes(UpMesUri, model.Station, latestRecord.GUID);
                 }
                 else
                 {
@@ -1274,14 +1274,15 @@ namespace WheelRecognitionSystem.ViewModels
 
         private async Task SendMes(string _uri, string _sation, string _guid)
         {
-
-            // 使用传统using块管理HttpClient
-            using (var httpClient = new HttpClient())
+            try
             {
-                var apiClient = new ApiClient(httpClient);
-
-                try
+                Console.WriteLine( $"SendMes : {_sation}:{_guid}" );  
+                // 使用传统using块管理HttpClient
+                using (var httpClient = new HttpClient())
                 {
+                    var apiClient = new ApiClient(httpClient);
+
+
                     var response = await apiClient.PostJsonAsync<LoginRequest, ApiResponse>(
                        _uri,
                         new LoginRequest { stationNo = _sation, guid = _guid }
@@ -1289,12 +1290,12 @@ namespace WheelRecognitionSystem.ViewModels
 
                     Console.WriteLine($"SendMes成功: {response?.msg}");
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"SendMes失败: {ex.Message}");
-                }
-            }
 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SendMes失败: {ex.Message}");
+            }
         }
 
 

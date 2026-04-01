@@ -376,6 +376,7 @@ namespace WheelRecognitionSystem.ViewModels.Pages
             if (myCamera != null && exposure != 0 && exposure != NowExposure)
             {
                 myCamera.SetExposureTime(exposure);
+                NowExposure = exposure;
             }
         }
         /// <summary>
