@@ -477,7 +477,7 @@ namespace WheelRecognitionSystem.ViewModels
 
 
                     //1.相机拍照信号 分为五个相机触发信号  1检1 1检2A和2B共用一个相机  1检3 一检3返修  2检1
-                    //5个相机 5个触摸屏
+                    //4个相机 5个触摸屏
                     Thread.Sleep(100);
                     if (PlcCilent != null && PlcCilent.Connected)
                     {
@@ -528,20 +528,29 @@ namespace WheelRecognitionSystem.ViewModels
                                         EventMessage.MessageDisplay($"回复读取拍照成功：{readPLCSignals[i].Name} （143.{i}.True）", true, true);
                                         ResetSignal(143, i, 600); // 拍照信号复位                                 
                                     }
+                                }
+                                for (int i = 0; i < readPLCSignals.Length + 1; i++)
+                                {
+
 
                                     //轮形编码 - PLC传输过来的 mmss_轮形号 用于修改数据
                                     string back_WheelCoding = GetBytesToString(_readBuffer, 314 + i * 16);
                                     string NG_WheelCoding = GetBytesToString(_readBuffer, 2 + i * 16);
                                     Thread.Sleep(10);
 
-                                    // 2. 回流状态处理
+                                    // 2. 读取检测位当前轮形
                                     int backBit = i + 1;
+
                                     bool back = S7.GetBitAt(_readBuffer, 192, backBit);
+                                    if (backBit == 5)
+                                    {
+                                        Console.WriteLine($"---------------{backBit} : {back}");
+                                    }
                                     bool FlowOrDown = S7.GetBitAt(_readBuffer, 192, 0); //1回流 0下转
                                     string showStatus = FlowOrDown ? "回流" : "下转";
                                     if (back)
                                     {
-                                        EventMessage.MessageDisplay($"接收到回流信号：（92.{i + 1}） 轮形：{back_WheelCoding}-{showStatus}", true, true);
+                                        EventMessage.MessageDisplay($"接收检测位信号：（192.{i + 1}） 轮形：{back_WheelCoding}-{showStatus}", true, true);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回流信号192.{i + 1}：{back}");
                                         modifiValue = new KeyValuePair<string, string>(back_WheelCoding, showStatus);
                                         ModfiModel modfi = new ModfiModel();
@@ -550,14 +559,14 @@ namespace WheelRecognitionSystem.ViewModels
                                         modfi.Station = sys_Camerars[i].Name;
                                         int indexPos = 144;
                                         int indexBit = i + 5;
-                                        if (i >= 8)
+                                        if (indexBit >= 8)
                                         {
                                             indexPos = indexPos + 1;
                                             indexBit = indexBit - 8;
                                         }
 
                                         S7.SetBitAt(ref WriteBuffer, indexPos, indexBit, true); //回复读取回流状态成功
-                                        EventMessage.MessageDisplay($"回复读取回流成功：（{indexPos}.{indexBit}）", true, true);
+                                        EventMessage.MessageDisplay($"回复检测位成功：（{indexPos}.{indexBit}）", true, true);
                                         //PlcCilent.DBWrite(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回复读取回流状态成功：{indexPos}.{indexBit}");
                                         //0 1检1  1 
@@ -1253,7 +1262,7 @@ namespace WheelRecognitionSystem.ViewModels
                     Console.WriteLine($"工位：{model.Station}-{rowsAffected}-编码：{model.WheelCoding}");
                     //上传mes
                     //await SendMes(UpMesUri, "1检1", latestRecord.GUID);
-                     SendMes(UpMesUri, model.Station, latestRecord.GUID);
+                    SendMes(UpMesUri, model.Station, latestRecord.GUID);
                 }
                 else
                 {
@@ -1276,7 +1285,7 @@ namespace WheelRecognitionSystem.ViewModels
         {
             try
             {
-                Console.WriteLine( $"SendMes : {_sation}:{_guid}" );  
+                Console.WriteLine($"SendMes : {_sation}:{_guid}");
                 // 使用传统using块管理HttpClient
                 using (var httpClient = new HttpClient())
                 {
