@@ -120,5 +120,11 @@ namespace WheelRecognitionSystem.Models
         /// </summary>
         [SugarColumn(ColumnDataType = "date")]
         public DateTime RecognitionDay { get; set; }
+
+        /// <summary>
+        /// 是否删除
+        /// </summary>
+        [SqlSugar.SugarColumn(IsNullable = true)]
+        public bool Delete { get; set; }
     }
 }

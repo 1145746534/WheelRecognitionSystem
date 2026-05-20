@@ -522,6 +522,7 @@ namespace WheelRecognitionSystem.ViewModels
                                     readPLCSignals[i].ArrivalSignal = photo;
                                     if (photo)
                                     {
+                                        
                                         EventMessage.MessageDisplay($"接收到拍照信号：{readPLCSignals[i].Name} （108.{i}.True）", true, true);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 接收到拍照信号108.{i}：{photo}");
                                         S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
@@ -529,6 +530,9 @@ namespace WheelRecognitionSystem.ViewModels
                                         ResetSignal(143, i, 600); // 拍照信号复位                                 
                                     }
                                 }
+
+                                Thread.Sleep(10);
+                                //4个相机 5个检测位  2号3号检测位绑定在2号相机
                                 for (int i = 0; i < readPLCSignals.Length + 1; i++)
                                 {
 
@@ -536,27 +540,64 @@ namespace WheelRecognitionSystem.ViewModels
                                     //轮形编码 - PLC传输过来的 mmss_轮形号 用于修改数据
                                     string back_WheelCoding = GetBytesToString(_readBuffer, 314 + i * 16);
                                     string NG_WheelCoding = GetBytesToString(_readBuffer, 2 + i * 16);
-                                    Thread.Sleep(10);
-
                                     // 2. 读取检测位当前轮形
-                                    int backBit = i + 1;
+                                    int backBit = i + 1; //检测位
 
                                     bool back = S7.GetBitAt(_readBuffer, 192, backBit);
-                                    if (backBit == 5)
-                                    {
-                                        Console.WriteLine($"---------------{backBit} : {back}");
-                                    }
-                                    bool FlowOrDown = S7.GetBitAt(_readBuffer, 192, 0); //1回流 0下转
-                                    string showStatus = FlowOrDown ? "回流" : "下转";
+                                    //if (backBit == 5)
+                                    //{
+                                    //    Console.WriteLine($"---------------{backBit} : {back}");
+                                    //}
+                                    //bool FlowOrDown = S7.GetBitAt(_readBuffer, 192, 0); //1回流 0下转
+                                    string showStatus = "下转";// FlowOrDown ? "回流" : "下转";
                                     if (back)
                                     {
+                                        if (backBit ==1)
+                                        {
+                                            string directory = @"E:\临时\下转\精车1号"; // 自定义保存目录
+                                            Logger.WriteLog($" {back_WheelCoding}+地址：{314 + i * 16}", directory);
+                                        }
+                                        
+                                        if (backBit == 2 || backBit == 3)
+                                        {
+                                            string directory = @"E:\临时\下转\精车2号"; // 自定义保存目录
+                                            Logger.WriteLog($" {back_WheelCoding}+地址：{314 + i * 16}", directory);
+                                        }
+                                        if (backBit == 4)
+                                        {
+                                            string directory = @"E:\临时\下转\返修1号"; // 自定义保存目录
+                                            Logger.WriteLog($" {back_WheelCoding}+地址：{314 + i * 16}", directory);
+                                        }
+                                        if (backBit == 5)
+                                        {
+                                            string directory = @"E:\临时\下转\二检1号"; // 自定义保存目录
+                                            Logger.WriteLog($" {back_WheelCoding}+地址：{314 + i * 16}", directory);
+                                        }
+
                                         EventMessage.MessageDisplay($"接收检测位信号：（192.{i + 1}） 轮形：{back_WheelCoding}-{showStatus}", true, true);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 回流信号192.{i + 1}：{back}");
                                         modifiValue = new KeyValuePair<string, string>(back_WheelCoding, showStatus);
                                         ModfiModel modfi = new ModfiModel();
                                         modfi.WheelCoding = back_WheelCoding;
                                         modfi.FlowOrDown = showStatus;
-                                        modfi.Station = sys_Camerars[i].Name;
+                                        if (i == 0)
+                                        {
+                                            modfi.Station = sys_Camerars[0].Name;
+                                        }
+                                        if (i == 1)
+                                        {
+                                            modfi.Station = sys_Camerars[1].Name + "A";
+                                        }
+                                        if (i == 2)
+                                        {
+                                            modfi.Station = sys_Camerars[1].Name + "B";
+                                        }
+                                        if (i == 4)
+                                        {
+                                            modfi.Station = sys_Camerars[3].Name;
+                                        }
+
+
                                         int indexPos = 144;
                                         int indexBit = i + 5;
                                         if (indexBit >= 8)
@@ -633,6 +674,9 @@ namespace WheelRecognitionSystem.ViewModels
                                     //PlcCilent.DBRead(WriteDB, WriteStartAddress, WriteLenght, WriteBuffer);
                                     //string value = GetBytesToString(WriteBuffer, 10, 14).Trim();
                                 }
+
+                                //返修滚道
+
                             }
                         }
                         catch (Exception ex)
@@ -899,6 +943,10 @@ namespace WheelRecognitionSystem.ViewModels
                 Console.WriteLine($"DoJob:{ex.ToString()}");
             }
         }
+        int pre1 = 0;
+        int pre2 = 0;
+        int pre3 = 0;
+        int pre4 = 0;
 
         /// <summary>
         /// 结果处理&回复PLC
@@ -915,7 +963,17 @@ namespace WheelRecognitionSystem.ViewModels
             string text;
             if (!model.resultModel.ResultBol || recognType == null || recognType == "NG")
             {
-                text = prefix + DateTime.Now.ToString("yyMMddHH");
+                if (model.readPLCSignal.Name.Equals("精车1号"))               
+                    text = (++pre1).ToString("D4") + "00000000";               
+                else if (model.readPLCSignal.Name.Equals("精车2号"))                
+                    text = (++pre2).ToString("D4") + "00000000"; 
+                else if (model.readPLCSignal.Name.Equals("返修1号"))                
+                    text = (++pre3).ToString("D4") + "00000000"; 
+                else if (model.readPLCSignal.Name.Equals("二检1号"))                
+                    text = (++pre4).ToString("D4") + "00000000";               
+                else
+                    text = prefix + DateTime.Now.ToString("yyMMddHH");
+
                 recognType = text;
                 wheelType = "error";
             }
@@ -927,8 +985,22 @@ namespace WheelRecognitionSystem.ViewModels
 
             if (model.IsSendPLCInfo)
             {
-                //发送PLC的数据
+                
+                //if (model.readPLCSignal.Name.Equals("精车2号"))
+                //{
+                //    string directory = @"E:\临时\拍照\精车2号"; // 自定义保存目录
+                //    Logger.WriteLog($" {text}", directory);
+                //}
+                string directory = $@"E:\临时\拍照\{model.readPLCSignal.Name}"; // 自定义保存目录
+                Logger.WriteLog($" {text}", directory);
 
+               
+
+                int maxLength = 16; // PLC 中定义的最大长度
+                byte[] buffer = StringToS7Bytes(text, maxLength); // 转换字符串为 PLC 格式字节数组
+                CopyBytes(buffer, WriteBuffer, 10 + index * 16);
+                Thread.Sleep(2);
+                //发送PLC的数据
                 S7.SetBitAt(ref WriteBuffer, 0, index, true); //拍照流程完成
                 new Thread((obj) =>
                 {
@@ -936,10 +1008,6 @@ namespace WheelRecognitionSystem.ViewModels
                     Thread.Sleep(500);
                     S7.SetBitAt(ref WriteBuffer, 0, threadI, false); //复位读取成功
                 }).Start(index);
-
-                int maxLength = 16; // PLC 中定义的最大长度
-                byte[] buffer = StringToS7Bytes(text, maxLength); // 转换字符串为 PLC 格式字节数组
-                CopyBytes(buffer, WriteBuffer, 10 + index * 16);
 
             }
             if (model.IsInteraction)
@@ -980,6 +1048,7 @@ namespace WheelRecognitionSystem.ViewModels
                 dataModel.ResultBool = true; //人工检查结果
                 dataModel.Remark = "-1";
                 dataModel.RecognitionDay = model.endTime;
+                dataModel.Delete = false;
                 pDB.Insertable(dataModel).ExecuteCommand();
                 pDB.Close();
                 pDB.Dispose();
