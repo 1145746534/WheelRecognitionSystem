@@ -198,6 +198,10 @@ namespace WheelRecognitionSystem.ViewModels
         /// 回流状态上次更新的二维码
         /// </summary>
         private string lastUpdateCodeBack;
+        /// <summary>
+        /// 回流状态上次更新的工站
+        /// </summary>
+        private string lastUpdateStation;
 
 
         private IRegionManager _regionManager;
@@ -583,17 +587,21 @@ namespace WheelRecognitionSystem.ViewModels
                                         if (i == 0)
                                         {
                                             modfi.Station = sys_Camerars[0].Name;
+                                            modfi.MesStation = sys_Camerars[0].Name;
                                         }
                                         if (i == 1)
                                         {
-                                            modfi.Station = sys_Camerars[1].Name + "A";
+                                            modfi.MesStation = sys_Camerars[1].Name + "A";
+                                            modfi.Station = sys_Camerars[1].Name;
                                         }
                                         if (i == 2)
                                         {
-                                            modfi.Station = sys_Camerars[1].Name + "B";
+                                            modfi.MesStation = sys_Camerars[1].Name + "B";
+                                            modfi.Station = sys_Camerars[1].Name;
                                         }
                                         if (i == 4)
                                         {
+                                            modfi.MesStation = sys_Camerars[3].Name;
                                             modfi.Station = sys_Camerars[3].Name;
                                         }
 
@@ -1234,36 +1242,36 @@ namespace WheelRecognitionSystem.ViewModels
                 }
 
 
-                using (SqlSugarClient db = new SqlAccess().SystemDataAccess)
-                {
-                    var record = db.Queryable<Tbl_productiondatamodel>()
-                                .Where(t => t.RecognitionTime > startTime && t.RecognitionTime < endTime)
-                                .Where(t => t.ImagePath != null && t.ImagePath.Contains(fileName))
-                                .First();
-                    //开启Sql日志输出（调试用）
-                    //db.Aop.OnLogExecuting = (sql, pars) =>
-                    //{
-                    //    Console.WriteLine("---" + sql);
-                    //};
+                //using (SqlSugarClient db = new SqlAccess().SystemDataAccess)
+                //{
+                //    var record = db.Queryable<Tbl_productiondatamodel>()
+                //                .Where(t => t.RecognitionTime > startTime && t.RecognitionTime < endTime)
+                //                .Where(t => t.ImagePath != null && t.ImagePath.Contains(fileName))
+                //                .First();
+                //    //开启Sql日志输出（调试用）
+                //    //db.Aop.OnLogExecuting = (sql, pars) =>
+                //    //{
+                //    //    Console.WriteLine("---" + sql);
+                //    //};
 
-                    if (record != null)
-                    {
-                        // 更新Model字段
-                        record.Model = newModelName;
-                        record.ImagePath = newImagePath;
-                        record.WheelStyle = style;
+                //    if (record != null)
+                //    {
+                //        // 更新Model字段
+                //        record.Model = newModelName;
+                //        record.ImagePath = newImagePath;
+                //        record.WheelStyle = style;
 
-                        // 更新数据库记录
-                        db.Updateable(record)
-                          .Where(t => t.ID == record.ID) // 确保使用主键定位记录
-                          .ExecuteCommand();
-                    }
-                    else
-                    {
-                        // 可选：处理未找到记录的情况
-                        //throw new Exception($"未找到包含文件名的记录: {fileName}");
-                    }
-                }
+                //        // 更新数据库记录
+                //        db.Updateable(record)
+                //          .Where(t => t.ID == record.ID) // 确保使用主键定位记录
+                //          .ExecuteCommand();
+                //    }
+                //    else
+                //    {
+                //        // 可选：处理未找到记录的情况
+                //        //throw new Exception($"未找到包含文件名的记录: {fileName}");
+                //    }
+                //}
             }
             catch (Exception ex)
             {
@@ -1292,29 +1300,36 @@ namespace WheelRecognitionSystem.ViewModels
 
         private async Task OnDataModifiNextStationAsync(ModfiModel model)
         {
+            string directory = $@"E:\临时\下转\数据库修改"; // 自定义保存目录
             SqlSugarClient db = new SqlAccess().SystemDataAccess;
             try
             {
-
+              
+              
                 string prefix_WheelCoding = model.WheelCoding;
+                Logger.WriteLog($"方法进入：工位 {model.MesStation} 条码 {prefix_WheelCoding}", directory);
+                string station = model.Station; 
                 string nextStation = model.FlowOrDown;
                 char[] parts = prefix_WheelCoding.ToCharArray();
-                if (prefix_WheelCoding == lastUpdateCodeBack)
+                if (prefix_WheelCoding == lastUpdateCodeBack && station == lastUpdateStation)
                 {
-                    EventMessage.MessageDisplay($"两次状态码一致：{lastUpdateCodeBack}", true, true);
+                    Logger.WriteLog($"两次状态码一致：{station} {prefix_WheelCoding}  {lastUpdateCodeBack}", directory);
+                    EventMessage.MessageDisplay($"状态码一致：{station} {lastUpdateCodeBack}", true, true);
                     return;
                 }
                 if (parts.Count() != 12)
                 {
-                    throw new Exception($"NextStation-Prefix_WheelCoding数据长度错误：{parts.Count()}");
+                    Logger.WriteLog($"数据长度错误：{prefix_WheelCoding}", directory);
+                    throw new Exception($"NextStation-WheelCoding数据长度错误：{parts.Count()}");
                 }
                 lastUpdateCodeBack = prefix_WheelCoding;
+                lastUpdateStation = station;
 
 
 
                 // 步骤1：查询符合条件的最新一条记录
                 Tbl_productiondatamodel latestRecord = db.Queryable<Tbl_productiondatamodel>()
-                    .Where(x => x.TransmissionCoding == prefix_WheelCoding)
+                    .Where(x => x.TransmissionCoding == prefix_WheelCoding && x.Station == station)
                     .OrderByDescending(x => x.ID)
                     .First();
 
@@ -1329,19 +1344,23 @@ namespace WheelRecognitionSystem.ViewModels
                             NextStation = nextStation
                         }).Where(it => it.ID == latestRecord.ID)
                         .ExecuteCommand();
-                    Console.WriteLine($"工位：{model.Station}-{rowsAffected}-编码：{model.WheelCoding}");
+                    Logger.WriteLog($"{latestRecord.ID} 工位： {model.MesStation} 条码：{prefix_WheelCoding} 改变结果：{rowsAffected}", directory);
+                    //Console.WriteLine($"工位：{model.Station}-{rowsAffected}-编码：{model.WheelCoding}");
                     //上传mes
                     //await SendMes(UpMesUri, "1检1", latestRecord.GUID);
-                    SendMes(UpMesUri, model.Station, latestRecord.GUID);
+                    SendMes(UpMesUri, model.MesStation, latestRecord.GUID);
                 }
                 else
                 {
-                    Console.WriteLine($"NextStation-未找到匹配的记录:{prefix_WheelCoding}");
+                    Logger.WriteLog($"NextStation-未找到匹配的记录：{prefix_WheelCoding}", directory);
+
+                    //Console.WriteLine($"NextStation-未找到匹配的记录:{prefix_WheelCoding}");
                 }
 
             }
             catch (Exception ex)
             {
+                Logger.WriteLog($"异常信息：{ex.ToString()}", directory);
                 Console.WriteLine($"DoJob:{ex.ToString()}");
             }
             finally

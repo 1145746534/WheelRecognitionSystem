@@ -21,7 +21,12 @@ namespace WheelRecognitionSystem.Models
         public string FlowOrDown { get; set; }
 
         /// <summary>
-        /// 工位
+        /// 显示工位
+        /// </summary>
+        public string MesStation { get; set; }
+
+        /// <summary>
+        /// 拍照进入的工位
         /// </summary>
         public string Station { get; set; }
 
