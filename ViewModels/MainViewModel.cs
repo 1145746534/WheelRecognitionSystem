@@ -522,11 +522,11 @@ namespace WheelRecognitionSystem.ViewModels
                                     readPLCSignals[i].ArrivalSignal = photo;
                                     if (photo)
                                     {
-                                        
+
                                         EventMessage.MessageDisplay($"接收到拍照信号：{readPLCSignals[i].Name} （108.{i}.True）", true, true);
                                         //Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff")} 接收到拍照信号108.{i}：{photo}");
                                         S7.SetBitAt(ref WriteBuffer, 143, i, true); //回复读取拍照成功
-                                        EventMessage.MessageDisplay($"回复读取拍照成功：{readPLCSignals[i].Name} （143.{i}.True）", true, true);
+                                        //EventMessage.MessageDisplay($"回复读取拍照成功：{readPLCSignals[i].Name} （143.{i}.True）", true, true);
                                         ResetSignal(143, i, 600); // 拍照信号复位                                 
                                     }
                                 }
@@ -552,12 +552,12 @@ namespace WheelRecognitionSystem.ViewModels
                                     string showStatus = "下转";// FlowOrDown ? "回流" : "下转";
                                     if (back)
                                     {
-                                        if (backBit ==1)
+                                        if (backBit == 1)
                                         {
                                             string directory = @"E:\临时\下转\精车1号"; // 自定义保存目录
                                             Logger.WriteLog($" {back_WheelCoding}+地址：{314 + i * 16}", directory);
                                         }
-                                        
+
                                         if (backBit == 2 || backBit == 3)
                                         {
                                             string directory = @"E:\临时\下转\精车2号"; // 自定义保存目录
@@ -963,16 +963,16 @@ namespace WheelRecognitionSystem.ViewModels
             string text;
             if (!model.resultModel.ResultBol || recognType == null || recognType == "NG")
             {
-                if (model.readPLCSignal.Name.Equals("精车1号"))               
-                    text = (++pre1).ToString("D4") + "00000000";               
-                else if (model.readPLCSignal.Name.Equals("精车2号"))                
-                    text = (++pre2).ToString("D4") + "00000000"; 
-                else if (model.readPLCSignal.Name.Equals("返修1号"))                
-                    text = (++pre3).ToString("D4") + "00000000"; 
-                else if (model.readPLCSignal.Name.Equals("二检1号"))                
-                    text = (++pre4).ToString("D4") + "00000000";               
-                else
-                    text = prefix + DateTime.Now.ToString("yyMMddHH");
+                //if (model.readPLCSignal.Name.Equals("精车1号"))               
+                //    text = (++pre1).ToString("D4") + "00000000";               
+                //else if (model.readPLCSignal.Name.Equals("精车2号"))                
+                //    text = (++pre2).ToString("D4") + "00000000"; 
+                //else if (model.readPLCSignal.Name.Equals("返修1号"))                
+                //    text = (++pre3).ToString("D4") + "00000000"; 
+                //else if (model.readPLCSignal.Name.Equals("二检1号"))                
+                //    text = (++pre4).ToString("D4") + "00000000";               
+                //else
+                text = prefix + DateTime.Now.ToString("yyMMddHH");
 
                 recognType = text;
                 wheelType = "error";
@@ -985,7 +985,7 @@ namespace WheelRecognitionSystem.ViewModels
 
             if (model.IsSendPLCInfo)
             {
-                
+
                 //if (model.readPLCSignal.Name.Equals("精车2号"))
                 //{
                 //    string directory = @"E:\临时\拍照\精车2号"; // 自定义保存目录
@@ -994,7 +994,7 @@ namespace WheelRecognitionSystem.ViewModels
                 string directory = $@"E:\临时\拍照\{model.readPLCSignal.Name}"; // 自定义保存目录
                 Logger.WriteLog($" {text}", directory);
 
-               
+
 
                 int maxLength = 16; // PLC 中定义的最大长度
                 byte[] buffer = StringToS7Bytes(text, maxLength); // 转换字符串为 PLC 格式字节数组
@@ -1002,6 +1002,7 @@ namespace WheelRecognitionSystem.ViewModels
                 Thread.Sleep(2);
                 //发送PLC的数据
                 S7.SetBitAt(ref WriteBuffer, 0, index, true); //拍照流程完成
+                EventMessage.MessageDisplay($"拍照流程完成:{model.readPLCSignal.Name} {0}.{index}", true, false);
                 new Thread((obj) =>
                 {
                     int threadI = (int)obj;  // 将 object 类型转为 int
@@ -1023,7 +1024,7 @@ namespace WheelRecognitionSystem.ViewModels
                 data.WheelType = wheelType;
                 data.Similarity = decSimilarity * 100;
                 data.TimeConsumed = fTimeConsumed;
-                data.Remark = $"分数：{decSimilarity}";
+                data.Remark = $"相似度：{decSimilarity * 100}%";
                 DisplayDataGrid(index, data);
                 EventMessage.MessageDisplay($"{model.readPLCSignal.Name} - 型号:{wheelType} - {model.resultModel.status}", true, false);
             }

@@ -422,7 +422,7 @@ namespace WheelRecognitionSystem.ViewModels
                     {
                         UpdateTemplates();
                         InteractS7PLCModel interact = _processingQueue.Dequeue();
-                        RecognitionResultModel recognitionResult = null;
+                        RecognitionResultModel recognitionResult = new RecognitionResultModel();
                         List<RecognitionResultModel> list = null;
                         string score = "0";
 
@@ -436,7 +436,7 @@ namespace WheelRecognitionSystem.ViewModels
                             interact.starTime = DateTime.Now;
                             if (image == null)
                             {
-                                recognitionResult = new RecognitionResultModel();
+                               
                                 recognitionResult.RecognitionWheelType = "NG";
                                 recognitionResult.status = "图像采集失败";
                             }

@@ -427,11 +427,14 @@ namespace WheelRecognitionSystem.Public
                 {
                     if (templateData.Template != null)
                     {
-                        using (HDevDisposeHelper dh = new HDevDisposeHelper())
-                        {
-                            HOperatorSet.SetGenericShapeModelParam(templateData.Template, "angle_start", (new HTuple(-180)).TupleRad());
-                        }
-                        HOperatorSet.SetGenericShapeModelParam(templateData.Template, "border_shape_models", "false");
+                        //using (HDevDisposeHelper dh = new HDevDisposeHelper())
+                        //{
+                        //    HOperatorSet.SetGenericShapeModelParam(templateData.Template, "angle_start", (new HTuple(-180)).TupleRad());
+                        //}
+                        //HOperatorSet.SetGenericShapeModelParam(templateData.Template, "border_shape_models", "false");
+                        //HOperatorSet.SetGenericShapeModelParam(templateData.Template, "iso_scale_max", 1.2);
+                        //HOperatorSet.SetGenericShapeModelParam(templateData.Template, "iso_scale_min", 0.8);
+
                         //set_generic_shape_model_param (ModelID, 'iso_scale_max', 1.1)
                         //set_generic_shape_model_param(ModelID, 'iso_scale_min', 0.9)
                         //
