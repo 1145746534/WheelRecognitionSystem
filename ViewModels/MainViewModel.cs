@@ -507,11 +507,11 @@ namespace WheelRecognitionSystem.ViewModels
 
                                 //轮毂温度 3条线
                                 //Console.WriteLine( $"轮毂温度：{S7.GetRealAt(_readBuffer, 124)}");
-                                readPLCSignals[0].WheelTemperature = S7.GetRealAt(_readBuffer, 124);
+                                readPLCSignals[0].WheelTemperature = S7.GetRealAt(_readBuffer, 124); //精车1号
                                 temperature = S7.GetRealAt(_readBuffer, 128);
-                                readPLCSignals[1].WheelTemperature = temperature; //1检2A 1检2B
+                                readPLCSignals[1].WheelTemperature = temperature; //精车2号
                                 //readPLCSignals[2].WheelTemperature = temperature; 
-                                readPLCSignals[2].WheelTemperature = S7.GetRealAt(_readBuffer, 132); //1检3
+                                readPLCSignals[3].WheelTemperature = S7.GetRealAt(_readBuffer, 132); //二检1号
                                 //计数
                                 //count = S7.GetIntAt(_readBuffer, 156);
 
