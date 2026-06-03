@@ -179,6 +179,34 @@ namespace WheelRecognitionSystem.ViewModels
             }
         }
 
+        private void CheckAndRemoveDuplicateWheelTypes()
+        {
+            using (var db = new SqlAccess().SystemDataAccess)
+            {
+                var allRecords = db.Queryable<sys_bd_Templatedatamodel>().ToList();
+                var groups = allRecords
+                    .GroupBy(d => d.WheelType)
+                    .Where(g => g.Count() > 1)
+                    .ToList();
+
+                foreach (var group in groups)
+                {
+                    var sorted = group.OrderByDescending(d => d.UpdateTime).ToList();
+                    var toDelete = sorted.Skip(1).ToList();
+                    foreach (var item in toDelete)
+                    {
+                        Console.WriteLine($"删除重复 WheelType: {item.WheelType}, Index: {item.Index}, UpdateTime: {item.UpdateTime}");
+                        //db.Deleteable<sys_bd_Templatedatamodel>(item).ExecuteCommand();
+                    }
+                }
+
+                if (groups.Count == 0)
+                {
+                    Console.WriteLine("没有发现重复的 WheelType");
+                }
+            }
+        }
+
 
         /// <summary>
         /// 加载AI模型参数

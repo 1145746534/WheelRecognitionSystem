@@ -489,14 +489,16 @@ namespace WheelRecognitionSystem.Public
                                 SafeDisposeHTuple(ref HomMat2D);
                             }
 
-                            if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
+                            //if (temp.Similarity > 0.8 && temp.AbsDifferenceGray < 3)
+                            if (temp.Similarity > 0.8)
                             {
 
                                 temp.status = "识别成功";
                                 result = temp;
                                 break;
                             }
-                            if (temp.Similarity > minSimilarity && temp.AbsDifferenceGray < 20)
+                            //if (temp.Similarity > minSimilarity && temp.AbsDifferenceGray < 20)
+                            if (temp.Similarity > minSimilarity)
                             {
                                 recognitionResults.Add(temp);
                             }
